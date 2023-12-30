@@ -1,0 +1,41 @@
+.conversationContainer {
+    width: 100%;
+    height: 100%;
+    padding: 20px 10px 20px 10px;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+}
+.conversationTopBar {
+    width: 100%;
+    /* height: 70px; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+.conversationAvatar {
+    width: 70px;
+    border-radius: 100%;
+    border: 2px solid white;
+}
+.conversationDetails {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 20px;
+}
+.conversationUserDetails {
+    display: flex;
+    flex-direction: column;
+    color: white;
+    align-items: flex-start;
+}
+.conversationMenu img {
+    width: 40px;
+    margin: 5px;
+    cursor: pointer;
+}
+.chatinInterface{
+    width: 100%;
+    height: 80%;
+    background-color: white;
+}

@@ -1,0 +1,16 @@
+.adsContainer {
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.adsContainer img {
+    border-radius: 10px;
+    max-height: 50vh;
+    -webkit-filter: grayscale(100%);
+    filter: gray;
+}
+
+.adsContainer h3 {
+    color: black;
+    /* background: rgba(142, 142, 142, 0.5); */
+}

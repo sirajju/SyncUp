@@ -1,0 +1,39 @@
+.chatsContainer {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #EEE9EE;
+
+}
+.chatsLeft {
+    padding: 20px;
+    background: white;
+    width: 40%;
+    min-width: 25pc;
+}
+.chatsRight {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+}
+.chatsRight{
+    width: 60%;
+}
+.chatsStyle {
+    height: 96vh;
+    margin: 10px 5px 5px 3px;
+    border-radius: 5px;
+}
+.belowAds{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+@media (max-width:700px){
+    .chatsRight{
+        display: none;
+    }
+}

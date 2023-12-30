@@ -1,0 +1,43 @@
+.createAdContainer{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    color: black;
+    flex-direction: column;
+}
+.createAdContainer input {
+    width: 80%;
+    margin: 10px;
+    padding: 4px;
+    outline: none;
+    border: 1px solid grey;
+    border-radius: 5px;
+}
+.createAdContainer input:focus{
+    border: 1px solid #ED80FD;
+}
+.inputAd {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: 80%;
+}   
+.adImageInput {
+    width: 20%;
+    height: 30%;
+    background-color: rgb(190, 190, 190);
+    border-radius: 100px;
+    cursor: pointer;
+    max-height: 30%;
+    
+}
+.submitAd {
+    width: 80%;
+    height: 38px;
+    border-radius: 10px;
+    border: none;
+    background-color: #ED80FD;
+    color: white;
+}

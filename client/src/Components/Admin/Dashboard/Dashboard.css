@@ -1,0 +1,115 @@
+.dashboardContainer{
+    width: 100%;
+    position: absolute;
+    height: 100%;
+
+}
+.navbar{
+    padding: 15px;
+    /* border-radius: 10px; */
+    /* margin: 10px; */
+}
+.collapse{
+    display: flex;
+    justify-content: flex-end;
+}
+.navbar-brand,.adminDp{
+    width: 35px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+.sidebar{
+    width: 180px;
+    background: white;
+    height: 83%;
+    border-radius: 10px;
+    margin: 10px;
+    position: absolute;
+    left:-280px;
+    transition: 0.3s;
+    display: flex;
+    /* justify-content: center; */
+    align-items: flex-start;
+    padding:20px;
+    flex-direction: column;
+    gap: 2px;
+
+}
+.animate-sidebar {
+    left: 0;
+    transition: 0.3s;
+}
+.sidebarBtn{
+    border: none;
+    background: transparent;
+    color: black;
+    height: 40px;
+    width: 100%;
+    border-radius: 5px;
+    font-weight: bold;
+}
+.sideBtnActive {
+    color: #EE9AE5;
+}
+.dashboard{
+    width: 100%;
+    background: white;
+    height: 88%;
+    background: linear-gradient(-245deg, #EE9AE5 10%, #5961F9 80%);
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+.dbDetails {
+    width: 70%;
+    height: 80%;
+    margin: 40px;
+    margin-top: 5px;
+    margin-left: 100px;
+}
+.dbItem {
+    background-color: white;
+    height: 100px;
+    width: 200px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    border-radius: 10px;
+}
+.dtCont {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+.dbItem img {
+    width: 40px;
+}
+.graph{
+    text-align: center;
+    width: 100%;
+    background-color: white;
+    height: 80%;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+}
+.hel {
+    width: 80%;
+    height: 75%;
+}
+.hel h5 {
+    color: black;
+}
+@media (max-width: 576px){
+    .adminTitle{
+        font-size: 15px;
+        font-weight: bold;
+    }
+}
+@media (max-width: 345px){
+    .adminTitle{
+        display: none;
+    }
+}

@@ -1,0 +1,46 @@
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:Asia/Kolkata
+X-LIC-LOCATION:Asia/Kolkata
+BEGIN:STANDARD
+TZOFFSETFROM:+0530
+TZOFFSETTO:+0530
+TZNAME:IST
+DTSTART:19700101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Kolkata:20231207T170000
+DTEND;TZID=Asia/Kolkata:20231207T180000
+DTSTAMP:20231207T084151Z
+ORGANIZER;CN=Maajid Pp:mailto:majimaajidpp@gmail.com
+UID:5v1v5e782m69kvcavf3n4js7t6@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=nameernihadpc@gmail.com;X-NUM-GUESTS=0:mailto:nameernihadpc@gmail.c
+ om
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=munnas2aa@gmail.com;X-NUM-GUESTS=0:mailto:munnas2aa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=
+ TRUE;CN=sreesanjaych@gmail.com;X-NUM-GUESTS=0:mailto:sreesanjaych@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE
+ ;CN=Maajid Pp;X-NUM-GUESTS=0:mailto:majimaajidpp@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/twx-mozw-pqg
+X-MICROSOFT-CDO-OWNERAPPTID:2001853047
+CREATED:20231207T084148Z
+DESCRIPTION:-::~:~::~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~
+ :~:~:~:~:~:~:~:~::~:~::-\nJoin with Google Meet: https://meet.google.com/tw
+ x-mozw-pqg\n\nLearn more about Meet at: https://support.google.com/a/users/
+ answer/9282720\n\nPlease do not edit this section.\n-::~:~::~:~:~:~:~:~:~:~
+ :~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~::~:~::-
+LAST-MODIFIED:20231207T084148Z
+LOCATION:
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:daily_session(mern)week 18\,19
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR

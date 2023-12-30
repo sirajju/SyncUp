@@ -1,0 +1,33 @@
+.profileContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.profileAvatar {
+    width: 200px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 100px;
+}
+.modal-body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.modal-header,.modal-footer{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none !important ;
+}
+.profileConfig{
+    width: 98%;
+    height: 60%;
+    margin-top: 5px;
+    display: flex;
+    /* justify-content: center; */
+    align-items: center;
+    flex-direction: column;
+    padding: 40px;
+}
