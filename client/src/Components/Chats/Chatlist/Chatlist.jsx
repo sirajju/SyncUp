@@ -12,12 +12,25 @@ import axios from 'axios'
 import CurrentList from './currentList'
 import Contactslist from './ContactsList'
 import ChatingInterface from './ChatingInterface'
+import { setConversations } from '../../../Context/userContext'
+import GetChatList from '../../../main/Chats/getChatList'
 
 
-const Chatlist = React.memo(function Chatlist({ searchResult, chatlist,setChat }) {
+const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
+    const conversation = useSelector(state=>state.conversations)
     const userData = useSelector(state => state.user)
+    const [status,setStatus]=useState({})
     const [contactsModal, openContactsModal] = useState(false)
-    console.log(searchResult, chatlist);
+    const dispatch = useDispatch()
+    useEffect(() => {
+        if(!searchResult){
+            async function a() {
+                const mes = await GetChatList()
+                dispatch(setConversations(mes))
+            }
+            a()
+        }
+    }, [])
     const addToContact = (userId) => {
         const token = localStorage.getItem(`SyncUp_Auth_Token`)
         axios.post(`http://${window.location.hostname}:5000/addToContact`, { userId }, {
@@ -75,11 +88,11 @@ const Chatlist = React.memo(function Chatlist({ searchResult, chatlist,setChat }
     }
     return (
         <div className="chatlistContainer" data-aos="fade-up" data-aos-duration="700" >
-            {contactsModal&& <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} /> }
-            {chatlist && <CurrentList chatlist={chatlist} />}
-            {(!chatlist.length && !searchResult.length &&!searchResult.notfound) &&
+            {contactsModal && <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} />}
+            {Boolean(conversation.value.length) && <CurrentList setChat={setChat} />}
+            {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
                 <div className="welcomeContainer">
-                    <img style={{width:'70px',margin:'20px'}} src={empty} alt="" />
+                    <img style={{ width: '70px', margin: '20px' }} src={empty} alt="" />
                     <h2>Look like your chats is empty </h2>
                     <button onClick={() => openContactsModal(true)}>
                         Start chat
@@ -89,6 +102,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, chatlist,setChat }
             {Boolean(searchResult.length && !searchResult.notfound) && searchResult.map(el => {
                 return (
                     <div className="chatlistItem">
+                        
                         <img src={el.avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
                             <div className="userContent">
@@ -122,7 +136,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, chatlist,setChat }
                                         );
                                     } else if (rs == 'Accepted') {
                                         return (
-                                            <button onClick={() => setChat(el._id)} className="sendFrndRqst">
+                                            <button onClick={() => setChat({type:'chat',data:el._id})} className="sendFrndRqst">
                                                 <img style={{ 'width': '20px' }} src={message} alt="" />
                                             </button>
                                         );
@@ -140,7 +154,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, chatlist,setChat }
                 );
 
             })}
-            {searchResult.notfound && !chatlist.length && <div className="chatlistItem">
+            {(searchResult.notfound && !conversation.value.length )&& <div className="chatlistItem">
                 <img src={"https://res.cloudinary.com/drjubxrbt/image/upload/v1703079644/gz8rffstvw1squbps9ag.png"} className='chatIcon' alt="" />
                 <div className="chatDetails">
                     <div className="userContent">

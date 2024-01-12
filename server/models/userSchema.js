@@ -84,7 +84,7 @@ const user = mongoose.Schema({
         default:100
     },
     last_seen:{
-        type:Date,
+        type:String,
         default:Date.now()
     },
     logged_devices:{

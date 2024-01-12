@@ -14,9 +14,6 @@ const http = require("http").createServer(app)
 const { intializeSocket } = require('./config/socket.io')
 const webPush = require('web-push')
 
-const vapidKeys = webPush.generateVAPIDKeys();
-
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -28,11 +25,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 const io = intializeSocket(http)
-app.use(async (req, res, next) => {
+app.use(async(req, res, next) => {
   req.io = io
   next()
 })
-
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
 

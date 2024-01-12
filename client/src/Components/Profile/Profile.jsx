@@ -16,6 +16,7 @@ function Profile({ setGo }) {
     const dispatch = useDispatch();
     const [username, setUsername] = useState(userData.value.username);
     const [isUsernameValid, setIsUsernameValid] = useState(true);
+    const navigate = useNavigate()
 
     const saveUsername = () => {
         if (isUsernameValid) {
@@ -38,11 +39,9 @@ function Profile({ setGo }) {
             toast.error('Please choose a different one.');
         }
     };
-
     const checkUsername = async (e) => {
         const newUsername = e.target.value;
         setUsername(newUsername);
-
         try {
             const res = await axios.get(
                 `http://${window.location.hostname}:5000/checkUsername?username=${newUsername}`
@@ -58,7 +57,6 @@ function Profile({ setGo }) {
             setIsUsernameValid(false);
         }
     };
-
     return (
         <>
             <button
@@ -87,6 +85,7 @@ function Profile({ setGo }) {
                         type="text"
                         value={editable ? username : userData.value.username}
                         onInput={checkUsername}
+                        onKeyUp={(e)=>e.key=='Enter'&&saveUsername(e)}
                         class={`form-control profileUsernameInput ${!isUsernameValid ? 'invalid' : ''}`}
                         disabled={editable ? false : true}
                         placeholder="Username"
@@ -103,6 +102,10 @@ function Profile({ setGo }) {
                             <img style={{ width: '20px' }} src={editable ? tickSave : pencil} />{' '}
                         </span>
                     </div>
+                </div>
+                <div onClick={userData.value.isPremium ? ()=>toast('Currently we only have this type    ') : ()=>navigate('/plans')} className={`profilePremiumBadge ${!userData.value.isPremium&&'cursor-pointer'}`}>
+                    <span>Select your premium badge : </span>
+                    <span class="badge badge-success rounded-pill d-inline premiumBadge cursor-pointer">Premium</span>
                 </div>
             </div>
         </>

@@ -7,7 +7,7 @@ import Login from './main/Login/Login'
 import Register from './main/Register/Register'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Chats from './main/Chats/Chats';
-import { useSelector } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import UserRoute from './Components/CheckLogin/userRoute';
 import GuestRoute from './Components/CheckLogin/guestRoute';
 import Forget from './Components/ForgetPassword/Forget';
@@ -17,6 +17,7 @@ import Users from './Components/Admin/Users/Users';
 import Dashboard from './Components/Admin/Dashboard/Dashboard';
 import Ads from './Components/Admin/Ads/Ads';
 import CreateAd from './Components/Admin/Ads/CreateAd';
+import Premium from './Components/Premium/Premium';
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
@@ -30,7 +31,8 @@ function App() {
           <Route path='/login' element={<GuestRoute><Login /></GuestRoute>} />
           <Route path='/register' element={<GuestRoute><Register /></GuestRoute>} />
           <Route path='/chats' element={<UserRoute><Chats /></UserRoute>} />
-          <Route path='/forgetPassword' element={<GuestRoute><Forget /></GuestRoute>} />
+          <Route path='/plans' element={<UserRoute><Premium /></UserRoute>} />
+          <Route path='/premium' element={<GuestRoute><Forget /></GuestRoute>} />
           <Route path='/resetPassword' element={<GuestRoute><VerifyLink /></GuestRoute>} />
           <Route path='/admin' element={<AdminRoute redirect={<Dashboard />} />} />
           <Route path='/admin/users' element={<AdminRoute redirect={<Users />} />} />

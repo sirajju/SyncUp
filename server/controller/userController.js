@@ -8,6 +8,7 @@ const cloudinary = require('cloudinary')
 const crypto = require('crypto-js')
 const Connection = require('../models/connectionModel')
 const webPush = require('web-push')
+const Premium = require('../models/premiumModel')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -22,17 +23,17 @@ const opts = {
 
 const registerUser = async (req, res) => {
     try {
-        let { username, email, password,refferal } = req.body
+        let { username, email, password, refferal } = req.body
         console.log(refferal);
         password = await makeHashed(password)
         const user = new User({
             username,
             email,
             password,
-            invitedBy:refferal&&atob(refferal)
+            invitedBy: refferal && atob(refferal)
         })
         if (await user.save()) {
-            jwt.sign({ username, email }, process.env.JWT_SECRET, async(err, data) => {
+            jwt.sign({ username, email }, process.env.JWT_SECRET, async (err, data) => {
                 if (data) {
                     res.status(200).json({ message: "Registration success", token: data, success: true })
                 }
@@ -78,9 +79,11 @@ const loginUser = async (req, res) => {
                             res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token: data, success: false })
                         }
                         else {
-                            if (userData.logged_devices == 1) {
-                                const connData = await Connection.findOne({ userId: userData._id })
-                                req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
+                            const connData = await Connection.findOne({ userId: userData._id })
+                            if (connData) {
+                                if (userData.logged_devices == 1 && connData) {
+                                    req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
+                                }
                             }
                             await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
                             res.json({ message: "Login success", success: true, token: data })
@@ -178,11 +181,13 @@ const verifyOtp = async (req, res) => {
         if (userData.auth.otp.value == req.query.otp) {
             let expire = userData.auth.otp.expireAt
             if ((expire - Date.now()) >= 0) {
-                if(userData.invitedBy){
-                    const invData = await User.findOneAndUpdate({email:userData.invitedBy},{$push:{notifications:{type:"premium",message:"You got 150 chatpoints by refferal",time:Date.now(),isReaded:false}}})
-                    await User.findOneAndUpdate({email:userData.invitedBy},{$inc:{chatpoints:150}})
-                    conData = await Connection.findOne({userId:invData._id})
-                    req.io.to(conData.socketId).emit('onUpdateNeeded')
+                if (userData.invitedBy) {
+                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
+                    await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
+                    connData = await Connection.findOne({ userId: invData._id })
+                    if(connData){
+                        req.io.to(conData.socketId).emit('onUpdateNeeded')
+                    }
                 }
                 await User.findOneAndUpdate({ email: req.userEmail }, { $set: { isEmailVerified: true } })
                 res.json({ success: true, message: "Yay you are all done!!" })
@@ -297,7 +302,9 @@ const getAds = async (req, res) => {
         const encrypted = encryptData(adsData)
         const userData = await User.findOne({ email: req.userEmail })
         const connData = await Connection.findOne({ userId: userData._id })
-        req.io.to(connData.socketId).emit('onUpdateNeeded')
+        if(connData){
+            req.io.to(connData.socketId).emit('onUpdateNeeded')
+        }
         res.json({ success: true, body: encrypted })
     } catch (error) {
         res.json({ success: false, message: error.message })
@@ -308,7 +315,7 @@ const checkUser = async (req, res) => {
         const { user } = req.query
         if (user) {
             const regex = { $regex: new RegExp(`^${user}`, 'i') }
-            const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true })
+            const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } })
             if (userData.length) {
                 const encData = encryptData(userData)
                 res.json({ success: true, body: encData })
@@ -333,9 +340,11 @@ const addToContact = async (req, res) => {
             const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { requests: { id: userData._id, isAccepted: false }, notifications: { type: "request", userId: userData._id, time: Date.now(), isReaded: false } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
-                ConnectData.forEach((el) => {
-                    req.io.to(el.socketId).emit('onUpdateNeeded')
-                })
+                if(ConnectData){
+                    ConnectData.forEach((el) => {
+                        req.io.to(el.socketId).emit('onUpdateNeeded')
+                    })
+                }
                 res.json({ success: true, message: `Friend request sent` })
             } else {
                 res.json({ success: false, message: `Something went wrong` })
@@ -455,19 +464,50 @@ const removeContact = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
-const changeUsername = async(req,res)=>{
+const changeUsername = async (req, res) => {
     try {
-        const {username}=req.body
-        if(username){
-            const userData = await User.findOneAndUpdate({email:req.userEmail},{$set:{username}})
-            if(userData){
-                return res.json({message:"Username updated",success:true})
+        const { username } = req.body
+        if (username) {
+            const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { username } })
+            if (userData) {
+                return res.json({ message: "Username updated", success: true })
             }
         }
-        return res.json({message:"User is not authenticated"})
+        return res.json({ message: "User is not authenticated" })
     } catch (error) {
         console.log(error);
-        res.json({message:"Somthing went wrong"})
+        res.json({ message: "Somthing went wrong" })
+    }
+}
+const convertPointsToPremium = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail, isPremium: false })
+        if (userData) {
+            if (userData.chatpoints >= 499) {
+                const updateData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { isPremium: true }, $inc: { chatpoints: -499 } }, { new: true })
+                await new Premium({
+                    userId: userData._id,
+                    type: 'chatpoints',
+                    price: 499,
+                    expiresAt: new Date().getMonth() + 1,
+                    paymentType: 'chatpoints',
+                    paymentStatus: 'success',
+                    paymentSessionId: `cp_${userData._id}`
+                }).save()
+                if (updateData) {
+                    res.json({ success: true, message: "Welcome to premium membership" })
+                } else {
+                    res.json({ message: "Error while updating" })
+                }
+            } else {
+                res.json({ message: "You don't have enough points" })
+            }
+        } else {
+            res.json({ message: "You are already a premium member" })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ message: error.message })
     }
 }
 module.exports = {
@@ -489,5 +529,7 @@ module.exports = {
     getNoti,
     acceptReq,
     removeContact,
-    changeUsername
+    changeUsername,
+    convertPointsToPremium,
+    generateRandom
 }

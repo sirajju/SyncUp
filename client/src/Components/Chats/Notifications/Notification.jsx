@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import Confirmation from '../../Confirmation/Dailogue'
 import { useNavigate } from 'react-router-dom'
 
-function Notification({setGo}) {
+function Notification({setGo,setChat}) {
     const userData = useSelector(state => state.user)
     const [notifications, setNotifications] = useState([])
     const [confirm, setConfirm] = useState(false)
@@ -54,6 +54,7 @@ function Notification({setGo}) {
         }).then(res => {
             if (res.data.success) {
                 setConfirm(false)
+                setChat({type:null})
             }
         })
     }
@@ -79,7 +80,7 @@ function Notification({setGo}) {
                                         if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
                                             return (
                                                 <div  style={{ display: 'flex', flexDirection: 'row' }}>
-                                                    <button onClick={() => alert('lets message')} className="btnAccept mb-1 text-light">
+                                                    <button onClick={() => setChat({type:'chat',data:el.userId})} className="btnAccept mb-1 text-light">
                                                         <img style={{ 'width': '20px' }} src={message} alt="" />
                                                     </button>
                                                     <button onClick={() => { setConfirm(!confirm); setTempId(el.userId); }} className="btnAccept mb-1 text-light">
@@ -108,7 +109,7 @@ function Notification({setGo}) {
                                         if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
                                             return (
                                                 <div  style={{ display: 'flex', flexDirection: 'row' }}>
-                                                    <button onClick={() => alert('lets message')} className="btnAccept mb-1 text-light">
+                                                    <button onClick={() => setChat({type:'chat',data:el.userId})} className="btnAccept mb-1 text-light">
                                                         <img style={{ 'width': '20px' }} src={message} alt="" />
                                                     </button>
                                                 </div>

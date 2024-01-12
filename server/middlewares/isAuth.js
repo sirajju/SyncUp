@@ -3,19 +3,23 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto-js')
 const Connection = require('../models/connectionModel')
+const Message = require('../models/messageSchema')
 
 module.exports = async function (req, res, next) {
     try {
         const token = req.headers['authorization'].split('Bearer')[1].trim()
         const { username, email } = jwt.verify(token, process.env.JWT_SECRET)
-        const userData = await User.findOne({ $or: [{ email },{username}] })
+        const userData = await User.findOne({ $or: [{ email }, { username }] })
         if (userData) {
             if (userData.isBlocked) {
-                await User.findOneAndUpdate({email},{$set:{logged_devices:0}})
+                await User.findOneAndUpdate({ email }, { $set: { logged_devices: 0 } })
                 res.status(203).json({ message: "User suspended", success: false })
             } else {
-                if (req.path == '/isAlive') {
+                await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: 'online' } })
+                setTimeout(async () => {
                     await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: Date.now() } })
+                }, 20000);
+                if (req.path == '/isAlive') {
                     if (!userData.isEmailVerified) {
                         res.status(200).json({ success: false, err: "EMAILNOTVERERR", message: "Email is not verified yet!!" })
                     }

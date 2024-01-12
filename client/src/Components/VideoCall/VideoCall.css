@@ -1,0 +1,28 @@
+.videoContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+}
+.callOptions {
+    padding: 10px;
+}
+.selfStream{
+    width: 200px;
+    height: 200px;
+    border-radius:10px;
+    position: absolute;
+}
+.selfVideo{
+    transform:rotateY(180deg);
+    position: absolute;
+    right: 30px;
+    bottom:220px;
+    border-radius:10px;
+}
+.opponentVideo {
+    border-radius: 10px;
+}
