@@ -1,13 +1,12 @@
-import axios from 'axios';
+import { useState } from "react"
+import Axios from "../../interceptors/axios"
 
 export default async function GetChatList() {
-    const response = await axios.get(`http://${window.location.hostname}:5000/getCurrentConversations`, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`
-        }
-    })
-    if(response.data.success){
-        return response.data.body
+    const options = {
+        route:"getCurrentConversations",
+        crypto:true,
+        headers:{Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`}
     }
-    return []
+    let a = await Axios(options)
+    return a
 }

@@ -1,16 +1,18 @@
 import React from 'react'
 import './PremiumPlan.css'
 import Box from '../BoxStyle/box'
+import { useNavigate } from 'react-router-dom'
 
 function PremiumPlan() {
+    const navigate = useNavigate()
     return (
-        <div className="planParentDiv">
+        <div className="planParentDiv cursor-pointer" onClick={()=>navigate('/plans')}>
             <div className="pinkBox">
                 <h2>Here are our all plans</h2>
-                <p style={{textAlign:"center"}}>Premium helps you to drive into enormous features</p>
+                <p style={{ textAlign: "center" }}>Premium helps you to drive into enormous features</p>
                 <div className="plans">
-                    <Bigbox planTitle="Monthly" price='399' features={['Ads disabled','More privacy','More features']} isMonth={true} planDescription="Try our premium with monthly subscription" />
-                    <Bigbox planTitle="Lifetime" price='1899' features={['Ads disabled','More privacy','More features','Lifetime']} planDescription="Enjoy premium features for lifetime" />
+                    <Bigbox planTitle="Monthly" price='399' features={['Ads disabled', 'More privacy', 'More features']} isMonth={true} planDescription="Try our premium with monthly subscription" />
+                    <Bigbox planTitle="Lifetime" price='1899' features={['Ads disabled', 'More privacy', 'More features', 'Lifetime']} planDescription="Enjoy premium features for lifetime" />
                 </div>
             </div>
         </div>
@@ -21,20 +23,20 @@ const Bigbox = function (props) {
         width: "40%",
         textAlign: "center",
         padding: "30px",
-        margin:"30px",
-        background:"white",
-        minHeight:"400px"
+        margin: "30px",
+        background: "white",
+        minHeight: "400px"
     }
     return (
         <Box style={boxStyle}>
             <h3 className="planTitle">{props.planTitle}</h3>
             <p className="planDescription">{props.planDescription}</p>
             <div className="price">
-                <h2 style={{color:"#ED80FD"}}>₹{props.price}<span style={{color:"black",fontSize:"18px"}}>{props.isMonth?'/month':"only"}</span> </h2>
+                <h2 style={{ color: "#ED80FD" }}>₹{props.price}<span style={{ color: "black", fontSize: "18px" }}>{props.isMonth ? '/month' : "only"}</span> </h2>
             </div>
             <div className="features mt-4">
-                {props.features.map((feature)=>{
-                    return <h6><RoundedIcon/>{feature}</h6>
+                {props.features.map((feature) => {
+                    return <h6><RoundedIcon />{feature}</h6>
                 })}
             </div>
             <button className="btnBuy">

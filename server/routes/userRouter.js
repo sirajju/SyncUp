@@ -9,6 +9,7 @@ app.get('/sendReset',userController.sendReset);
 app.get('/checkUsername',userController.checkUsername);
 app.get('/isAlive',isAuth)
 app.get('/getAds',isAuth,userController.getAds)
+app.get('/getContacts',isAuth,userController.getContacts)
 app.get('/sendOtp',isAuth,userController.sendOtp);
 app.get('/resendOtp',isAuth,userController.resendOtp);
 app.get('/verifyOtp',isAuth,userController.verifyOtp);
@@ -18,21 +19,27 @@ app.get('/getUserInfo',isAuth,messageController.getUserInfo);
 app.get('/getConversation',isAuth,messageController.getConversation);
 app.get('/getCurrentConversations',isAuth,messageController.getCurrentConversations);
 app.get('/makeMsgSeen',isAuth,messageController.makeMsgSeen);
-app.get('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
 app.get('/verifyPremium',isAuth,paymentController.verifyPremium);
-app.get('/paymentCancelled',isAuth,paymentController.paymentCancelled);
 
 app.post('/register',userController.registerUser);
+app.post('/OauthRegister',userController.OauthRegister);
+app.post('/OauthLogin',userController.oAuthLoginUser);
 app.post('/login',userController.loginUser);
 app.post('/verifyChangePassword',userController.checkSignature)
-app.post('/changePass',userController.changePasword)
 app.post('/addToContact',isAuth,userController.addToContact)
-app.post('/cancellRequest',isAuth,userController.cancellRequest)
 app.post('/changeDp',isAuth,userController.changeDp)
-app.post('/acceptReq',isAuth,userController.acceptReq)
-app.post('/removeContact',isAuth,userController.removeContact)
-app.post('/changeUsername',isAuth,userController.changeUsername)
+app.post('/saveContacts',isAuth,userController.saveContacts)
 app.post('/sendMessage',isAuth,messageController.sendMessage)
 app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
+
+app.patch('/changePass',userController.changePasword)
+app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
+app.patch('/acceptReq',isAuth,userController.acceptReq)
+app.patch('/changeUsername',isAuth,userController.changeUsername)
+
+app.delete('/cancellRequest',isAuth,userController.cancellRequest)
+app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);
+app.delete('/removeContact',isAuth,userController.removeContact)
+
 
 module.exports = app;

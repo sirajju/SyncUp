@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Ads from '../AdsInterface/Ads';
-import axios from 'axios';
+import Axios from '../../../interceptors/axios';
 import toast from 'react-hot-toast';
 import cryptojs from 'crypto-js';
 import vidCall from '../../../assets/Images/videocall.png';
@@ -17,14 +17,12 @@ import msgDelivered from '../../../assets/Images/msg_delivered.png';
 import chat_svg from '../../../assets/svgIcons/chat.png';
 import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
-import socket from '../../../Context/socket';
 import GetChatList from '../../../main/Chats/getChatList';
 import GetMessages from '../../../main/Chats/getMessages';
 import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData } from '../../../Context/userContext';
 import VideocallContextProvider from '../../../Context/videocallContext';
 import { useNavigate } from 'react-router-dom';
-
-const SERVER_URL = `http://${window.location.hostname}:5000`;
+import { useSocket } from '../../../Context/socketContext';
 
 const ConversationDetails = ({ reciever, setChat }) => {
     return (
@@ -54,6 +52,7 @@ const MessageRenderer = () => {
     const userData = useSelector(state => state.user)
     const doodleRef = useRef()
     useEffect(() => {
+        console.log('rendering');
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight
     }, [currentChat])
     return (
@@ -88,20 +87,28 @@ const MessageRenderer = () => {
     )
 }
 
-function ChatingInterface({ chat, setChat, socket }) {
+function ChatingInterface({ chat, setChat }) {
+    const socket = useSocket()
     const userData = useSelector((state) => state.user);
     const callState = useSelector(state => state.call)
     const [reciever, setReciever] = useState(null);
     const [message, setMessage] = useState('');
     const [isSending, setSending] = useState(false)
     const inputRef = useRef();
-    const navigate=useNavigate()
+    const navigate = useNavigate()
     const dispatch = useDispatch()
-
-
     useEffect(() => {
+        if (chat.type == 'chat') {
+            document.addEventListener('keyup', (e) => {
+                if (e.key == 'Escape') {
+                    setChat({ type: null })
+                } else if (e.key == 'Enter') {
+                    inputRef.current.focus()
+                }
+            })
+        }
         if (chat.type == 'videoCall') {
-            socket.emit('onCall', { userId: chat.data,currentUser:userData.value._id })
+            socket.emit('onCall', { userId: chat.data, currentUser: userData.value._id })
         }
         const fetchUserData = async () => {
             if (inputRef.current) {
@@ -110,18 +117,26 @@ function ChatingInterface({ chat, setChat, socket }) {
             if (chat.type === 'chat') {
                 try {
                     const token = localStorage.getItem('SyncUp_Auth_Token');
-                    const response = await axios.get(`${SERVER_URL}/getUserInfo?userId=${chat.data}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-                    if (response.data.success) {
-                        const decrypted = cryptojs.AES.decrypt(response.data.body, 'syncupservercryptokey').toString(cryptojs.enc.Utf8);
-                        setReciever(JSON.parse(decrypted));
-                        dispatch(setCurrentChat(await GetMessages(JSON.parse(decrypted)._id)))
-                    } else {
-                        toast.error(response.data.message);
+                    const options = {
+                        route: "getUserInfo",
+                        params: { userId: chat.data },
+                        headers: { Authorization: `Bearer ${token}` },
+                        crypto: true
                     }
+                    Axios(options, async (data, res) => {
+                        if (data) {
+                            setReciever(data);
+                            const msgList = await GetMessages(data._id)
+                            if (msgList.length) {
+                                dispatch(setCurrentChat(msgList))
+                            } else {
+                                dispatch(setCurrentChat([]))
+                            }
+                        } else {
+                            toast.error(res.data.message);
+                        }
+                    })
+
                 } catch (error) {
                     console.error(error);
                     toast.error(error.message);
@@ -129,67 +144,44 @@ function ChatingInterface({ chat, setChat, socket }) {
             }
         };
         fetchUserData();
-        socket.on('msgDelivered', () => {
-            dispatch(markDelivered(userData.value._id))
-        })
-        socket.on('msgSeen', () => {
-            dispatch(markSeen(userData.value._id))
-        })
-        socket.on('messageRecieved', async (data) => {
-            dispatch(addNewMessage(data.newMessage))
-            dispatch(setConversations(await GetChatList()))
-        })
+
     }, [chat]);
     const sendMessage = async () => {
         if (isSending) {
             return toast('Umm..trafic makes slow')
         } else {
-            const newMsg = {
-                recieverId: reciever._id,
-                message: message.charAt(0).toUpperCase() + message.slice(1),
-                userEmail: userData.value.email
+            if (message.length) {
+                const newMsg = {
+                    recieverId: reciever._id,
+                    message: message.charAt(0).toUpperCase() + message.slice(1),
+                    userEmail: userData.value.email,
+                }
+                setMessage('')
+                setSending(true)
+                if (newMsg.message && newMsg.userEmail && newMsg.recieverId) {
+                    socket.emit('sendMsg', newMsg)
+                }
+                socket.on('msgSeen', () => {
+                    dispatch(markSeen(userData.value._id))
+                })
+                dispatch(setCurrentChat(await GetMessages(newMsg.recieverId)))
+                dispatch(setConversations(await GetChatList()))
+                setSending(false)
             }
-            setSending(true)
-            socket.emit('sendMsg', newMsg)
-            socket.on('msgDelivered', () => {
-                dispatch(markDelivered(userData.value._id))
-            })
-            socket.on('msgSeen', () => {
-                dispatch(markSeen(userData.value._id))
-            })
-            socket.on('userOffline',(data)=>{
-                toast.error(`User ${data.userName} is offline`)
-                hangUpCall(false)
-            })
-            dispatch(setCurrentChat(await GetMessages(newMsg.recieverId)))
-            dispatch(setConversations(await GetChatList()))
-            setMessage('')
-            setSending(false)
         }
-
     };
     const handleInputChange = (e) => {
-        setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
+        if(e.target.value.trim()){
+            setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
+        }
     };
-    const hangUpCall = (informToUser) => {
-        const videos = document.querySelectorAll('video')
-        videos.forEach(video => {
-            const stream = video.srcObject
-            stream.getVideoTracks().forEach(track => track.stop());
-            stream.getAudioTracks().forEach(track => track.stop());
-            video.srcObject = null
-        })
-        informToUser&&socket.emit('onHangup', { userId: chat.data })
+    const hangUpCall = () => {
+        window.location.reload()
+        socket.emit('onHangup', { userId: chat.data })
         setChat({ type: null })
     }
     const declineCall = () => {
-        const videos = document.querySelectorAll('video')
-        videos.forEach(video => {
-            const stream = video.srcObject
-            stream.getVideoTracks().forEach(track => track.stop());
-            stream.getAudioTracks().forEach(track => track.stop());
-            video.srcObject = null
-        })
+        window.location.reload()
         socket.emit('onDeclined', { userId: chat.data })
         setChat({ type: null })
     }
@@ -215,12 +207,12 @@ function ChatingInterface({ chat, setChat, socket }) {
                         <img src={emoji} alt="" />
                         <input onChange={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
                         <img src={add} alt="" />
-                        <img src={!message ? mic : (!isSending ? send : timer)} onClick={!message ? '' : sendMessage} alt="" />
+                        <img src={!message ? mic : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
                     </div>
                 </div>
             )}
-            {(chat.type == 'videoCall' ) && (
-                <VideoCall declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
+            {(chat.type == 'videoCall') && (
+                <VideoCall socket={socket} declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
             )}
         </>
     );

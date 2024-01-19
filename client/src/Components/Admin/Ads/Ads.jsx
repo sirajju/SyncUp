@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from  'react'
 import ListBox from '../ListBox/ListBox'
-import axios from 'axios'
-import crypto from 'crypto-js'
+import axios from '../../../interceptors/axios'
 import { useNavigate } from 'react-router-dom'
 import editIcon from '../../../assets/Images/edit.png'
 import viewIcon from '../../../assets/Images/view.png'
@@ -17,14 +16,15 @@ function Ads() {
         const token = localStorage.getItem('SyncUp_AdminToken')
         if (token) {
             setProg(true)
-            axios.get('http://localhost:5000/admin/isAlive?getData=true&&ref=Ads', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }).then(res => {
-                if (res.data.success) {
-                    const decrypted = crypto.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(crypto.enc.Utf8)
-                    setAdsData(JSON.parse(decrypted))
+            const options = {
+                route:'admin/isAlive',
+                params:{getData:true,ref:'Ads'},
+                headers:{Authorization:`Bearer ${token}`},
+                crypto:true
+            }
+            axios(options,data => {
+                if (data) {
+                    setAdsData(data)
                 } else {
                     localStorage.removeItem('SyncUp_AdminToken')
                     navigate('/admin')

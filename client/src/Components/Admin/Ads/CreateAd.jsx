@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import NewPage from '../NewPage/NewPage'
 import './CreateAd.css'
-import axios from 'axios'
+import axios from '../../../interceptors/axios'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
@@ -35,11 +35,13 @@ function CreateAd() {
         if(data&&!err){
             const token=localStorage.getItem('SyncUp_AdminToken')
             if(token){
-                axios.post('http://localhost:5000/admin/createAd',{adData:adData},{
-                    headers:{
-                        Authorization:`Bearer ${token}`
-                    }
-                }).then(res=>{
+                const options = {
+                    route:'admin/createAd',
+                    payload:{adData:adData},
+                    headers:{Authorization:`Bearer ${token}`},
+                    method:"POST"
+                }
+                axios(options,res=>{
                     if(res.data.success){
                         toast.success(res.data.message)
                         navigate('/admin/ads')
@@ -47,6 +49,7 @@ function CreateAd() {
                         toast.error(res.data.message)
                     }
                 })
+                
             }
         }
     }

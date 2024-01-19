@@ -4,7 +4,7 @@ import { useTimer } from 'react-timer-hook'
 import { useDispatch } from 'react-redux'
 import { hideLoading, setAuthConfig, showLoading } from '../../Context/userContext'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import Axios from '../../interceptors/axios'
 
 export default function Forget() {
     const [email, setEmail] = useState('')
@@ -23,16 +23,16 @@ export default function Forget() {
     }
     const handleSubmit = () => {
         dispatch(showLoading())
-        axios.get(`http://${window.location.hostname}:5000/sendReset?user=${email}`).then(
-            res => {
-                if (res.data.success) {
-                    toast.success(res.data.message)
-                } else {
-                    toast.error(res.data.message)
-                }
+        const options = {
+            route:"sendReset",
+            params:{user:email}
+        }
+        Axios(options,res => {
+            if (res.data.success) {
+                toast.success(res.data.message)
+            } else {
+                toast.error(res.data.message)
             }
-        ).catch(err => {
-            toast.error(err)
         })
         setTimeout(() => {
             dispatch(hideLoading())

@@ -9,6 +9,7 @@ import tickSave from '../../assets/Images/tick_save.png';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { setUserData } from '../../Context/userContext';
+import Axios from '../../interceptors/axios';
 
 function Profile({ setGo }) {
     const userData = useSelector((state) => state.user);
@@ -21,20 +22,21 @@ function Profile({ setGo }) {
     const saveUsername = () => {
         if (isUsernameValid) {
             const token = localStorage.getItem('SyncUp_Auth_Token');
-            axios.post(`http://${window.location.hostname}:5000/changeUsername`,{username},{
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                )
-                .then((res) => {
-                    if (res.data.success) {
-                        toast.success(res.data.message);
-                    } else {
-                        toast.error(res.data.message);
-                    }
-                    setEditable(false)
-                });
+            const options = {
+                route:"changeUsername",
+                payload:{username},
+                method:"PATCH",
+                headers:{Authorization: `Bearer ${token}`}
+            }
+            Axios(options,(res) => {
+                if (res.data.success) {
+                    dispatch(setUserData({...userData.value,username}))
+                    toast.success(res.data.message);
+                } else {
+                    toast.error(res.data.message);
+                }
+                setEditable(false)
+            })
         } else {
             toast.error('Please choose a different one.');
         }
@@ -43,15 +45,18 @@ function Profile({ setGo }) {
         const newUsername = e.target.value;
         setUsername(newUsername);
         try {
-            const res = await axios.get(
-                `http://${window.location.hostname}:5000/checkUsername?username=${newUsername}`
-            );
-
-            if (!res.data.success&&e.target.value!=userData.value.username) {
-                setIsUsernameValid(false);
-            } else {
-                setIsUsernameValid(true);
+            const options={
+                route:"checkUsername",
+                params:{username:newUsername}
             }
+            Axios(options,(res)=>{
+                if (!res.data.success&&e.target.value!=userData.value.username) {
+                    setIsUsernameValid(false);
+                } else {
+                    setIsUsernameValid(true);
+                }
+            })
+            
         } catch (error) {
             console.error('Error checking username:', error);
             setIsUsernameValid(false);
@@ -83,7 +88,7 @@ function Profile({ setGo }) {
                 <div class="input-group mb-3">
                     <input
                         type="text"
-                        value={editable ? username : userData.value.username}
+                        value={username}
                         onInput={checkUsername}
                         onKeyUp={(e)=>e.key=='Enter'&&saveUsername(e)}
                         class={`form-control profileUsernameInput ${!isUsernameValid ? 'invalid' : ''}`}

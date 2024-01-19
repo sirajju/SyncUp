@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './Login.css'
-import axios from 'axios'
+import axios from '../../../interceptors/axios'
 import {useNavigate} from 'react-router-dom'
 import {toast}from 'react-hot-toast'
 import {showLoading,hideLoading} from '../../../Context/userContext'
@@ -18,7 +18,7 @@ function Login() {
     const handleSubmit=()=>{
         if(Object.values(adminData).length==2){
             dispatch(showLoading())
-            axios.post('http://localhost:5000/admin/login',adminData).then(res=>{
+            axios({route:'admin/login',payload:adminData,method:"POST"},res=>{
                 if(res.data.success){
                     localStorage.setItem('SyncUp_AdminToken',res.data.token)
                     toast.success(res.data.message)

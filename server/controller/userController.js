@@ -49,6 +49,38 @@ const registerUser = async (req, res) => {
         res.json({ message: 'Account is already exists', success: false })
     }
 }
+const OauthRegister = async (req, res) => {
+    try {
+        const data = req.body.data
+        const userData = await User.findOne({ email: data.email })
+        if (!userData) {
+            const user = new User({
+                username: data.name,
+                email: data.email,
+                isEmailVerified: data.email_verified,
+                invitedBy: data.refferal && atob(data.refferal),
+                avatar_url: data.picture
+            })
+            if (await user.save()) {
+                jwt.sign({ username: user.username, email: user.email }, process.env.JWT_SECRET, async (err, data) => {
+                    if (data) {
+                        res.status(200).json({ message: "Registration success", token: data, success: true })
+                    }
+                    else {
+                        throw new Error('Oops!,Something went wrong try again later').stack(err)
+                    }
+                })
+            } else {
+                res.status(200).json({ message: "Oops!,Something went wrong", success: false })
+            }
+        } else {
+            res.json({ message: 'Account is already exists', success: false })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ message: error.message, success: false })
+    }
+}
 const makeHashed = async function (pass) {
     return await bcrypt.hash(pass, 10).then((data) => {
         return data
@@ -92,6 +124,53 @@ const loginUser = async (req, res) => {
                 }
             } else {
                 res.json({ message: "Incorrect password", success: false })
+            }
+        } else {
+            res.status(203).json({ message: "User not exists", success: false })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ message: error.message, success: false })
+    }
+}
+const oAuthLoginUser = async (req, res) => {
+    try {
+        const { name, email } = req.body.data
+        const userData = await User.findOne({ email })
+        if (userData) {
+            if (userData.isBlocked) {
+                res.status(203).json({ message: "User suspended", success: false })
+            } else {
+                if (userData.invitedBy) {
+                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
+                    await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
+                    connData = await Connection.findOne({ userId: invData._id })
+                    if (connData) {
+                        req.io.to(conData.socketId).emit('onUpdateNeeded')
+                    }
+                }
+                jwt.sign({ username: userData.username, email: userData.email }, process.env.JWT_SECRET, async (err, data) => {
+                    if (err) {
+                        throw new Error('Oops!,Something went wrong').stack(err)
+                    }
+                    else if (!userData.isEmailVerified) {
+                        res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token: data, success: false })
+                    }
+                    else {
+                        const connData = await Connection.findOne({ userId: userData._id })
+                        if (connData) {
+                            if (userData.logged_devices == 1 && connData) {
+                                req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
+                            }
+                        }
+                        await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
+                        if (userData.googleSynced == false) {
+                            res.json({ message: "Login success", success: true, token: data, notSynced: true })
+                        } else {
+                            res.json({ message: "Login success", success: true, token: data })
+                        }
+                    }
+                })
             }
         } else {
             res.status(203).json({ message: "User not exists", success: false })
@@ -154,6 +233,7 @@ const resendOtp = async (req, res) => {
 }
 const sendMail = async (message, reciever, subject) => {
     try {
+        console.log(message);
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,
@@ -185,7 +265,7 @@ const verifyOtp = async (req, res) => {
                     const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
                     await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
                     connData = await Connection.findOne({ userId: invData._id })
-                    if(connData){
+                    if (connData) {
                         req.io.to(conData.socketId).emit('onUpdateNeeded')
                     }
                 }
@@ -302,7 +382,7 @@ const getAds = async (req, res) => {
         const encrypted = encryptData(adsData)
         const userData = await User.findOne({ email: req.userEmail })
         const connData = await Connection.findOne({ userId: userData._id })
-        if(connData){
+        if (connData) {
             req.io.to(connData.socketId).emit('onUpdateNeeded')
         }
         res.json({ success: true, body: encrypted })
@@ -317,13 +397,34 @@ const checkUser = async (req, res) => {
             const regex = { $regex: new RegExp(`^${user}`, 'i') }
             const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } })
             if (userData.length) {
+                const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
+                googleSearch.map((el, ind) => {
+                    const obj = {
+                        _id: ind,
+                        avatar_url: el.googleContacts.photos.url,
+                        username: el.googleContacts.names.displayName,
+                        isPremium: false
+                    }
+                    userData.push(obj)
+                })
                 const encData = encryptData(userData)
                 res.json({ success: true, body: encData })
             } else {
-                res.json({ success: false, message: `not found` })
+                const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1 } }])
+                const temp = googleSearch.map((el, ind) => {
+                    return {
+                        _id: ind,
+                        avatar_url: el.googleContacts.photos.url,
+                        username: el.googleContacts.names.displayName,
+                        isPremium: false
+                    }
+                })
+                const encData = encryptData(temp)
+                res.json({ success: false, body: encData })
             }
         }
     } catch (error) {
+        console.log(error);
         res.status(500).json({ err: error.message })
     }
 }
@@ -336,11 +437,11 @@ const addToContact = async (req, res) => {
         const friendData = await User.findOne({ _id: userId })
         const userData = await User.findOne({ email: req.userEmail })
         if (friendData) {
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { id: friendData._id, isAccepted: false } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { requests: { id: userData._id, isAccepted: false }, notifications: { type: "request", userId: userData._id, time: Date.now(), isReaded: false } } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { id:friendData._id, isAccepted: false, email: friendData.email } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { requests: { id: userData._id, isAccepted: false , email: userData.email}, notifications: { type: "request", userId: userData._id, email: userData.email, time: Date.now(), isReaded: false } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
-                if(ConnectData){
+                if (ConnectData) {
                     ConnectData.forEach((el) => {
                         req.io.to(el.socketId).emit('onUpdateNeeded')
                     })
@@ -377,12 +478,12 @@ const changeDp = async (req, res) => {
 }
 const cancellRequest = async (req, res) => {
     try {
-        const { userId } = req.body
+        const { userId } = req.query
         const friendData = await User.findOne({ _id: userId })
         const userData = await User.findOne({ email: req.userEmail })
         if (friendData) {
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { contacts: { id: friendData._id, isAccepted: false }, requests: { id: userData._id, isAccepted: false } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $pull: { requests: { id: userData._id, isAccepted: false }, notifications: { type: 'request', userId: userData._id } } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { contacts: { id: friendData._id, isAccepted: false,email:friendData.email }, requests: { id: userData._id, isAccepted: false } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $pull: { requests: { id: userData._id, isAccepted: false,email: userData.email }, notifications: { type: 'request', userId: userData._id,email:userData.email } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
                 ConnectData.forEach((el) => {
@@ -405,13 +506,16 @@ const getNoti = async (req, res) => {
         const requests = notifications.filter(el => el.notifications.type == 'request')
         const normal = notifications.filter(el => el.notifications.type != 'request')
         let notiToSend = [...normal]
-        requests.forEach(el => {
-            notiToSend.push({ ...el.notifications, userId: el.notiData[0]._id, avatar_url: el.notiData[0].avatar_url, username: el.notiData[0].username })
-        })
+        if (requests.length) {
+            requests.forEach(el => {
+                notiToSend.push({ ...el.notifications, email:el.notiData[0].email,userId: el.notiData[0]._id, avatar_url: el.notiData[0].avatar_url, username: el.notiData[0].username })
+            })
+        }
         if (notifications) {
             const userData = await User.findOne({ email: req.userEmail })
             await User.findOneAndUpdate({ email: req.userEmail }, { $set: { notifications: userData.notifications.map((el) => el = { ...el, isReaded: true }) } })
-            res.json({ success: true, body: notiToSend })
+            const encData = encryptData(notiToSend)
+            res.json({ success: true, body: encData })
         } else {
             res.json({ success: false })
         }
@@ -426,10 +530,10 @@ const acceptReq = async (req, res) => {
         const userData = await User.findOne({ email: req.userEmail })
         const friendData = await User.findOne({ _id: userId })
         if (userId) {
-            await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { requests: { id: userId, isAccepted: false } } })
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { requests: { id: userId, isAccepted: true }, contacts: { id: friendData._id, isAccepted: true } } })
-            await User.findOneAndUpdate({ email: friendData.email }, { $pull: { contacts: { id: userData._id, isAccepted: false } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { contacts: { id: userData._id, isAccepted: true }, notifications: { type: 'acceptRQ', message: `${userData.username} has accepted your friend request`, userId: userData._id, avatar_url: userData.avatar_url, time: Date.now(), isReaded: false } } })
+            await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { requests: { id: userId, isAccepted: false} } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { requests: { id: userId, isAccepted: true,email:friendData.email }, contacts: { id: friendData._id, isAccepted: true,email:friendData.email } } })
+            await User.findOneAndUpdate({ email: friendData.email }, { $pull: { contacts: { id:userData._id, isAccepted: false } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { contacts: {id:userData._id , isAccepted: true,email: userData.email }, notifications: { type: 'acceptRQ', message: `${userData.username} has accepted your friend request`, userId: userData._id, email:userData.email ,avatar_url: userData.avatar_url, time: Date.now(), isReaded: false } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
                 ConnectData.forEach((el) => {
@@ -446,7 +550,7 @@ const acceptReq = async (req, res) => {
 }
 const removeContact = async (req, res) => {
     try {
-        const { userId } = req.body
+        const { userId } = req.query
         const userData = await User.findOne({ email: req.userEmail })
         const friendData = await User.findOne({ _id: userId })
         if (friendData && userData) {
@@ -510,6 +614,36 @@ const convertPointsToPremium = async (req, res) => {
         res.json({ message: error.message })
     }
 }
+const saveContacts = async (req, res) => {
+    try {
+        const { contacts } = req.body
+        if (contacts) {
+            const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { googleContacts: contacts, googleSynced: true } })
+            const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
+            googleSearch.forEach(async el => {
+                if (el.googleContacts.emailAddresses[0].value) {
+                    await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { isGoogleContact: true, email: el.googleContacts.emailAddresses[0].value, isAccepted: false } } })
+
+                }
+            })
+            if (userData) {
+                res.json({ success: true, message: "Contacts updated" })
+            } else {
+                res.json({ success: false, message: "Err while updating contacts" })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+const getContacts = async(req,res)=>{
+    try {
+        const contactData = await User.aggregate([{$match:{email:req.userEmail}},{$unwind:"$contacts"},{$lookup:{from:"users",foreignField:"email",localField:"contacts.email",as:"contactData"}},{$project:{'contactData.username':1,'contactData.avatar_url':1}}])
+        console.log(contactData);
+    } catch (error) {
+        res.json({message:error.message})
+    }
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -531,5 +665,10 @@ module.exports = {
     removeContact,
     changeUsername,
     convertPointsToPremium,
-    generateRandom
+    generateRandom,
+    OauthRegister,
+    oAuthLoginUser,
+    encryptData,
+    saveContacts,
+    getContacts
 }

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import './Notification.css'
-import axios from 'axios'
+import Axios from '../../../interceptors/axios'
 import message from '../../../assets/Images/message.png'
 import close from '../../../assets/Images/close.png'
 import toast from 'react-hot-toast'
 import Confirmation from '../../Confirmation/Dailogue'
 import { useNavigate } from 'react-router-dom'
 
-function Notification({setGo,setChat}) {
+function Notification({ setGo, setChat }) {
     const userData = useSelector(state => state.user)
     const [notifications, setNotifications] = useState([])
     const [confirm, setConfirm] = useState(false)
@@ -16,14 +16,15 @@ function Notification({setGo,setChat}) {
     const history = useNavigate()
     useEffect(() => {
         let token = localStorage.getItem('SyncUp_Auth_Token')
-        axios.get(`http://${window.location.hostname}:5000/getNotifications`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(res => {
-            if (res.data.success) {
+        const options = {
+            route: "getNotifications",
+            headers: { Authorization: `Bearer ${token}` },
+            crypto: true
+        }
+        Axios(options, (data) => {
+            if (data) {
                 let temp = []
-                res.data.body.forEach(el => {
+                data.forEach(el => {
                     if (el.notifications?.type) {
                         temp.unshift({ ...el, ...el.notifications })
                     } else {
@@ -33,13 +34,16 @@ function Notification({setGo,setChat}) {
                 setNotifications([...temp])
             }
         })
+
     }, [userData])
     const acceptRequest = (userId) => {
-        axios.post(`http://${window.location.hostname}:5000/acceptReq`, { userId }, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`
-            }
-        }).then(res => {
+        const options = {
+            method: "PATCH",
+            route: "acceptReq",
+            payload: { userId },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` }
+        }
+        Axios(options, res => {
             if (!res.data.sucess) {
                 toast.error(res.data.message)
             }
@@ -47,20 +51,22 @@ function Notification({setGo,setChat}) {
     }
     const removeFromContact = () => {
         const userId = tempId
-        axios.post(`http://${window.location.hostname}:5000/removeContact`, { userId }, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`
-            }
-        }).then(res => {
+        const options = {
+            route: "removeContact",
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            params:{userId}
+        }
+        Axios(options, res => {
             if (res.data.success) {
                 setConfirm(false)
-                setChat({type:null})
+                setChat({ type: null })
             }
         })
     }
     return (
         <>
-            <button className="closeBtn" onClick={() =>{setGo(false)}}> <span>&times;</span> </button>
+            <button className="closeBtn" onClick={() => { setGo(false) }}> <span>&times;</span> </button>
             <Confirmation posFunc={removeFromContact} value={confirm} func={setConfirm} title='Uhmm!!' content='If you change your mind then you have to request again.Do you want to decline ?' />
             {notifications && notifications.map((el, ind) => {
                 return (
@@ -71,52 +77,52 @@ function Notification({setGo,setChat}) {
                                 <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 50px 0 0 ', position: 'absolute' }}>{new Date(el.time).toLocaleTimeString()}</span>
                             </div>
                         </div>}
-                        {el.type == "request"  && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
+                        {el.type == "request" && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
                             <img src={el.avatar_url} className='chatIcon' />
                             <span className='text-center p-3' style={{ width: '100%' }}>{el.type == 'request' && !userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length ? `Freind request recieved from ${el.username}` : `You accepted friend request from ${el.username}`}</span>
                             <div className="followRqstDiv"  >
-   
-                                    {(() => {
-                                        if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
-                                            return (
-                                                <div  style={{ display: 'flex', flexDirection: 'row' }}>
-                                                    <button onClick={() => setChat({type:'chat',data:el.userId})} className="btnAccept mb-1 text-light">
-                                                        <img style={{ 'width': '20px' }} src={message} alt="" />
-                                                    </button>
-                                                    <button onClick={() => { setConfirm(!confirm); setTempId(el.userId); }} className="btnAccept mb-1 text-light">
-                                                        <img style={{ 'width': '20px' }} src={close} alt="" />
-                                                    </button>
-                                                </div>
-                                            )
-                                        } else {
-                                            return (
-                                                <button onClick={() => acceptRequest(el.userId)} className="btnAccept mb-1 text-light">
-                                                    Accept
+
+                                {(() => {
+                                    if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
+                                        return (
+                                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                                <button onClick={() => setChat({ type: 'chat', data: el.userId })} className="btnAccept mb-1 text-light">
+                                                    <img style={{ 'width': '20px' }} src={message} alt="" />
                                                 </button>
-                                            )
-                                        }
-                                    })()}
-    
+                                                <button onClick={() => { setConfirm(!confirm); setTempId(el.userId); }} className="btnAccept mb-1 text-light">
+                                                    <img style={{ 'width': '20px' }} src={close} alt="" />
+                                                </button>
+                                            </div>
+                                        )
+                                    } else {
+                                        return (
+                                            <button onClick={() => acceptRequest(el.userId)} className="btnAccept mb-1 text-light">
+                                                Accept
+                                            </button>
+                                        )
+                                    }
+                                })()}
+
                                 <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 0px 0 0 ', position: 'absolute' }}>{new Date(el.time).toLocaleTimeString()}</span>
                             </div>
                         </div>}
-                        {el.type=='acceptRQ'&&<div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
+                        {el.type == 'acceptRQ' && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
                             <img src={el.avatar_url} className='chatIcon' />
                             <span className='text-center p-3' style={{ width: '100%' }}>{el.message}</span>
                             <div className="followRqstDiv"  >
-   
-                                    {(() => {
-                                        if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
-                                            return (
-                                                <div  style={{ display: 'flex', flexDirection: 'row' }}>
-                                                    <button onClick={() => setChat({type:'chat',data:el.userId})} className="btnAccept mb-1 text-light">
-                                                        <img style={{ 'width': '20px' }} src={message} alt="" />
-                                                    </button>
-                                                </div>
-                                            )
-                                        }
-                                    })()}
-    
+
+                                {(() => {
+                                    if (userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length) {
+                                        return (
+                                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                                <button onClick={() => setChat({ type: 'chat', data: el.userId })} className="btnAccept mb-1 text-light">
+                                                    <img style={{ 'width': '20px' }} src={message} alt="" />
+                                                </button>
+                                            </div>
+                                        )
+                                    }
+                                })()}
+
                                 <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 0px 0 0 ', position: 'absolute' }}>{new Date(el.time).toLocaleTimeString()}</span>
                             </div>
                         </div>}

@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import './Dashboard.css'
 import usersIcon from '../../../assets/Images/users.png'
 import businessIcon from '../../../assets/Images/business.png'
@@ -8,11 +8,10 @@ import Chart from './Chart'
 import SmallBoxes from './SmallBoxes'
 import Navbar from '../NavBar/Navbar'
 import Sidebar from '../Sidebar/Sidebar'
-import axios from 'axios'
+import Axios from '../../../interceptors/axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { hideLoading, setAuthConfig, showLoading } from '../../../Context/userContext'
 import toast from 'react-hot-toast'
-import cryptojs from 'crypto-js'
 
 function Dashboard() {
   const dispatch = useDispatch()
@@ -22,17 +21,15 @@ function Dashboard() {
     dispatch(showLoading())
     const token = localStorage.getItem('SyncUp_AdminToken')
     if (token) {
-      axios.get(`http://localhost:5000/admin/isAlive?getData=${!Boolean(Object.values(data).length)}&&ref=Dashboard`, {
-        headers: {
-
-          Authorization: `Bearer ${token}`
-        }
-      }).then(res => {
-        if (res.data.success) {
-          if (res.data.body) {
-            const decrypted = cryptojs.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(cryptojs.enc.Utf8);
-            setData(JSON.parse(decrypted))
-          }
+      const options = {
+        route: 'admin/isAlive',
+        params: { getData: !Boolean(Object.values(data).length), ref: 'Dashboard' },
+        headers: { Authorization: `Bearer ${token}` },
+        crypto: true
+      }
+      Axios(options, (data,res) => {
+        if (data) {
+          return setData(data)
         } else {
           toast.error(res.data.message)
           localStorage.removeItem('SyncUp_AdminToken')

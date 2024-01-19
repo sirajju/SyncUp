@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const Connection = require('../models/connectionModel')
 const User = require('../models/userSchema')
 const messageController = require('../controller/messageController')
+const Room = require('../models/roomModel')
+const { ObjectId } = require('mongodb')
 
 function intializeSocket(server) {
     const io = socketIO(server, {
@@ -16,14 +18,13 @@ function intializeSocket(server) {
         socket.on('set-socketId', async (data) => {
             const connectData = await Connection.findOne({ userId: data.userId })
             if (!connectData && data.userId && socket.id) {
-                console.log(`socket data creating..${socket.id}`);
                 try {
                     await new Connection({
                         userId: data.userId,
                         socketId: socket.id
                     }).save();
                     await User.findOneAndUpdate({ _id: data.userId }, { $set: { last_seen: 'online' } })
-                    setTimeout(async() => {
+                    setTimeout(async () => {
                         await User.findOneAndUpdate({ _id: data.userId }, { $set: { last_seen: Date.now() } })
                     }, 10000)
                 } catch (error) {
@@ -34,7 +35,7 @@ function intializeSocket(server) {
             } else {
                 if (connectData.socketId != socket.id) {
                     await User.findOneAndUpdate({ _id: data.userId }, { $set: { last_seen: 'online' } })
-                    setTimeout(async() => {
+                    setTimeout(async () => {
                         await User.findOneAndUpdate({ _id: data.userId }, { $set: { last_seen: Date.now() } })
                     }, 20000)
                     console.log(`updating existing socket id ${socket.id}`);
@@ -46,23 +47,16 @@ function intializeSocket(server) {
             const to = await Connection.findOne({ userId: data.userId })
             const userData = await User.findOne({ _id: to.userId })
             if (to) {
-                if (userData.last_seen == 'online') {
-                    socket.to(to.socketId).emit('callRecieved', { userId: to.userId })
-                } else {
-                    const currentUser = await Connection.findOne({ userId: data.currentUser })
-                    socket.to(currentUser.socketId).emit('userOffline', { userName: userData.username })
-                }
+                socket.to(to.socketId).emit('callRecieved', { userId: to.userId })
             }
         })
         socket.on('onHangup', async (data) => {
-            console.log('on hangup');
             const to = await Connection.findOne({ userId: data.userId })
             if (to) {
                 socket.to(to.socketId).emit('callEnded', { userId: to.userId })
             }
         })
         socket.on('onDeclined', async (data) => {
-            console.log('on declined');
             const to = await Connection.findOne({ userId: data.userId })
             if (to) {
                 socket.to(to.socketId).emit('callDeclined', { userId: to.userId })
@@ -74,20 +68,35 @@ function intializeSocket(server) {
             const recieverConnection = await Connection.findOne({ userId: newMessage.recieverId })
             if (senderConnection && recieverConnection) {
                 if (senderConnection.socketId != socket.id) {
-                    console.log('sender socket id is not matched');
                     await Connection.findOneAndUpdate({ socketId: senderConnection.socketId }, { $set: { socketId: socket.id } })
                 }
-                socket.to(recieverConnection.socketId).to(socket.id).emit('messageRecieved', { newMessage })
+                socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
                 // socket.to(socket.id).emit('msgSent', { newMessage })
             } else {
                 socket.emit('logoutUser', { message: "Err while sending message" })
             }
         })
+        socket.on('join-room', async (data) => {
+            const roomData = await Room.findOne({ roomId: data.roomId })
+            socket.join(data.roomId)
+            const connData = await Connection.aggregate([{ $match: { userId: new ObjectId(data.userId) } }, { $lookup: { from: "users", foreignField: '_id', localField: 'userId', as: "userData" } }])
+            if (!roomData) {
+                if (connData) {
+                    const roomData = new Room({
+                        roomId: data.roomId,
+                        users: [{ email: connData[0].userData[0].email, socketId: connData[0].socketId }]
+                    })
+                    const saveState = await roomData.save()
+                }
+            } else {
+                await Room.findOneAndUpdate({ roomId: data.roomId }, { $push: { users: {email: connData[0].userData[0].email, socketId: connData[0].socketId} } })
+            }
+            io.to(data.roomId).emit('userConnected',{roomId:data.roomId,userId:connData.userId})
+        })
         socket.on('disconnect', async (socket) => {
             await Connection.findOneAndDelete({ socketId: socket.id })
         });
     });
-
     return io;
 }
 

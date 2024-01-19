@@ -1,11 +1,12 @@
 const mongoose = require('mongoose')
 
 const room = new mongoose.Schema({
-    roomName:{
-        type:String,
-    },
     roomId:{
-        type:Stirng
+        type:String
+    },
+    users:{
+        type:Array,
+        default:[]
     },
     createdAt:{
         type:Date,
@@ -13,3 +14,4 @@ const room = new mongoose.Schema({
     }
 })
 const Room = mongoose.model('Room',room)
+module.exports = Room

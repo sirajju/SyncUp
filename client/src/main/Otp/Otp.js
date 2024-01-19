@@ -4,9 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import OtpPage from '../../Components/OtpPage/Otp'
 import { useDispatch } from 'react-redux'
 import { useTimer } from 'react-timer-hook'
-import axios from 'axios'
 import toast from 'react-hot-toast'
 import { hideLoading, setAuthConfig, showLoading } from '../../Context/userContext'
+import Axios from '../../interceptors/axios'
 
 function Otp() {
   const [otp, setOtp] = useState({})
@@ -19,11 +19,11 @@ function Otp() {
   useEffect(() => {
     let token = localStorage.getItem('SyncUp_Auth_Token')
     if (token) {
-      axios.get(`http://${window.location.hostname}:5000/sendOtp`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }).then(res => {
+      const options = {
+        route: "sendOtp",
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+      Axios(options, res => {
         if (!res.data.success) {
           toast.error(res.data.message)
           navigate('/login')
@@ -50,11 +50,11 @@ function Otp() {
   }
   const resendOtp = function () {
     const token = localStorage.getItem('SyncUp_Auth_Token')
-    axios.get(`http://${window.location.hostname}:5000/resendOtp`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }).then(res => {
+    const options = {
+      route: "resendOtp",
+      headers: { 'Authorization': `Bearer ${token}` }
+    }
+    Axios(options, res => {
       if (res.data.success) {
         timer.restart(Date.now() + (30000 * count))
         setCount((prevCount) => prevCount + 1)
@@ -81,11 +81,12 @@ function Otp() {
     }
     if (last_otp.length == 5) {
       const token = localStorage.getItem('SyncUp_Auth_Token')
-      axios.get(`http://${window.location.hostname}:5000/verifyOtp?otp=${last_otp}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }).then(res => {
+      const options = {
+        route: "verifyOtp",
+        params: { otp: last_otp },
+        headers: { Authorization: `Bearer ${token}` }
+      }
+      Axios(options, res => {
         incTrie(prev => prev + 1)
         if (!res.data.success) {
           toast.error(res.data.message)

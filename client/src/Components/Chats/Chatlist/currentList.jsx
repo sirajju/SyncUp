@@ -11,7 +11,7 @@ function CurrentList({ setChat}) {
                         <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
                             <div className="userContent">
-                                <h5 className='userName'>{el.opponent[0].username} {el.isPremium && <span class="badge badge-success rounded-pill d-inline premiumBadge">Premium</span>} </h5>
+                                <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>} </h5>
                                 <p className="lastMessage">  {el.last_message[0].content}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">

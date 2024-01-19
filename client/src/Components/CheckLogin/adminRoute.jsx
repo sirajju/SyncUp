@@ -1,7 +1,7 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { hideLoading, setAuthConfig, showLoading } from '../../Context/userContext'
+import axios from '../../interceptors/axios'
 import toast from 'react-hot-toast'
 import cryptojs from 'crypto-js'
 import AdminLogin from '../../Components/Admin/Login/Login'
@@ -15,12 +15,7 @@ function AdminRoute({redirect}) {
         dispatch(showLoading())
         const token = localStorage.getItem('SyncUp_AdminToken')
         if (token) {
-            axios.get(`http://${window.location.hostname}:5000/admin/isAlive`, {
-                headers: {
-
-                    Authorization: `Bearer ${token}`
-                }
-            }).then(res => {
+            axios({route:'admin/isAlive',headers:{Authorization:`Bearer ${token}`}},res => {
                 if (res.data.success) {
                     setAuth(true)
                 } else {

@@ -8,7 +8,7 @@ import message from '../../../assets/Images/message.png'
 import pending from '../../../assets/Images/pending.png'
 import empty from '../../../assets/Images/empty_chat.png'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import Axios from '../../../interceptors/axios'
 import CurrentList from './currentList'
 import Contactslist from './ContactsList'
 import ChatingInterface from './ChatingInterface'
@@ -17,13 +17,13 @@ import GetChatList from '../../../main/Chats/getChatList'
 
 
 const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
-    const conversation = useSelector(state=>state.conversations)
+    const conversation = useSelector(state => state.conversations)
     const userData = useSelector(state => state.user)
-    const [status,setStatus]=useState({})
+    const [status, setStatus] = useState({})
     const [contactsModal, openContactsModal] = useState(false)
     const dispatch = useDispatch()
     useEffect(() => {
-        if(!searchResult){
+        if (!searchResult) {
             async function a() {
                 const mes = await GetChatList()
                 dispatch(setConversations(mes))
@@ -33,17 +33,20 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
     }, [])
     const addToContact = (userId) => {
         const token = localStorage.getItem(`SyncUp_Auth_Token`)
-        axios.post(`http://${window.location.hostname}:5000/addToContact`, { userId }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(res => {
+        const options = {
+            route: 'addToContact',
+            payload: { userId },
+            headers: { Authorization: `Bearer ${token}` },
+            method: "POST"
+        }
+        Axios(options, res => {
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {
                 toast.error(res.data.message)
             }
         })
+
     }
     const checkCondact = (id) => {
         const contact = userData.value.contacts.find(el => el.id === id);
@@ -55,16 +58,20 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             }
         } else if (userData.value._id == id) {
             return 'Accepted'
+        } else if (id.toString().length < 5) {
+            return 404
         }
         return 0;
     };
     const cancellRequest = (userId) => {
         const token = localStorage.getItem(`SyncUp_Auth_Token`)
-        axios.post(`http://${window.location.hostname}:5000/cancellRequest`, { userId }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }).then(res => {
+        const options = {
+            method: "DELETE",
+            route: "cancellRequest",
+            params: { userId },
+            headers: { Authorization: `Bearer ${token}` }
+        }
+        Axios(options, res => {
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {
@@ -72,7 +79,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             }
         })
     }
-    const copyLink = async () => {
+    const copyLink = async (name) => {
         if (navigator.share) {
             navigator.share({
                 title: 'SyncUp',
@@ -80,7 +87,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                 url: `http://${window.location.hostname}:3000/register?refferal=${btoa(userData.value.email)}`
             })
         }
-        await navigator.clipboard.writeText(`Hi ${searchResult.notfound} ,User ${userData.value.username} want to connect with you on SyncUp \n\nClick below link to join \nhttp://localhost:3000/register?refferal=${btoa(userData.value.email)}`).then(() => {
+        await navigator.clipboard.writeText(`Hi ${name} ,User ${userData.value.username} want to connect with you on SyncUp \n\nClick below link to join \nhttp://localhost:3000/register?refferal=${btoa(userData.value.email)}`).then(() => {
             toast.success('Link copied to clipboard')
         }).catch(err => {
             toast.error(err.message)
@@ -99,15 +106,15 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                     </button>
                 </div>
             }
-            {Boolean(searchResult.length && !searchResult.notfound) && searchResult.map(el => {
+            {Boolean(searchResult.length) && searchResult.map(el => {
                 return (
                     <div className="chatlistItem">
-                        
+
                         <img src={el.avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
                             <div className="userContent">
                                 <h5 className='userName' style={{ textTransform: 'capitalize' }}>
-                                    {userData.value._id == el._id ? `${el.username} (You)` : el.username} {el.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>}
+                                    {userData.value._id == el._id ? `${el.username} (You)` : el.username} {el?.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>}
                                 </h5>
                                 <p className="lastMessage">
                                     {(() => {
@@ -119,7 +126,10 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                                                 return "Message yourself"
                                             }
                                             return "Message to your contacts"
-                                        } else {
+                                        } else if (rs == 404) {
+                                            return "Not found , Invite to get chat points"
+                                        }
+                                        else {
                                             return "Send friend request to message"
                                         }
                                     })()}
@@ -136,11 +146,16 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                                         );
                                     } else if (rs == 'Accepted') {
                                         return (
-                                            <button onClick={() => setChat({type:'chat',data:el._id})} className="sendFrndRqst">
+                                            <button onClick={() => setChat({ type: 'chat', data: el._id })} className="sendFrndRqst">
                                                 <img style={{ 'width': '20px' }} src={message} alt="" />
                                             </button>
                                         );
-                                    } else {
+                                    }
+                                    else if (rs == 404) {
+                                        return <button className='btnStart' onClick={() => copyLink(el.username)} style={{ width: '80px', margin: '7px', height: '35px' }} >Invite</button>
+
+                                    }
+                                    else {
                                         return (
                                             <button onClick={() => addToContact(el._id)} className="sendFrndRqst">
                                                 <img style={{ 'width': '20px' }} src={follow} alt="" />
@@ -154,18 +169,23 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                 );
 
             })}
-            {(searchResult.notfound && !conversation.value.length )&& <div className="chatlistItem">
-                <img src={"https://res.cloudinary.com/drjubxrbt/image/upload/v1703079644/gz8rffstvw1squbps9ag.png"} className='chatIcon' alt="" />
-                <div className="chatDetails">
-                    <div className="userContent">
-                        <h5 className='userName'>{searchResult.notfound}</h5>
-                        <p className="lastMessage">Not found , Invite to get chat points </p>
-                    </div>
-                    <div className="messageDetails">
-                        <button className='btnStart' onClick={copyLink} style={{ width: '80px', margin: '7px', height: '35px' }} >Invite</button>
-                    </div>
-                </div>
-            </div>}
+            {(searchResult.notfound && !conversation.value.length) &&
+                searchResult.data.map(el => {
+                    return (
+                        <div className="chatlistItem">
+                            <img src={el.avatar_url || 'https://res.cloudinary.com/drjubxrbt/image/upload/v1703079644/gz8rffstvw1squbps9ag.png'} className='chatIcon' alt="" />
+                            <div className="chatDetails">
+                                <div className="userContent">
+                                    <h5 className='userName'>{el.username}</h5>
+                                    <p className="lastMessage">Not found , Invite to get chat points </p>
+                                </div>
+                                <div className="messageDetails">
+                                    <button className='btnStart' onClick={() => copyLink(el.username)} style={{ width: '80px', margin: '7px', height: '35px' }} >Invite</button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
             <div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
                 <Ads />
             </div>

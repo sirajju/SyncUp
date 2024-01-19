@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from 'axios'
+import Axios from "../../interceptors/axios";
 import toast from 'react-hot-toast'
 import { hideLoading, setUserData, showLoading } from '../../Context/userContext'
 
@@ -26,11 +26,13 @@ export default function Basic() {
     const secureUrl = await HandleUpload(img)
     const token = localStorage.getItem('SyncUp_Auth_Token')
     if (token) {
-      axios.post(`http://${window.location.hostname}:5000/changeDp`, { img: secureUrl }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }).then(res => {
+      const options = {
+        method: 'POST',
+        payload: { img: secureUrl },
+        headers: { Authorization: `Bearer ${token}` },
+        route: "changeDp"
+      }
+      Axios(options, res => {
         if (res.data.success) {
           toast.success(res.data.message)
           dispatch(setUserData({ ...userData, avatar_url: secureUrl }))
@@ -38,10 +40,8 @@ export default function Basic() {
         } else {
           toast.error(res.data.message)
         }
-      }).catch(err => {
-        console.log(err);
-        toast.error(err.message)
       })
+
       setTimeout(() => {
         setLoading(false)
         dispatch(hideLoading())
@@ -66,7 +66,7 @@ export default function Basic() {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-dismiss="modal">Close</button>
-              <button type="button" className="btn" onClick={!loading ? setProfilePic : ()=>toast('Please wait..')} style={{ background: 'linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%)', color: 'white' }}>{loading ? <> Uploading... </> : "Apply"}</button>
+              <button type="button" className="btn" onClick={!loading ? setProfilePic : () => toast('Please wait..')} style={{ background: 'linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%)', color: 'white' }}>{loading ? <> Uploading... </> : "Apply"}</button>
             </div>
           </div>
         </div>

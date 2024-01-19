@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
+import Axios from '../../../interceptors/axios'
 import {
   MDBBtn,
   MDBModal,
@@ -11,13 +12,23 @@ import {
 } from 'mdb-react-ui-kit';
 
 export default function App({contactsModal,openContactsModal}) {
+  useEffect(()=>{
+    const options = {
+      route:"getContacts",
+      headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
+      crypto:true
+    }
+    Axios(options,(data,res)=>{
+      console.log(data);
+    })
+  },[])
   return (
     <>
-      <MDBModal data-aos="fade-down" data-aos-duration="700" open={contactsModal} setOpen={openContactsModal} tabIndex='-1'>
+    <MDBModal data-aos="fade-down" data-aos-duration="700" open={contactsModal} setOpen={openContactsModal} tabIndex='-1'>
         <MDBModalDialog scrollable>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Modal title</MDBModalTitle>
+              <MDBModalTitle className='text-center w-100' >Modal title</MDBModalTitle>
               <MDBBtn
                 className='btn-close'
                 color='none'

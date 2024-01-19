@@ -32,7 +32,7 @@ function App() {
           <Route path='/register' element={<GuestRoute><Register /></GuestRoute>} />
           <Route path='/chats' element={<UserRoute><Chats /></UserRoute>} />
           <Route path='/plans' element={<UserRoute><Premium /></UserRoute>} />
-          <Route path='/premium' element={<GuestRoute><Forget /></GuestRoute>} />
+          <Route path='/forgetPassword' element={<GuestRoute><Forget /></GuestRoute>} />
           <Route path='/resetPassword' element={<GuestRoute><VerifyLink /></GuestRoute>} />
           <Route path='/admin' element={<AdminRoute redirect={<Dashboard />} />} />
           <Route path='/admin/users' element={<AdminRoute redirect={<Users />} />} />

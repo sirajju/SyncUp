@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../Dashboard/Dashboard.css';
 import './Users.css';
-import axios from 'axios';
 import { hideLoading, showLoading } from '../../../Context/userContext';
 import toast from 'react-hot-toast';
 import cryptojs from 'crypto-js';
@@ -9,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import ListBox from '../ListBox/ListBox';
 import editIcon from '../../../assets/Images/edit.png'
 import viewIcon from '../../../assets/Images/view.png'
+import Axios from '../../../interceptors/axios';
 
 function Users() {
     const dispatch = useDispatch();
@@ -20,21 +20,20 @@ function Users() {
         setProg(true)
         const token = localStorage.getItem('SyncUp_AdminToken');
         if (token) {
-            axios.get(`http://localhost:5000/admin/isAlive?getData=true&&ref=Users`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }).then(res => {
-                if (res.data.success) {
-                    if (res.data.body) {
-                        const decrypted = cryptojs.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(cryptojs.enc.Utf8);
-                        setData(Object.values(JSON.parse(decrypted)));
-                    }
+            const options = {
+                route: 'admin/isAlive',
+                params: { getData: true, ref: "Users" },
+                headers: { Authorization: `Bearer ${token}` },
+                crypto: true
+            }
+            Axios(options, (data,res) => {
+                if (data) {
+                    setData(data);
                 } else {
                     toast.error(res.data.message);
                     localStorage.removeItem('SyncUp_AdminToken');
                 }
-            });
+            })
         }
         setTimeout(() => {
             // dispatch(hideLoading());
@@ -45,11 +44,11 @@ function Users() {
     const th = ['Username', 'Email', 'Premium', 'Verified', 'Points', 'Business', 'Block/Unblock', 'Actions']
     let sortList = ['Name', 'Blocked', 'Premium', 'Business', 'Chatpoints']
     return (
-        <ListBox th={th}  sortList={sortList} prog={prog}>
+        <ListBox th={th} sortList={sortList} prog={prog}>
             {!prog && data.map((el, index) => (
                 <tr className='text-center' key={index}>
                     <td>
-                        <img width={'25'} style={{borderRadius:"10px"}} src={el.avatar_url} />
+                        <img width={'25'} style={{ borderRadius: "10px" }} src={el.avatar_url} />
                     </td>
                     <td>{el.username}</td>
                     <td>{el.email.slice(0, 2)}...{el.email.slice(el.email.length - 2, el.email.length)}</td>
@@ -70,11 +69,12 @@ function Users() {
 
 const changeBlock = ((email, state, func) => {
     const token = localStorage.getItem('SyncUp_AdminToken')
-    axios.get(`http://localhost:5000/admin/changeBlock?user=${email}&&state=${state}`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }).then(res => {
+    const options = {
+        route:"admin/changeBlock",
+        params:{user:email,state},
+        headers:{Authorization: `Bearer ${token}`}
+    }
+    Axios(options,res => {
         if (res.data.success) {
             toast.success(res.data.message)
         } else {

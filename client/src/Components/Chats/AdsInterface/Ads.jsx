@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Carousel, initMDB } from "mdb-ui-kit";
 import './Ads.css'
-import axios from 'axios';
-import crypto from 'crypto-js'
+import axios from '../../../interceptors/axios'
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 initMDB({ Carousel });
@@ -13,17 +12,18 @@ function Ads() {
         async function getAds(){
             const token = localStorage.getItem('SyncUp_Auth_Token')
             if (token) {
-                const res = await axios.get(`http://${window.location.hostname}:5000/getAds`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+                const options = {
+                    route:'getAds',
+                    headers:{Authorization: `Bearer ${token}`},
+                    crypto:true
+                }
+                axios(options,(data,res)=>{
+                    if (data) {
+                        setAds(data)
+                    } else {
+                        toast.error(res.data.message)
                     }
                 })
-                if (res.data.success) {
-                    const decrypted = crypto.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(crypto.enc.Utf8)
-                    setAds(JSON.parse(decrypted))
-                } else {
-                    toast.error(res.data.message)
-                }
             }
         }
         getAds()

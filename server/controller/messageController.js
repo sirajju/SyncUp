@@ -6,6 +6,7 @@ const crypto = require('crypto-js')
 const Connection = require('../models/connectionModel')
 const Conversation = require('../models/conversationSchema')
 const Message = require('../models/messageSchema')
+const {encryptData} = require('./userController')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -58,7 +59,8 @@ const getConversation = async (req, res) => {
                     if(connectData){
                         req.io.to(connectData.socketId).emit('msgSeen')
                     }
-                    res.json({ success: true, isExists: true, body: messageData })
+                    const encData = encryptData(messageData)
+                    res.json({ success: true, isExists: true, body: encData })
                 } else {
                     res.json({ success: true, isExists: false });
                 }
@@ -124,7 +126,8 @@ const getCurrentConversations = async (req, res) => {
                     req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id })
                 }
             })
-            res.json({ success: true, body: conversationData })
+            const encData = encryptData(conversationData)
+            res.json({ success: true, body: encData }) 
         } else {
             res.json({ success: false })
         }

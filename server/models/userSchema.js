@@ -12,7 +12,6 @@ const user = mongoose.Schema({
     },
     password:{
         type:String,
-        required:true,
     },
     auth:{
         otp:{
@@ -24,6 +23,14 @@ const user = mongoose.Schema({
             expireAt:String,
             tryCount:Number
         }
+    },
+    googleSynced:{
+        type:Boolean,
+        default:false,
+    },
+    googleContacts:{
+        type:Array,
+        default:[]
     },
     isPremium:{
         type:Boolean,

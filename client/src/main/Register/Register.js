@@ -1,10 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import LoginPage from '../../Components/LoginPage/Login'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { hideLoading, showLoading } from '../../Context/userContext'
+import { googleLogout, useGoogleLogin } from '@react-oauth/google';
+import Axios from '../../interceptors/axios'
+
 
 function Register() {
     const [userData, setUserData] = useState({})
@@ -13,6 +16,38 @@ function Register() {
     const [showPass, setShow] = useState(false)
     const navigate = useNavigate()
     const dispatch = useDispatch()
+    const login = useGoogleLogin({
+        onSuccess: (codeResponse) => registerGoogle(codeResponse),
+        onError: (error) => alert('Login Failed:', error)
+    });
+    function registerGoogle(user){
+        const refferal = params.get('refferal')
+        const options = {
+            url: "https://www.googleapis.com/",
+            route: "oauth2/v3/userinfo",
+            headers: { Authorization: `Bearer ${user.access_token}` }
+        }
+        Axios(options, res => {
+            console.log(res);
+            if (res.data) {
+                const options = {
+                    route:"OauthRegister",
+                    payload:{data: { ...res.data, refferal }},
+                    method:"POST"
+                }
+                Axios(options,res => {
+                    if (res.data.success) {
+                        toast.success('Now login to continue')
+                        navigate('/login')
+                    } else {
+                        toast.error(res.data.message)
+
+                    }
+                })
+
+            }
+        })
+    }
     const props = {
         leftTitle: "Register to continue",
         leftDescription: "Register to chat with your friends and family.By registering you will accept our terms and conditions.",
@@ -25,7 +60,11 @@ function Register() {
         }
         if (e.target.value !== '') {
             if (e.target.id == 'username') {
-                axios.get(`http://${window.location.hostname}:5000/checkUsername?username=${e.target.value}`).then(res => {
+                const options = {
+                    route:"checkUsername",
+                    params:{username:e.target.value}
+                }
+                Axios(options,res => {
                     if (!res.data.success) {
                         setErr(res.data.message)
                         e.target.classList.add('invalid')
@@ -68,7 +107,11 @@ function Register() {
         if (val >= 4) {
             if (userData['password'] == userData['confirm password']) {
                 dispatch(showLoading())
-                axios.post(`http://${window.location.hostname}:5000/register`, userData).then(res => {
+                const options = {
+                    route:"register",
+                    payload:userData
+                }
+                Axios(options,res => {
                     if (res.data) {
                         setTimeout(() => {
                             dispatch(hideLoading())
@@ -80,7 +123,7 @@ function Register() {
                             toast.error(res.data.message)
                         }
                     }
-                }).catch(err => { toast.error(err.message); dispatch(hideLoading()) })
+                })
             } else {
                 toast.error('Passwords are\'nt match')
             }
@@ -112,7 +155,8 @@ function Register() {
                     <label htmlFor='showPass' className='showPassLabel'>Show password</label>
                 </div>
             </div>
-            <button className="btnLogin" onClick={handleSubmit}>Register</button>
+            <button className="btnLogin mt-1" style={{ height: '35px' }} onClick={handleSubmit}>Register</button>
+            <button className="button resendOtp m-1 mt-2" style={{ height: '30px', width: '130px' }} onClick={login}>Google</button>
             <p className='createHere'>Alreay have an account ? <Link to={'/login'}>Login here</Link></p>
         </LoginPage>
     )

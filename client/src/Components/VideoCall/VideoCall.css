@@ -5,7 +5,15 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    background-color: white;
+    background: linear-gradient(360deg, #ee9ae5ff 70%, #5961f9ff 100%);
+
+}
+.videoContainer button {
+    background-color: #ED80FD;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid white;
+    color: white;
 }
 .callOptions {
     padding: 10px;
@@ -25,4 +33,32 @@
 }
 .opponentVideo {
     border-radius: 10px;
+}
+.vidLoading {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: transparent;
+    background-color: #ED80FD;
+    flex-direction: column;
+    gap: 15px;
+}
+.vidLoading span {
+    width: 50px;
+    height: 50px;
+    border: 2px solid white;
+    border-right: none;
+    border-radius: 100%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+    0%{
+        transform: rotate(0deg);
+    }
+    100%{
+        transform: rotate(360deg);
+    }
 }

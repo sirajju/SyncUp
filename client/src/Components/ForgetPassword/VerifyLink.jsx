@@ -1,10 +1,10 @@
-import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import './Forget.css'
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { hideLoading, showLoading } from '../../Context/userContext';
+import Axios from '../../interceptors/axios';
 
 function VerifyLink() {
     const [params, setParams] = useSearchParams()
@@ -19,7 +19,12 @@ function VerifyLink() {
     useEffect(() => {
         dispatch(showLoading())
         if (token && user) {
-            axios.post(`http://${window.location.hostname}:5000/verifyChangePassword`, { token, user }).then(res => {
+            const options = {
+                method:"POST",
+                route:"verifyChangePassword",
+                payload:{token, user }
+            }
+            Axios(options,res => {
                 if (res.data.success) {
                     setAuth(true)
                 } else {
@@ -27,6 +32,8 @@ function VerifyLink() {
                     navigate('/login')
                 }
             })
+        }else{
+            navigate('/login')
         }
         setTimeout(() => {
             dispatch(hideLoading())
@@ -47,7 +54,12 @@ function VerifyLink() {
         console.log(passData);
         if (Object.values(passData).length == 2) {
             if (passData.confirmPass == passData.pass) {
-                axios.post(`http://${window.location.hostname}:5000/changePass`,{password:passData.pass,user,token}).then(res=>{
+                const options = {
+                    method:"PATCH",
+                    route:"changePass",
+                    payload:{password:passData.pass,user,token}
+                }
+                Axios(options,res=>{
                     if(res.data.success){
                         toast.success(res.data.message)
                         navigate('/login')
