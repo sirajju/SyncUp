@@ -20,22 +20,21 @@ function Register() {
         onSuccess: (codeResponse) => registerGoogle(codeResponse),
         onError: (error) => alert('Login Failed:', error)
     });
-    function registerGoogle(user){
+    function registerGoogle(user) {
         const refferal = params.get('refferal')
         const options = {
             url: "https://www.googleapis.com/",
             route: "oauth2/v3/userinfo",
             headers: { Authorization: `Bearer ${user.access_token}` }
         }
-        Axios(options, res => {
-            console.log(res);
+        Axios(options).then(res => {
             if (res.data) {
                 const options = {
-                    route:"OauthRegister",
-                    payload:{data: { ...res.data, refferal }},
-                    method:"POST"
+                    route: "OauthRegister",
+                    payload: { data: { ...res.data, refferal } },
+                    method: "POST"
                 }
-                Axios(options,res => {
+                Axios(options, res => {
                     if (res.data.success) {
                         toast.success('Now login to continue')
                         navigate('/login')
@@ -61,10 +60,10 @@ function Register() {
         if (e.target.value !== '') {
             if (e.target.id == 'username') {
                 const options = {
-                    route:"checkUsername",
-                    params:{username:e.target.value}
+                    route: "checkUsername",
+                    params: { username: e.target.value }
                 }
-                Axios(options,res => {
+                Axios(options).then(res => {
                     if (!res.data.success) {
                         setErr(res.data.message)
                         e.target.classList.add('invalid')
@@ -108,10 +107,10 @@ function Register() {
             if (userData['password'] == userData['confirm password']) {
                 dispatch(showLoading())
                 const options = {
-                    route:"register",
-                    payload:userData
+                    route: "register",
+                    payload: userData
                 }
-                Axios(options,res => {
+                Axios(options).then(res => {
                     if (res.data) {
                         setTimeout(() => {
                             dispatch(hideLoading())

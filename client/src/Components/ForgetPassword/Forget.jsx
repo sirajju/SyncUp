@@ -27,7 +27,7 @@ export default function Forget() {
             route:"sendReset",
             params:{user:email}
         }
-        Axios(options,res => {
+        Axios(options).then(res=>{
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {

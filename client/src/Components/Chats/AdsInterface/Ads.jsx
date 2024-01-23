@@ -17,9 +17,9 @@ function Ads() {
                     headers:{Authorization: `Bearer ${token}`},
                     crypto:true
                 }
-                axios(options,(data,res)=>{
-                    if (data) {
-                        setAds(data)
+                axios(options).then(res=>{
+                    if (res.data.success) {
+                        setAds(res.data.body)
                     } else {
                         toast.error(res.data.message)
                     }

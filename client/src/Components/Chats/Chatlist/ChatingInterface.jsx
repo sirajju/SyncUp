@@ -19,10 +19,15 @@ import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
 import GetChatList from '../../../main/Chats/getChatList';
 import GetMessages from '../../../main/Chats/getMessages';
-import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData } from '../../../Context/userContext';
+import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent } from '../../../Context/userContext';
 import VideocallContextProvider from '../../../Context/videocallContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../../Context/socketContext';
+import Emoji from '../../Emojis/Emoji'
+import emojiRegex from 'emoji-regex';
+import VidConfig from '../../VideoCall/VidConfig';
+import msgSending from '../../../assets/Images/pending.png'
+
 
 const ConversationDetails = ({ reciever, setChat }) => {
     return (
@@ -52,7 +57,6 @@ const MessageRenderer = () => {
     const userData = useSelector(state => state.user)
     const doodleRef = useRef()
     useEffect(() => {
-        console.log('rendering');
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight
     }, [currentChat])
     return (
@@ -94,7 +98,10 @@ function ChatingInterface({ chat, setChat }) {
     const [reciever, setReciever] = useState(null);
     const [message, setMessage] = useState('');
     const [isSending, setSending] = useState(false)
+    const [openEmoji, setOpenEmoji] = useState(false)
+    const [file, setFile] = useState(false)
     const inputRef = useRef();
+    const fileInputRef = useRef();
     const navigate = useNavigate()
     const dispatch = useDispatch()
     useEffect(() => {
@@ -103,12 +110,14 @@ function ChatingInterface({ chat, setChat }) {
                 if (e.key == 'Escape') {
                     setChat({ type: null })
                 } else if (e.key == 'Enter') {
-                    inputRef.current.focus()
+                    if (inputRef.current) {
+                        inputRef.current.focus()
+                    }
                 }
             })
         }
         if (chat.type == 'videoCall') {
-            socket.emit('onCall', { userId: chat.data, currentUser: userData.value._id })
+            socket.emit('onCall', { to: chat.data, from: userData.value._id })
         }
         const fetchUserData = async () => {
             if (inputRef.current) {
@@ -123,10 +132,10 @@ function ChatingInterface({ chat, setChat }) {
                         headers: { Authorization: `Bearer ${token}` },
                         crypto: true
                     }
-                    Axios(options, async (data, res) => {
-                        if (data) {
-                            setReciever(data);
-                            const msgList = await GetMessages(data._id)
+                    Axios(options).then(async res => {
+                        if (res.data.success) {
+                            setReciever(res.data.body);
+                            const msgList = await GetMessages(res.data.body._id)
                             if (msgList.length) {
                                 dispatch(setCurrentChat(msgList))
                             } else {
@@ -153,8 +162,13 @@ function ChatingInterface({ chat, setChat }) {
             if (message.length) {
                 const newMsg = {
                     recieverId: reciever._id,
+                    senderId: userData.value._id,
                     message: message.charAt(0).toUpperCase() + message.slice(1),
                     userEmail: userData.value.email,
+                    isDelivered: false,
+                    isReaded: false,
+                    isSent: false,
+                    sentTime: Date.now()
                 }
                 setMessage('')
                 setSending(true)
@@ -164,17 +178,65 @@ function ChatingInterface({ chat, setChat }) {
                 socket.on('msgSeen', () => {
                     dispatch(markSeen(userData.value._id))
                 })
-                dispatch(setCurrentChat(await GetMessages(newMsg.recieverId)))
+
+                dispatch(addNewMessage({ ...newMsg, content: newMsg.message }))
                 dispatch(setConversations(await GetChatList()))
                 setSending(false)
             }
         }
     };
     const handleInputChange = (e) => {
-        if(e.target.value.trim()){
-            setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
+        if (e.target.value.startsWith(':emoji')) {
+            setOpenEmoji(true)
+            setMessage('')
+        }
+        else {
+            if (e.target.value.trim()) {
+                setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
+            }
         }
     };
+    const handleFileInput = async (e) => {
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+            const obj = { data: ev.target.result, type: e.target.files[0].type }
+            alert(obj)
+            setFile(obj)
+            sendMedia()
+        }
+        reader.readAsDataURL(e.target.files[0])
+    }
+    const sendMedia = async () => {
+        setSending(true)
+        const formData = new FormData();
+        console.log(file);
+        formData.append('file', file.data);
+        formData.append('upload_preset', 'syncup_preset');
+
+        const data = await fetch('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', {
+            method: 'POST',
+            body: formData,
+        }).catch(err => toast(err.message))
+        const { secure_url } = await data.json()
+        if (secure_url) {
+            const options = {
+                route: "/sendMediaMessage",
+                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                payload: { secure_url, reciever: reciever._id, type: file.type },
+                method: "POST"
+            }
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    setSending(false)
+                    toast('Media sent')
+                } else {
+                    toast(res.data.message)
+                }
+            })
+        } else {
+            toast.error('Err while sending media')
+        }
+    }
     const hangUpCall = () => {
         window.location.reload()
         socket.emit('onHangup', { userId: chat.data })
@@ -185,6 +247,16 @@ function ChatingInterface({ chat, setChat }) {
         socket.emit('onDeclined', { userId: chat.data })
         setChat({ type: null })
     }
+    const removeLastEmoji = () => {
+        const regex = emojiRegex();
+        const match = regex.exec(message);
+        if (match) {
+            const emoji = match[0];
+            setMessage((msg) => msg.slice(0, -emoji.length));
+        } else {
+            setMessage((msg) => msg.slice(0, -1));
+        }
+    };
     return (
         <>
             {(!chat.type && userData.value.isPremium) && (
@@ -204,15 +276,17 @@ function ChatingInterface({ chat, setChat }) {
                     </div>
                     <MessageRenderer reciever={reciever} />
                     <div className="conversationBottom">
-                        <img src={emoji} alt="" />
-                        <input onChange={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
-                        <img src={add} alt="" />
-                        <img src={!message ? mic : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
+                        <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
+                        <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onChange={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
+                        <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
+                        <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
+                        <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
                     </div>
                 </div>
             )}
+            {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
             {(chat.type == 'videoCall') && (
-                <VideoCall socket={socket} declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
+                <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
             )}
         </>
     );

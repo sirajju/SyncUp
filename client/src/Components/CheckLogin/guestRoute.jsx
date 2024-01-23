@@ -17,7 +17,7 @@ function GuestRoute({ children }) {
         if (!token) {
             return setAuth(false)
         } else {
-            axios({route: 'isAlive',headers:{Authorization:`Bearer ${token}`}}, (res) => {
+            axios({route: 'isAlive',headers:{Authorization:`Bearer ${token}`}}).then(res=>{
                 if (res.data.success) {
                     navigate('/chats')
                 } else {

@@ -7,6 +7,6 @@ export default async function GetChatList() {
         crypto:true,
         headers:{Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`}
     }
-    let a = await Axios(options)
-    return a
+    let res = await Axios(options)
+    return res.data.body
 }

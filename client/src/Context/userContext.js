@@ -58,7 +58,16 @@ const currentchat = createSlice({
           return el
         }
       })
-    }
+    },
+    markSent:(state, action) => {
+      state.value = state.value.map(el => {
+        if (el.senderId == action.payload) {
+          return { ...el, isSent: true }
+        } else {
+          return el
+        }
+      })
+    },
   },
 });
 const totalConversations = createSlice({
@@ -84,7 +93,7 @@ const callState = createSlice({
 });
 
 export const { setConversations, resetConversation } = totalConversations.actions;
-export const { setCurrentChat, markDelivered, markSeen, addNewMessage } = currentchat.actions;
+export const { setCurrentChat, markDelivered, markSeen, addNewMessage,markSent } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setUserData } = userSlice.actions;
 export const { setCallData } = callState.actions;

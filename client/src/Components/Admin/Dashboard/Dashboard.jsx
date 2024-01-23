@@ -27,9 +27,9 @@ function Dashboard() {
         headers: { Authorization: `Bearer ${token}` },
         crypto: true
       }
-      Axios(options, (data,res) => {
-        if (data) {
-          return setData(data)
+      Axios(options).then(res=>{
+        if (res.data.success) {
+          return setData(res.data.body)
         } else {
           toast.error(res.data.message)
           localStorage.removeItem('SyncUp_AdminToken')

@@ -22,8 +22,8 @@ const Chatlist = React.memo(Chatslst)
 const ChatingInterface = React.memo(chatingUi)
 
 function Chats() {
-    const socket = useSocket()
     const [searchResult, setSearchData] = useState([])
+    const socket = useSocket()
     const dispatch = useDispatch()
     const [chat, setChat] = useState({ type: null })
     const [go, setGo] = useState()
@@ -48,31 +48,22 @@ function Chats() {
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
             }
-            Axios(options, (data, res) => {
-                if (data) {
-                    dispatch(setUserData(data));
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    dispatch(setUserData(res.data.body));
                 } else {
                     toast.error(res.data.message)
                     localStorage.removeItem('SyncUp_Auth_Token')
                     history('/login')
                 }
             })
+
         }
         const handleLogout = ({ message }) => {
             toast.error(message)
             localStorage.removeItem('SyncUp_Auth_Token')
             localStorage.removeItem('syncup_opened')
             history('/login')
-        }
-
-        const handleSent = async (data) => {
-            const msgList = await GetMessages(data.newMessage.recieverId)
-            if (msgList.length) {
-                dispatch(setCurrentChat(msgList))
-            } else {
-                dispatch(setCurrentChat([]))
-            }
-            dispatch(setConversations(await GetChatList()))
         }
         const handleSeen = () => {
             dispatch(markSeen(userData.value._id))
@@ -83,12 +74,19 @@ function Chats() {
 
         socket.on('onUpdateNeeded', handleUpdate)
         socket.on('logoutUser', handleLogout)
-        socket.on('msgSent', handleSent)
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
-
+        socket.on('msgSent', ()=>{
+            alert('msgSent')
+        })
+        socket.on('messageRecieved', async (data) => {
+            dispatch(addNewMessage(data.newMessage))
+            dispatch(setConversations(await GetChatList()))
+        })
         socket.on('callRecieved', (data) => {
-            setChat({ type: 'videoCall', data: data.userId, isRecieved: true })
+            alert('call')
+            console.log(data);
+            setChat({ type: 'videoCall', data, isRecieved: true })
             dispatch(setCallData({ userId: data.userId, isRecieved: true }))
         })
         socket.on('callEnded', (data) => {
@@ -127,11 +125,7 @@ function Chats() {
             dispatch(setConversations(mes))
         }
         a()
-        socket.on('messageRecieved', async (data) => {
-            dispatch(addNewMessage(data.newMessage))
-            dispatch(setConversations(await GetChatList()))
-        })
-    }, [])
+    }, [socket])
     const handleSearch = useCallback(async (e) => {
         if (e.target.value.trim()) {
             const token = localStorage.getItem('SyncUp_Auth_Token')
@@ -141,15 +135,14 @@ function Chats() {
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
             }
-            Axios(options, (data, res) => {
-                if (res?.data.success) {
-                    setSearchData(data)
-                    dispatch(resetConversation())
-                } else {
-                    dispatch(resetConversation())
-                    setSearchData({ notfound: true, data: [...data, { username: e.target.value }] })
-                }
-            })
+            const res = await Axios(options)
+            if (res.data.success) {
+                setSearchData(res.data.body)
+                dispatch(resetConversation())
+            } else {
+                dispatch(resetConversation())
+                setSearchData({ notfound: true, data: [...res.data.body, { username: e.target.value }] })
+            }
         } else {
             setSearchData([])
             dispatch(setConversations(await GetChatList()))

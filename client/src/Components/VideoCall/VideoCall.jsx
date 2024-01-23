@@ -2,88 +2,100 @@ import React, { useEffect, useRef, useState, useMemo } from 'react'
 import './VideoCall.css'
 import imgDecline from '../../assets/Images/decline.png'
 import { useSelector } from 'react-redux'
-import Peer from 'simple-peer'
-import {v4 as randomUUID} from 'uuid'
+import { UserAgent } from '@apirtc/apirtc';
+import { useSocket } from '../../Context/socketContext';
+import Axios from '../../interceptors/axios';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
-function VideoCall({ hangUpCall, chat, declineCall, socket }) {
-  const userData = useSelector(state=>state.user)
-  const myStream = useRef()
-  const userStream = useRef()
-  const peerRef = useRef()
-  const [isLoaded, setLoaded] = useState(false)
-  const [roomId, setRoomId] = useState(false)
+function VideoCall({ hangUpCall, chat, declineCall, acceptCall }) {
+  const socket = useSocket()
+  const userData = useSelector(state => state.user)
+  const conversationRef = useRef(null);
+  const [conversationName, setConversationName] = useState("")
+  const [isLoaded, setLoaded] = useState(true)
   const callState = useSelector(state => state.call)
-  function initializeMedia() {
-    try {
-      let video = document.createElement('video')
-      video.muted = true
-      if (navigator.mediaDevices) {
-        navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        }).then(stream => {
-          myStream.current = stream
-          video.srcObject = stream
-          video.addEventListener('loadedmetadata', () => {
-            video.play()
-          })
-          video.classList.add('selfStream')
-          const div = document.querySelector('.selfVideo')
-          if (div) {
-            div.append(video)
-          }
-        })
-        let opponentVideo = document.createElement('video')
-        opponentVideo.muted = true
-        navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        }).then(stream => {
-          opponentVideo.srcObject = stream
-          userStream.current = stream
-          opponentVideo.addEventListener('loadedmetadata', () => {
-            setLoaded(true)
-            opponentVideo.play()
-          })
-          opponentVideo.classList.add('opponentVideo')
-          const div = document.querySelector('.opVideo')
-          if (div) {
-            div.append(opponentVideo)
-          }
-        })
-      } else {
-        alert('videoCall is not supperted yet')
-      }
-    } catch (error) {
-      alert(error.message)
-    }
-  }
   useEffect(() => {
-    initializeMedia()
-  }, [isLoaded])
-  useEffect(()=>{
-    if(myStream){
-      startStreaming()
+    const onStreamListChangedHandler = function (streamInfo) {
+      if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
+        if (conversationRef.current)
+          conversationRef.current.subscribeToStream(streamInfo.streamId)
+            .then((stream) => {
+              console.log('subscribeToStream success', streamInfo);
+            }).catch((err) => {
+              console.error('subscribeToStream error', err);
+            });
+      }
     }
-  },[])
-  function startStreaming() {
-    const peer = new Peer({ initiator: true, trickle: false, myStream })
-    peerRef.current = peer
-
-    peer.on('signal', (data) => {
-      const roomId = randomUUID()
-      socket.emit('join-room',{roomId,data,userId:userData.value._id})
-      socket.on('userConnected',(data)=>{
-        alert('userConnected')
-        setRoomId(data.roomId)
+    const onStreamAddedHandler = function (stream) {
+      alert('added')
+      if (stream.isRemote) {
+        stream.addInDiv('opVideo', 'remote-media-' + stream.streamId, {}, false);
+      }
+    }
+    const onStreamRemovedHandler = function (stream) {
+      if (stream.isRemote) {
+        stream.removeFromDiv('opVideo', 'remote-media-' + stream.streamId)
+      }
+    }
+    let localStream = null;
+    let apikey = "58fe00be7be7c9805c1c0b98b195669a"
+    let ua = new UserAgent({
+      uri: 'apiKey:' + apikey
+    })
+    if (chat.isRecieved) {
+      ua.register().then(session => {
+        const connectedSession = session
+        const connectedConversation = connectedSession.getConversation(chat.data.conversationName)
+        connectedConversation.on("streamListChanged", onStreamListChangedHandler)
+        connectedConversation.on("streamAdded", onStreamAddedHandler)
+        connectedConversation.on("streamRemoved", onStreamRemovedHandler)
+        createLocalStream(connectedConversation)
       })
+    } else {
+      ua.register().then((session) => {
+        let conversationName = "CONVERSATION_" + userData.value._id
+        const conversation = session.getOrCreateConversation(conversationName, { meshOnlyEnabled: true })
+        conversation.on("streamListChanged", onStreamListChangedHandler)
+        conversation.on("streamAdded", onStreamAddedHandler)
+        conversation.on("streamRemoved", onStreamRemovedHandler)
+        setConversationName(conversation.getName())
+        conversationRef.current = conversation
+        createLocalStream(conversation)
+      });
+    }
+  }, [])
+  const createLocalStream = (conversation) => {
+    let localStream = null;
+    let apikey = "58fe00be7be7c9805c1c0b98b195669a"
+    let ua = new UserAgent({
+      uri: 'apiKey:' + apikey
     })
-    peer.on('stream',()=>{
-      alert('streaming.........')
+    ua.createStream({
+      constraints: {
+        audio: true,
+        video: true
+      }
     })
-  }
-  const acceptCall = ()=>{
-    socket.emit('join-room',{roomId,userId:userData.value._id})
+      .then((stream) => {
+        localStream = stream;
+        stream.attachToElement(document.getElementById('local-video-stream'));
+        conversation.join()
+          .then((response) => {
+            conversation
+              .publish(localStream)
+              .then((stream) => {
+                console.log("Your local stream is published in the conversation", stream);
+              })
+              .catch((err) => {
+                console.error("publish error", err);
+              });
+          }).catch((err) => {
+            console.error('Conversation join error', err);
+          });
+      }).catch((err) => {
+        console.error('create stream error', err);
+      });
   }
   return (
     <>
@@ -101,8 +113,12 @@ function VideoCall({ hangUpCall, chat, declineCall, socket }) {
               </>}
           </div>
           <div className="callUi">
-            <div className="selfVideo"></div>
-            <div className="opVideo"></div>
+            <div className="selfVideo">
+              <video id="local-video-stream" className='selfStream' autoPlay muted></video>
+            </div>
+            <div className="opVideo">
+
+            </div>
           </div></> : <div className="vidLoading">
           <span className="spinner" />
           <p className='text-light' >Connecting...</p>

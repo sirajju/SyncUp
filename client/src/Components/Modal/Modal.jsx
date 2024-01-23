@@ -32,7 +32,7 @@ export default function Basic() {
         headers: { Authorization: `Bearer ${token}` },
         route: "changeDp"
       }
-      Axios(options, res => {
+      Axios(options).then(res => {
         if (res.data.success) {
           toast.success(res.data.message)
           dispatch(setUserData({ ...userData, avatar_url: secureUrl }))
@@ -79,10 +79,14 @@ const HandleUpload = async (base64File) => {
   formData.append('file', base64File);
   formData.append('upload_preset', 'syncup_preset');
 
-  const data = await fetch('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', {
-    method: 'POST',
-    body: formData,
-  })
-  const { secure_url } = await data.json()
-  return secure_url
+  try {
+    const data = await fetch('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    const { secure_url } = await data.json()
+    return secure_url
+  }catch(err){
+    toast.error(err.message)
+  }
 };

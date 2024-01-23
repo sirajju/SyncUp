@@ -7,6 +7,7 @@ const Connection = require('../models/connectionModel')
 const Conversation = require('../models/conversationSchema')
 const Message = require('../models/messageSchema')
 const {encryptData} = require('./userController')
+const {ObjectId} = require('mongodb')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -90,7 +91,8 @@ const sendMessage = async ({recieverId, message,userEmail}) => {
                 sentTime: Date.now(),
                 isDelivered: false,
                 isReaded: false,
-                isDeleted: false
+                isDeleted: false,
+                isSent:true
             })
             await newMessage.save()
             if (!conversationData) {
@@ -152,10 +154,33 @@ const makeMsgSeen = async (req, res) => {
         res.json({ message: error.message })
     }
 }
+const sendMediaMessage = async(req,res)=>{
+    try {
+        const data=req.body
+        console.log(data);
+        if(secure_url){
+            const userData = await User.findOne({email:req.userEmail})
+            const recieverData = await User.findOne({_id:new ObjectId(data.reciever)})
+            const messageData = new Message({
+                senderId: userData._id,
+                recieverId:recieverData._id,
+                sentTime: Date.now(),
+                isMedia:true,
+                mediaConfig:{
+                    url:data.secure_url,
+                    type:data.type
+                }
+            })
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = {
     getUserInfo,
     getConversation,
     sendMessage,
     makeMsgSeen,
-    getCurrentConversations
+    getCurrentConversations,
+    sendMediaMessage
 }

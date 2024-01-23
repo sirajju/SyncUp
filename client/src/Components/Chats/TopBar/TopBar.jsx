@@ -21,7 +21,7 @@ function TopBar({ handleSearch, setGo }) {
     onSuccess: (codeResponse) => saveCondact(codeResponse),
     onError: (error) => alert('Login Failed:', error)
   });
-  function saveCondact(user){
+  function saveCondact(user) {
     axios.get('https://people.googleapis.com/v1/people/me/connections', {
       headers: { Authorization: `Bearer ${user.access_token}` },
       params: {
@@ -39,9 +39,11 @@ function TopBar({ handleSearch, setGo }) {
         route: "saveContacts",
         method: "POST"
       }
-      Axios(opt, res => {
-        dispatch(setUserData({...userData.value,googleSynced:true}))
-        toast.success('Google contacts imported')
+      Axios(opt).then(res => {
+        if (res.data.success) {
+          dispatch(setUserData({ ...userData.value, googleSynced: true }))
+          toast.success('Google contacts imported')
+        }
       })
     }
   }
@@ -61,7 +63,7 @@ function TopBar({ handleSearch, setGo }) {
         {/* <img src={settingIcon} className='icon settingsIcon' alt='Settings' /> */}
         {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon' alt='Settings' />}
         <img src={menuIcon} className='icon' alt='Menu' />
-        <img src={userData.value.avatar_url } onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon' alt='Dp' />
+        <img src={userData.value.avatar_url} onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon' alt='Dp' />
       </div>
     </div>
   );

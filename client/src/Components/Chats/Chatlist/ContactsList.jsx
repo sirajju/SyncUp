@@ -18,8 +18,8 @@ export default function App({contactsModal,openContactsModal}) {
       headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
       crypto:true
     }
-    Axios(options,(data,res)=>{
-      console.log(data);
+    Axios(options).then(res=>{
+      console.log(res.data.body);
     })
   },[])
   return (

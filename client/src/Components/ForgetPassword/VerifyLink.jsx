@@ -24,7 +24,7 @@ function VerifyLink() {
                 route:"verifyChangePassword",
                 payload:{token, user }
             }
-            Axios(options,res => {
+            Axios(options).then(res=>{
                 if (res.data.success) {
                     setAuth(true)
                 } else {
@@ -59,7 +59,7 @@ function VerifyLink() {
                     route:"changePass",
                     payload:{password:passData.pass,user,token}
                 }
-                Axios(options,res=>{
+                Axios(options).then(res=>{
                     if(res.data.success){
                         toast.success(res.data.message)
                         navigate('/login')

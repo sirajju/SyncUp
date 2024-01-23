@@ -18,7 +18,7 @@ function Login() {
     const handleSubmit=()=>{
         if(Object.values(adminData).length==2){
             dispatch(showLoading())
-            axios({route:'admin/login',payload:adminData,method:"POST"},res=>{
+            axios({route:'admin/login',payload:adminData,method:"POST"}).then(res=>{
                 if(res.data.success){
                     localStorage.setItem('SyncUp_AdminToken',res.data.token)
                     toast.success(res.data.message)

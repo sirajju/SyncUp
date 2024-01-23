@@ -7,49 +7,49 @@ import { useNavigate } from 'react-router-dom'
 
 function CreateAd() {
     const myRef = useRef()
-    const navigate=useNavigate()
-    const [adData,setAdData]=useState({})
-    const [err,setErr]=useState(null)
+    const navigate = useNavigate()
+    const [adData, setAdData] = useState({})
+    const [err, setErr] = useState(null)
     const handleImage = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setAdData({...adData,img:e.target.result})
+                setAdData({ ...adData, img: e.target.result })
                 document.getElementById('adImg').src = e.target.result;
             };
             reader.readAsDataURL(file);
 
         }
     }
-    const handleInput=(e)=>{
-        if(e.target.value.trim()){
+    const handleInput = (e) => {
+        if (e.target.value.trim()) {
             setErr(null)
-            setAdData({...adData,[e.target.id]:e.target.value})
-        }else{
+            setAdData({ ...adData, [e.target.id]: e.target.value })
+        } else {
             setErr(`Please fill ${e.target.id}`)
         }
     }
-    const handleSubmit=()=>{
-        const data = Object.values(adData).length==4
-        if(data&&!err){
-            const token=localStorage.getItem('SyncUp_AdminToken')
-            if(token){
+    const handleSubmit = () => {
+        const data = Object.values(adData).length == 4
+        if (data && !err) {
+            const token = localStorage.getItem('SyncUp_AdminToken')
+            if (token) {
                 const options = {
-                    route:'admin/createAd',
-                    payload:{adData:adData},
-                    headers:{Authorization:`Bearer ${token}`},
-                    method:"POST"
+                    route: 'admin/createAd',
+                    payload: { adData: adData },
+                    headers: { Authorization: `Bearer ${token}` },
+                    method: "POST"
                 }
-                axios(options,res=>{
-                    if(res.data.success){
+                axios(options).then(res => {
+                    if (res.data.success) {
                         toast.success(res.data.message)
                         navigate('/admin/ads')
-                    }else{
+                    } else {
                         toast.error(res.data.message)
                     }
                 })
-                
+
             }
         }
     }
@@ -64,7 +64,7 @@ function CreateAd() {
                     <input id='ad_title' onChange={handleInput} type="text" placeholder='Enter title' />
                     <input id='ad_redirect_url' onChange={handleInput} type="text" placeholder='Enter redirect url' />
                     <button onClick={handleSubmit} className="submitAd">Create</button>
-                    {err&&<p className='text-danger mt-3'>{err}</p>}
+                    {err && <p className='text-danger mt-3'>{err}</p>}
                 </div>
             </div>
         </NewPage>

@@ -7,15 +7,15 @@ import cryptojs from 'crypto-js'
 import AdminLogin from '../../Components/Admin/Login/Login'
 import { useNavigate } from 'react-router-dom'
 
-function AdminRoute({redirect}) {
+function AdminRoute({ redirect }) {
     const [auth, setAuth] = useState(false)
     const dispatch = useDispatch()
-    const navigate=useNavigate()
+    const navigate = useNavigate()
     useEffect(() => {
         dispatch(showLoading())
         const token = localStorage.getItem('SyncUp_AdminToken')
         if (token) {
-            axios({route:'admin/isAlive',headers:{Authorization:`Bearer ${token}`}},res => {
+            axios({ route: 'admin/isAlive', headers: { Authorization: `Bearer ${token}` } }).then(res => {
                 if (res.data.success) {
                     setAuth(true)
                 } else {
@@ -24,7 +24,7 @@ function AdminRoute({redirect}) {
                     localStorage.removeItem('SyncUp_AdminToken')
                 }
             })
-        }else{
+        } else {
             setAuth(false)
         }
         setTimeout(() => {
@@ -34,7 +34,7 @@ function AdminRoute({redirect}) {
     return (
         <React.Fragment>
             {
-                auth ? redirect : <AdminLogin/>
+                auth ? redirect : <AdminLogin />
             }
         </React.Fragment>
     )

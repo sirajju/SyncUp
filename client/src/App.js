@@ -18,6 +18,8 @@ import Dashboard from './Components/Admin/Dashboard/Dashboard';
 import Ads from './Components/Admin/Ads/Ads';
 import CreateAd from './Components/Admin/Ads/CreateAd';
 import Premium from './Components/Premium/Premium';
+// import {GetToken} from './Context/firebaseConfig'
+// GetToken()
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)

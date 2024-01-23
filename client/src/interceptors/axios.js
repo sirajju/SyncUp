@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import cryptojs from 'crypto-js'
 
-async function Axios(options, callback) {
+async function Axios(options) {
     // const navigate = useNavigate()
     const { url, method, route, payload, headers, params, crypto } = options
     const requestUrl = url && (url.endsWith('/') ? url.slice(0, -1) : false);
@@ -20,10 +20,10 @@ async function Axios(options, callback) {
                 if (res) {
                     if (res.data.body && crypto) {
                         const decrypted = cryptojs.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(cryptojs.enc.Utf8);
-                        return callback?callback(JSON.parse(decrypted), res, null):JSON.parse(decrypted)
+                        return {...res,data:{...res.data,body:JSON.parse(decrypted)}}
                     }
                     else {
-                        return  callback?callback(res, null):res.data
+                        return  res
                     }
                 }
             } else {
@@ -31,16 +31,17 @@ async function Axios(options, callback) {
                 if (res) {
                     if (res.data.body && crypto) {
                         const decrypted = cryptojs.AES.decrypt(res.data.body, 'syncupservercryptokey').toString(cryptojs.enc.Utf8);
-                        return callback?callback(JSON.parse(decrypted), res, null):JSON.parse(decrypted)
+                        return {...res,data:{...res.data,body:JSON.parse(decrypted)}}
                     }
                     else{
-                        return callback?callback(res, null):res.data
+                        return res
                     }
                 }
             }
         } catch (error) {
             toast.error(error.message)
-            return callback?callback(null, error.message):error
+            localStorage.removeItem('SyncUp_Auth_Token')
+            return error
         }
     }
 }

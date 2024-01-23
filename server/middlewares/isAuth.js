@@ -14,6 +14,7 @@ module.exports = async function (req, res, next) {
             if (userData.isBlocked) {
                 await User.findOneAndUpdate({ email }, { $set: { logged_devices: 0 } })
                 res.status(203).json({ message: "User suspended", success: false })
+                const connData = await Connection.findOne({userId:userData._id})
             } else {
                 await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: 'online' } })
                 setTimeout(async () => {

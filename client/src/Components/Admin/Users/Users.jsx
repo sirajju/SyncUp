@@ -26,9 +26,9 @@ function Users() {
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
             }
-            Axios(options, (data,res) => {
-                if (data) {
-                    setData(data);
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    setData(res.data.body);
                 } else {
                     toast.error(res.data.message);
                     localStorage.removeItem('SyncUp_AdminToken');
@@ -70,11 +70,11 @@ function Users() {
 const changeBlock = ((email, state, func) => {
     const token = localStorage.getItem('SyncUp_AdminToken')
     const options = {
-        route:"admin/changeBlock",
-        params:{user:email,state},
-        headers:{Authorization: `Bearer ${token}`}
+        route: "admin/changeBlock",
+        params: { user: email, state },
+        headers: { Authorization: `Bearer ${token}` }
     }
-    Axios(options,res => {
+    Axios(options, res => {
         if (res.data.success) {
             toast.success(res.data.message)
         } else {

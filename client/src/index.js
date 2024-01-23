@@ -9,6 +9,8 @@ import { store } from './Context/userContext'
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { SocketProvider } from './Context/socketContext';
+import LogRocket from 'logrocket';
+LogRocket.init('v2np8t/syncup');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

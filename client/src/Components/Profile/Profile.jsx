@@ -23,14 +23,14 @@ function Profile({ setGo }) {
         if (isUsernameValid) {
             const token = localStorage.getItem('SyncUp_Auth_Token');
             const options = {
-                route:"changeUsername",
-                payload:{username},
-                method:"PATCH",
-                headers:{Authorization: `Bearer ${token}`}
+                route: "changeUsername",
+                payload: { username },
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${token}` }
             }
-            Axios(options,(res) => {
+            Axios(options).then(res => {
                 if (res.data.success) {
-                    dispatch(setUserData({...userData.value,username}))
+                    dispatch(setUserData({ ...userData.value, username }))
                     toast.success(res.data.message);
                 } else {
                     toast.error(res.data.message);
@@ -45,18 +45,18 @@ function Profile({ setGo }) {
         const newUsername = e.target.value;
         setUsername(newUsername);
         try {
-            const options={
-                route:"checkUsername",
-                params:{username:newUsername}
+            const options = {
+                route: "checkUsername",
+                params: { username: newUsername }
             }
-            Axios(options,(res)=>{
-                if (!res.data.success&&e.target.value!=userData.value.username) {
+            Axios(options).then(res => {
+                if (!res.data.success && e.target.value != userData.value.username) {
                     setIsUsernameValid(false);
                 } else {
                     setIsUsernameValid(true);
                 }
             })
-            
+
         } catch (error) {
             console.error('Error checking username:', error);
             setIsUsernameValid(false);
@@ -77,7 +77,7 @@ function Profile({ setGo }) {
             <div className="profileContainer">
                 <img
                     src={userData.value.avatar_url}
-                    alt=""
+                    alt="dp"
                     data-toggle="modal"
                     data-target="#profileAvatarModal"
                     className="profileAvatar"
@@ -90,7 +90,7 @@ function Profile({ setGo }) {
                         type="text"
                         value={username}
                         onInput={checkUsername}
-                        onKeyUp={(e)=>e.key=='Enter'&&saveUsername(e)}
+                        onKeyUp={(e) => e.key == 'Enter' && saveUsername(e)}
                         class={`form-control profileUsernameInput ${!isUsernameValid ? 'invalid' : ''}`}
                         disabled={editable ? false : true}
                         placeholder="Username"
@@ -108,7 +108,7 @@ function Profile({ setGo }) {
                         </span>
                     </div>
                 </div>
-                <div onClick={userData.value.isPremium ? ()=>toast('Currently we only have this type    ') : ()=>navigate('/plans')} className={`profilePremiumBadge ${!userData.value.isPremium&&'cursor-pointer'}`}>
+                <div onClick={userData.value.isPremium ? () => toast('Currently we only have this type    ') : () => navigate('/plans')} className={`profilePremiumBadge ${!userData.value.isPremium && 'cursor-pointer'}`}>
                     <span>Select your premium badge : </span>
                     <span class="badge badge-success rounded-pill d-inline premiumBadge cursor-pointer">Premium</span>
                 </div>

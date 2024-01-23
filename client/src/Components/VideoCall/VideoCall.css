@@ -4,7 +4,7 @@
     align-items: center;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     background: linear-gradient(360deg, #ee9ae5ff 70%, #5961f9ff 100%);
 
 }

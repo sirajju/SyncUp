@@ -44,10 +44,9 @@ function intializeSocket(server) {
             }
         })
         socket.on('onCall', async (data) => {
-            const to = await Connection.findOne({ userId: data.userId })
-            const userData = await User.findOne({ _id: to.userId })
+            const to = await Connection.findOne({ userId: data.to })
             if (to) {
-                socket.to(to.socketId).emit('callRecieved', { userId: to.userId })
+                socket.to(to.socketId).emit('callRecieved', { ...data,conversationName:`CONVERSATION_${data.from}` })
             }
         })
         socket.on('onHangup', async (data) => {
@@ -71,28 +70,27 @@ function intializeSocket(server) {
                     await Connection.findOneAndUpdate({ socketId: senderConnection.socketId }, { $set: { socketId: socket.id } })
                 }
                 socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
-                // socket.to(socket.id).emit('msgSent', { newMessage })
             } else {
                 socket.emit('logoutUser', { message: "Err while sending message" })
             }
         })
-        socket.on('join-room', async (data) => {
-            const roomData = await Room.findOne({ roomId: data.roomId })
-            socket.join(data.roomId)
-            const connData = await Connection.aggregate([{ $match: { userId: new ObjectId(data.userId) } }, { $lookup: { from: "users", foreignField: '_id', localField: 'userId', as: "userData" } }])
-            if (!roomData) {
-                if (connData) {
-                    const roomData = new Room({
-                        roomId: data.roomId,
-                        users: [{ email: connData[0].userData[0].email, socketId: connData[0].socketId }]
-                    })
-                    const saveState = await roomData.save()
-                }
-            } else {
-                await Room.findOneAndUpdate({ roomId: data.roomId }, { $push: { users: {email: connData[0].userData[0].email, socketId: connData[0].socketId} } })
-            }
-            io.to(data.roomId).emit('userConnected',{roomId:data.roomId,userId:connData.userId})
-        })
+        // socket.on('join-room', async (data) => {
+        //     const roomData = await Room.findOne({ roomId: data.roomId })
+        //     socket.join(data.roomId)
+        //     const connData = await Connection.aggregate([{ $match: { userId: new ObjectId(data.userId) } }, { $lookup: { from: "users", foreignField: '_id', localField: 'userId', as: "userData" } }])
+        //     if (!roomData) {
+        //         if (connData) {
+        //             const roomData = new Room({
+        //                 roomId: data.roomId,
+        //                 users: [{ email: connData[0].userData[0].email, socketId: connData[0].socketId }]
+        //             })
+        //             const saveState = await roomData.save()
+        //         }
+        //     } else {
+        //         await Room.findOneAndUpdate({ roomId: data.roomId }, { $push: { users: {email: connData[0].userData[0].email, socketId: connData[0].socketId} } })
+        //     }
+        //     io.to(data.roomId).emit('userConnected',{roomId:data.roomId,userId:connData.userId})
+        // })
         socket.on('disconnect', async (socket) => {
             await Connection.findOneAndDelete({ socketId: socket.id })
         });

@@ -30,6 +30,7 @@ app.post('/addToContact',isAuth,userController.addToContact)
 app.post('/changeDp',isAuth,userController.changeDp)
 app.post('/saveContacts',isAuth,userController.saveContacts)
 app.post('/sendMessage',isAuth,messageController.sendMessage)
+app.post('/sendMediaMessage',isAuth,messageController.sendMediaMessage)
 app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
 
 app.patch('/changePass',userController.changePasword)

@@ -9,6 +9,7 @@ const message = new mongoose.Schema({
     isDelivered:{type:Boolean,default:false},
     isDeleted:{type:Boolean,default:false},
     isReaded:{type:Boolean,default:false},
+    isSent:{type:Boolean,default:false},
     type:String,
     sentTime:{
         type:Number,
@@ -16,6 +17,14 @@ const message = new mongoose.Schema({
     },
     readedTime:{
         type:Number,
+    },
+    isMedia:{
+        type:Boolean,
+        default:false
+    },
+    mediaConfig:{
+        type:Object,
+        default:{}
     }
 })
 

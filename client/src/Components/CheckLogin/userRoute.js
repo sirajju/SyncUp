@@ -31,11 +31,10 @@ function IsAuth({ children }) {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { getData: true },
                 crypto: true,
-                failUrl:'/login'
             }
-            axios(options, (data,res) => {
-                if (data) {
-                    dispatch(setUserData(data));
+            axios(options).then(res=>{
+                if (res.data.success) {
+                    dispatch(setUserData(res.data.body));
                     setAuth(true)
                 }
                 else {

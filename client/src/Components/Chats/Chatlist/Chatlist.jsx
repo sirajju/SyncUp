@@ -39,7 +39,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             headers: { Authorization: `Bearer ${token}` },
             method: "POST"
         }
-        Axios(options, res => {
+        Axios(options).then(res=>{
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {
@@ -71,7 +71,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             params: { userId },
             headers: { Authorization: `Bearer ${token}` }
         }
-        Axios(options, res => {
+        Axios(options).then(res=>{
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {

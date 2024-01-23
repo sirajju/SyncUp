@@ -21,10 +21,10 @@ function Notification({ setGo, setChat }) {
             headers: { Authorization: `Bearer ${token}` },
             crypto: true
         }
-        Axios(options, (data) => {
-            if (data) {
+        Axios(options).then(res=>{
+            if (res.data.success) {
                 let temp = []
-                data.forEach(el => {
+                res.data.body.forEach(el => {
                     if (el.notifications?.type) {
                         temp.unshift({ ...el, ...el.notifications })
                     } else {
@@ -43,7 +43,7 @@ function Notification({ setGo, setChat }) {
             payload: { userId },
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` }
         }
-        Axios(options, res => {
+        Axios(options).then(res=>{
             if (!res.data.sucess) {
                 toast.error(res.data.message)
             }
@@ -57,7 +57,7 @@ function Notification({ setGo, setChat }) {
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
             params:{userId}
         }
-        Axios(options, res => {
+        Axios(options).then(res=>{
             if (res.data.success) {
                 setConfirm(false)
                 setChat({ type: null })

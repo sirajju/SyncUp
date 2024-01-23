@@ -54,7 +54,7 @@ function Otp() {
       route: "resendOtp",
       headers: { 'Authorization': `Bearer ${token}` }
     }
-    Axios(options, res => {
+    Axios(options).then(res => {
       if (res.data.success) {
         timer.restart(Date.now() + (30000 * count))
         setCount((prevCount) => prevCount + 1)
@@ -86,7 +86,7 @@ function Otp() {
         params: { otp: last_otp },
         headers: { Authorization: `Bearer ${token}` }
       }
-      Axios(options, res => {
+      Axios(options).then(res => {
         incTrie(prev => prev + 1)
         if (!res.data.success) {
           toast.error(res.data.message)

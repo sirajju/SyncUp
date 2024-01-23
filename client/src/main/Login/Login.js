@@ -39,14 +39,14 @@ function Login() {
                 route: "/oauth2/v3/userinfo",
                 headers: { Authorization: `Bearer ${user.access_token}` }
             }
-            Axios(options, res => {
+            Axios(options).then(res => {
                 if (res.data) {
                     const options = {
                         route: "OauthLogin",
                         method: "POST",
                         payload: { data: res.data }
                     }
-                    Axios(options, res => {
+                    Axios(options).then(res => {
                         if (res.data.success) {
                             toast.success(res.data.message)
                             localStorage.setItem('SyncUp_Auth_Token', res.data.token)
@@ -74,6 +74,7 @@ function Login() {
                     })
                 }
             })
+
         }
     }
     const props = {
@@ -99,7 +100,7 @@ function Login() {
                 payload: userData,
                 method: "POST"
             }
-            Axios(options, res => {
+            Axios(options).then(res => {
                 if (res.data.success) {
                     toast.success(res.data.message)
                     localStorage.setItem('SyncUp_Auth_Token', res.data.token)
