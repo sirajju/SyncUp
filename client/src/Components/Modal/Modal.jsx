@@ -61,7 +61,7 @@ export default function Basic() {
             </div>
             <div className="modal-body">
               <h5 className="text-dark">Choose image to you profile pic</h5>
-              <img src={userData.value.avatar_url} alt="" onClick={() => imgRef.current.click()} className="profileAvatar choosedImg" />
+              <img alt='dp' src={userData.value.avatar_url} onClick={() => imgRef.current.click()} className="profileAvatar choosedImg" />
               <input type="file" hidden onChange={handleAvatarInput} ref={imgRef} accept='image/*' />
             </div>
             <div className="modal-footer">

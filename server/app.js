@@ -19,15 +19,15 @@ const { ExpressPeerServer } = require('peer')
 const peerServer = ExpressPeerServer(http, { debug: true })
 app.use(cors())
 
-if (cluster.isMaster) {
-  for (let i = 0; i < os.cpus().length; i++) {
-    cluster.fork()
-  }
-  cluster.on('exit', () => {
-    console.log('exitting and restarting');
-    cluster.fork()
-  })
-} else {
+// if (cluster.isMaster) {
+//   for (let i = 0; i < os.cpus().length; i++) {
+//     cluster.fork()
+//   }
+//   cluster.on('exit', () => {
+//     console.log('exitting and restarting');
+//     cluster.fork()
+//   })
+// } else {
 
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'ejs');
@@ -64,6 +64,6 @@ if (cluster.isMaster) {
     console.log('Server started on https://localhost:5000');
   })
 
-}
+// }
 
 module.exports = app;

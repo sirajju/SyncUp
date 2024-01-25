@@ -114,10 +114,10 @@ function Login() {
                 else {
                     toast.error(res.data.message)
                 }
-                setTimeout(() => {
-                    dispatch(hideLoading())
-                }, 1000);
             })
+            setTimeout(() => {
+                dispatch(hideLoading())
+            }, 1000);
         }
         else {
             toast.error("Please fill everything")

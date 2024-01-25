@@ -7,7 +7,7 @@ import cryptojs from 'crypto-js'
 import AdminLogin from '../../Components/Admin/Login/Login'
 import { useNavigate } from 'react-router-dom'
 
-function AdminRoute({ redirect }) {
+function AdminRoute({ children }) {
     const [auth, setAuth] = useState(false)
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -34,7 +34,7 @@ function AdminRoute({ redirect }) {
     return (
         <React.Fragment>
             {
-                auth ? redirect : <AdminLogin />
+                auth ? children : <AdminLogin />
             }
         </React.Fragment>
     )

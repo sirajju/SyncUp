@@ -11,10 +11,10 @@ function IsAuth({ children }) {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     // const [opened, setOpened] = useState(localStorage.getItem('syncup_opened'))
-    const token = localStorage.getItem('SyncUp_Auth_Token')
     const userData = useSelector(state => state.user)
     const [auth, setAuth] = useState(false)
     useEffect(() => {
+        const token = localStorage.getItem('SyncUp_Auth_Token')
         dispatch(showLoading())
         if (!token) {
             navigate('/login')

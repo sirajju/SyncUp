@@ -36,10 +36,10 @@ function App() {
           <Route path='/plans' element={<UserRoute><Premium /></UserRoute>} />
           <Route path='/forgetPassword' element={<GuestRoute><Forget /></GuestRoute>} />
           <Route path='/resetPassword' element={<GuestRoute><VerifyLink /></GuestRoute>} />
-          <Route path='/admin' element={<AdminRoute redirect={<Dashboard />} />} />
-          <Route path='/admin/users' element={<AdminRoute redirect={<Users />} />} />
-          <Route path='/admin/ads' element={<AdminRoute redirect={<Ads />} />} />
-          <Route path='/admin/ads/new' element={<AdminRoute redirect={<CreateAd />} />} />
+          <Route path='/admin' element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route path='/admin/users' element={<AdminRoute><Users /></AdminRoute>} />
+          <Route path='/admin/ads' element={<AdminRoute><Ads /></AdminRoute>} />
+          <Route path='/admin/ads/new' element={<AdminRoute><CreateAd /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
         </Routes>
       </Router>

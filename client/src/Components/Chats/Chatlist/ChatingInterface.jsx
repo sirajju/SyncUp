@@ -52,12 +52,14 @@ const ConversationDetails = ({ reciever, setChat }) => {
 
 };
 
-const MessageRenderer = () => {
+const MessageRenderer = ({reciever}) => {
     const currentChat = useSelector(state => state.currentChat)
     const userData = useSelector(state => state.user)
+    const socket=useSocket()
     const doodleRef = useRef()
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight
+        socket.emit('markMsgSeen',{userId:reciever._id})
     }, [currentChat])
     return (
         <div className="chatinInterface">
@@ -117,13 +119,18 @@ function ChatingInterface({ chat, setChat }) {
             })
         }
         if (chat.type == 'videoCall') {
-            socket.emit('onCall', { to: chat.data, from: userData.value._id })
+            window.onbeforeunload = (e)=>{
+                e.preventDefault()
+                return false
+            }
+            socket.emit('onCall', chat.data)
         }
         const fetchUserData = async () => {
             if (inputRef.current) {
                 inputRef.current.focus();
             }
             if (chat.type === 'chat') {
+                socket.emit('join-room',{senderId:userData.value._id,recieverId:chat.data})
                 try {
                     const token = localStorage.getItem('SyncUp_Auth_Token');
                     const options = {
@@ -136,7 +143,7 @@ function ChatingInterface({ chat, setChat }) {
                         if (res.data.success) {
                             setReciever(res.data.body);
                             const msgList = await GetMessages(res.data.body._id)
-                            if (msgList.length) {
+                            if (msgList?.length) {
                                 dispatch(setCurrentChat(msgList))
                             } else {
                                 dispatch(setCurrentChat([]))
@@ -174,14 +181,19 @@ function ChatingInterface({ chat, setChat }) {
                 setSending(true)
                 if (newMsg.message && newMsg.userEmail && newMsg.recieverId) {
                     socket.emit('sendMsg', newMsg)
+                    dispatch(addNewMessage({ ...newMsg, content: newMsg.message }))
+                    dispatch(setConversations(await GetChatList()))
                 }
+                const handleDelivered = () => {
+                    dispatch(markDelivered(userData.value._id))
+                }
+                socket.on('msgDelivered', handleDelivered)
+                
                 socket.on('msgSeen', () => {
                     dispatch(markSeen(userData.value._id))
                 })
-
-                dispatch(addNewMessage({ ...newMsg, content: newMsg.message }))
-                dispatch(setConversations(await GetChatList()))
                 setSending(false)
+
             }
         }
     };
@@ -238,13 +250,11 @@ function ChatingInterface({ chat, setChat }) {
         }
     }
     const hangUpCall = () => {
-        window.location.reload()
-        socket.emit('onHangup', { userId: chat.data })
+        socket.emit('onHangup',chat.data)
         setChat({ type: null })
     }
     const declineCall = () => {
-        window.location.reload()
-        socket.emit('onDeclined', { userId: chat.data })
+        socket.emit('onDeclined',chat.data)
         setChat({ type: null })
     }
     const removeLastEmoji = () => {
@@ -270,7 +280,7 @@ function ChatingInterface({ chat, setChat }) {
                     <div className="conversationTopBar">
                         <ConversationDetails setChat={setChat} reciever={reciever} />
                         <div className="conversationMenu">
-                            <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: reciever._id })} alt="" />
+                            <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: {to:reciever._id,from:userData.value._id,conversationName:`CONVERSATION_${userData.value._id}`} })} alt="" />
                             <img src={menu} alt="" />
                         </div>
                     </div>

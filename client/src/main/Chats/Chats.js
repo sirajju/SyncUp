@@ -17,6 +17,7 @@ import getMessages from './getMessages'
 import GetMessages from './getMessages'
 import Axios from '../../interceptors/axios'
 import { useSocket } from '../../Context/socketContext'
+import { io } from 'socket.io-client'
 
 const Chatlist = React.memo(Chatslst)
 const ChatingInterface = React.memo(chatingUi)
@@ -28,18 +29,16 @@ function Chats() {
     const [chat, setChat] = useState({ type: null })
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
-    const call = useSelector(state => state.call)
     const history = useNavigate()
 
     useEffect(() => {
-        const handleConnect = () => {
+        socket.on('connect', () => {
             if (userData.value._id) {
                 socket.emit('set-socketId', {
                     userId: userData.value._id
                 })
             }
-        }
-        socket.on('connect', handleConnect)
+        })
         const handleUpdate = () => {
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
@@ -57,7 +56,6 @@ function Chats() {
                     history('/login')
                 }
             })
-
         }
         const handleLogout = ({ message }) => {
             toast.error(message)
@@ -71,12 +69,11 @@ function Chats() {
         const handleDelivered = () => {
             dispatch(markDelivered(userData.value._id))
         }
-
         socket.on('onUpdateNeeded', handleUpdate)
         socket.on('logoutUser', handleLogout)
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
-        socket.on('msgSent', ()=>{
+        socket.on('msgSent', () => {
             alert('msgSent')
         })
         socket.on('messageRecieved', async (data) => {
@@ -84,29 +81,29 @@ function Chats() {
             dispatch(setConversations(await GetChatList()))
         })
         socket.on('callRecieved', (data) => {
-            alert('call')
-            console.log(data);
             setChat({ type: 'videoCall', data, isRecieved: true })
-            dispatch(setCallData({ userId: data.userId, isRecieved: true }))
+            dispatch(setCallData({ userId: data.from, isRecieved: true, isAccepted: false, isEnded: false }))
         })
         socket.on('callEnded', (data) => {
-            const videos = document.querySelectorAll('video')
-            videos.forEach(video => {
-                const stream = video.srcObject
-                stream.getVideoTracks().forEach(track => track.stop());
-                stream.getAudioTracks().forEach(track => track.stop());
-                video.srcObject = null
-            })
+            alert('CallEnded')
+            // const videos = document.querySelectorAll('video')
+            // videos.forEach(video => {
+            //     const stream = video.srcObject
+            //     stream.getVideoTracks().forEach(track => track.stop());
+            //     stream.getAudioTracks().forEach(track => track.stop());
+            //     video.srcObject = null
+            // })
             window.location.reload()
         })
         socket.on('callDeclined', (data) => {
-            const videos = document.querySelectorAll('video')
-            videos.forEach(video => {
-                const stream = video.srcObject
-                stream.getVideoTracks().forEach(track => track.stop());
-                stream.getAudioTracks().forEach(track => track.stop());
-                video.srcObject = null
-            })
+            alert('call declined')
+            // const videos = document.querySelectorAll('video')
+            // videos.forEach(video => {
+            //     const stream = video.srcObject
+            //     stream.getVideoTracks().forEach(track => track.stop());
+            //     stream.getAudioTracks().forEach(track => track.stop());
+            //     video.srcObject = null
+            // })
             window.location.reload()
         })
         socket.on('userOffline', (data) => {
@@ -120,12 +117,18 @@ function Chats() {
             })
             setChat({ type: null })
         })
+
         async function a() {
+            if (userData.value._id) {
+                socket.emit('set-socketId', {
+                    userId: userData.value._id
+                })
+            }
             const mes = await GetChatList()
             dispatch(setConversations(mes))
         }
         a()
-    }, [socket])
+    }, [])
     const handleSearch = useCallback(async (e) => {
         if (e.target.value.trim()) {
             const token = localStorage.getItem('SyncUp_Auth_Token')

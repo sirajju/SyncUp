@@ -11,6 +11,7 @@ export default async function GetMessages(id) {
         crypto:true
     }
     const res =  await Axios(options)
+    console.log(res);
     return res.data.body
     
 }

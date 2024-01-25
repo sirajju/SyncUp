@@ -39,7 +39,7 @@ const currentchat = createSlice({
       state.value = action.payload;
     },
     addNewMessage: (state, action) => {
-      state.value = [...state.value, action.payload];
+      state.value = [...state.value.filter(el=>el.sentTime!=action.payload.sentTime),action.payload];
     },
     markSeen: (state, action) => {
       state.value = state.value.map(el => {

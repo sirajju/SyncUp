@@ -3,10 +3,7 @@ import './Chatlist.css'
 import dp from '../../../assets/Images/man.png'
 import { useDispatch, useSelector } from 'react-redux'
 import Ads from '../AdsInterface/Ads'
-import follow from '../../../assets/Images/follow.png'
-import message from '../../../assets/Images/message.png'
-import pending from '../../../assets/Images/pending.png'
-import empty from '../../../assets/Images/empty_chat.png'
+
 import toast from 'react-hot-toast'
 import Axios from '../../../interceptors/axios'
 import CurrentList from './currentList'
@@ -14,6 +11,8 @@ import Contactslist from './ContactsList'
 import ChatingInterface from './ChatingInterface'
 import { setConversations } from '../../../Context/userContext'
 import GetChatList from '../../../main/Chats/getChatList'
+import EmptyChat from './EmptyChat'
+import SearchResult from './SearchResult'
 
 
 const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
@@ -39,7 +38,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             headers: { Authorization: `Bearer ${token}` },
             method: "POST"
         }
-        Axios(options).then(res=>{
+        Axios(options).then(res => {
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {
@@ -71,7 +70,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             params: { userId },
             headers: { Authorization: `Bearer ${token}` }
         }
-        Axios(options).then(res=>{
+        Axios(options).then(res => {
             if (res.data.success) {
                 toast.success(res.data.message)
             } else {
@@ -98,77 +97,11 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
             {contactsModal && <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} />}
             {Boolean(conversation.value.length) && <CurrentList setChat={setChat} />}
             {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
-                <div className="welcomeContainer">
-                    <img style={{ width: '70px', margin: '20px' }} src={empty} alt="" />
-                    <h2>Look like your chats is empty </h2>
-                    <button onClick={() => openContactsModal(true)}>
-                        Start chat
-                    </button>
-                </div>
+                <EmptyChat openContactsModal={openContactsModal} />
             }
-            {Boolean(searchResult.length) && searchResult.map(el => {
-                return (
-                    <div className="chatlistItem">
-
-                        <img src={el.avatar_url} className='chatIcon' alt="" />
-                        <div className="chatDetails">
-                            <div className="userContent">
-                                <h5 className='userName' style={{ textTransform: 'capitalize' }}>
-                                    {userData.value._id == el._id ? `${el.username} (You)` : el.username} {el?.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>}
-                                </h5>
-                                <p className="lastMessage">
-                                    {(() => {
-                                        const rs = checkCondact(el._id);
-                                        if (rs == 'Pending') {
-                                            return "Request is not accepted yet"
-                                        } else if (rs == 'Accepted') {
-                                            if (el._id == userData.value._id) {
-                                                return "Message yourself"
-                                            }
-                                            return "Message to your contacts"
-                                        } else if (rs == 404) {
-                                            return "Not found , Invite to get chat points"
-                                        }
-                                        else {
-                                            return "Send friend request to message"
-                                        }
-                                    })()}
-                                </p>
-                            </div>
-                            <div className="followRqstDiv">
-                                {(() => {
-                                    const rs = checkCondact(el._id);
-                                    if (rs == 'Pending') {
-                                        return (
-                                            <button onClick={() => cancellRequest(el._id)} className="sendFrndRqst">
-                                                <img style={{ 'width': '20px' }} src={pending} alt="" />
-                                            </button>
-                                        );
-                                    } else if (rs == 'Accepted') {
-                                        return (
-                                            <button onClick={() => setChat({ type: 'chat', data: el._id })} className="sendFrndRqst">
-                                                <img style={{ 'width': '20px' }} src={message} alt="" />
-                                            </button>
-                                        );
-                                    }
-                                    else if (rs == 404) {
-                                        return <button className='btnStart' onClick={() => copyLink(el.username)} style={{ width: '80px', margin: '7px', height: '35px' }} >Invite</button>
-
-                                    }
-                                    else {
-                                        return (
-                                            <button onClick={() => addToContact(el._id)} className="sendFrndRqst">
-                                                <img style={{ 'width': '20px' }} src={follow} alt="" />
-                                            </button>
-                                        );
-                                    }
-                                })()}
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            })}
+            {Boolean(searchResult.length) &&
+                <SearchResult addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact}/>
+            }
             {(searchResult.notfound && !conversation.value.length) &&
                 searchResult.data.map(el => {
                     return (
