@@ -30,7 +30,6 @@ function Chats() {
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
     const history = useNavigate()
-
     useEffect(() => {
         socket.on('connect', () => {
             if (userData.value._id) {
@@ -128,6 +127,7 @@ function Chats() {
             dispatch(setConversations(mes))
         }
         a()
+     
     }, [])
     const handleSearch = useCallback(async (e) => {
         if (e.target.value.trim()) {
@@ -154,16 +154,18 @@ function Chats() {
     const props = {
         setChat,
         chat,
+        setGo
     }
     return (
-        <ChatBox rightComponent={<ChatingInterface {...props} />}>
+        <ChatBox rightComponent={go!='MobileChat'&&<ChatingInterface {...props} />}>
             {go == `Profile` && <Profile setGo={setGo} />}
             {go == `Notifications` && <Notification setChat={setChat} setGo={setGo} />}
+            {go=='MobileChat'&&chat.type&&<ChatingInterface {...props} />}
             {!go &&
                 <>
                     <TopBar handleSearch={handleSearch} setGo={setGo} />
                     <ChatTabs activeTab={'Chats'} />
-                    <Chatlist setChat={setChat} searchResult={searchResult} />
+                    <Chatlist setChat={setChat} setGo={setGo}  searchResult={searchResult} />
                 </>}
         </ChatBox>
     )

@@ -4,14 +4,16 @@ import './Ads.css'
 import axios from '../../../interceptors/axios'
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useSelector } from 'react-redux';
 initMDB({ Carousel });
 
 function Ads() {
     const [ads, setAds] = useState([])
+    const userData = useSelector(state=>state.user)
     useEffect(() => {
         async function getAds(){
             const token = localStorage.getItem('SyncUp_Auth_Token')
-            if (token) {
+            if (token&&!userData.value.isPremium) {
                 const options = {
                     route:'getAds',
                     headers:{Authorization: `Bearer ${token}`},

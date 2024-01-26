@@ -1,13 +1,20 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 
-function CurrentList({ setChat}) {
+function CurrentList({ setChat,setGo}) {
     const conversations = useSelector(state=>state.conversations)
+    const setConversation = function(id){
+        setChat({type:'chat',data:id})
+        console.log(window.outerWidth);
+        if(window.outerWidth<=800){
+            setGo('MobileChat')
+        }
+    }
     return (
         <>
             {conversations.value.map((el,key) => {
                 return (
-                    <div key={key} className="chatlistItem cursor-pointer p-3" onClick={()=>{setChat({type:'chat',data:el.opponent[0]._id})}} >
+                    <div key={key} className="chatlistItem cursor-pointer p-3" onClick={()=>{setConversation(el.opponent[0]._id)}} >
                         <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
                             <div className="userContent">

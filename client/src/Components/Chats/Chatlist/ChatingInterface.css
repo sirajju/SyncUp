@@ -1,7 +1,7 @@
 .conversationContainer {
     width: 100%;
     height: 100%;
-    padding: 10px 10px 20px 10px;
+    padding: 10px 10px 0px 10px;
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
 }
 
@@ -43,13 +43,13 @@
 
 .chatinInterface {
     width: 100%;
-    height: 75%;
+    height: 73vh;
     border-radius: 10px;
 }
 
 .chatinInterface .doodles {
     width: 100%;
-    height: 27pc;
+    height: 95%;
     border-radius: 10px;
     background: linear-gradient(160deg,rgba(255, 192, 249, 0.505),rgba(169, 174, 255, 0.669) 100%),url('https://i.ibb.co/HKFFzJS/f35c360a2f51409dce5a1e5d0f41f86d.jpg') ;
     display: flex;
@@ -60,11 +60,11 @@
 
 .conversationBottom {
     width: 100%;
-    margin-top: 10px;
-    height: 55px;
+    height: 45px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding:10px
 }
 
 .msgInput {

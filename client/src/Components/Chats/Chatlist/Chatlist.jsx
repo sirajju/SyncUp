@@ -15,7 +15,7 @@ import EmptyChat from './EmptyChat'
 import SearchResult from './SearchResult'
 
 
-const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
+const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo }) {
     const conversation = useSelector(state => state.conversations)
     const userData = useSelector(state => state.user)
     const [status, setStatus] = useState({})
@@ -95,7 +95,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
     return (
         <div className="chatlistContainer" data-aos="fade-up" data-aos-duration="700" >
             {contactsModal && <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} />}
-            {Boolean(conversation.value.length) && <CurrentList setChat={setChat} />}
+            {Boolean(conversation.value.length) && <CurrentList setGo={setGo} setChat={setChat} />}
             {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
                 <EmptyChat openContactsModal={openContactsModal} />
             }
@@ -119,9 +119,9 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat }) {
                         </div>
                     )
                 })}
-            <div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
+            {!userData.value.isPremium&&<div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
                 <Ads />
-            </div>
+            </div>}
         </div>
     )
 })

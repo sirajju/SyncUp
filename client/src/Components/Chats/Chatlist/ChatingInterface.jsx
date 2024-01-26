@@ -29,7 +29,7 @@ import VidConfig from '../../VideoCall/VidConfig';
 import msgSending from '../../../assets/Images/pending.png'
 
 
-const ConversationDetails = ({ reciever, setChat }) => {
+const ConversationDetails = ({ reciever, setChat,setGo }) => {
     return (
         <div className="conversationDetails">
             <button
@@ -37,6 +37,9 @@ const ConversationDetails = ({ reciever, setChat }) => {
                 className="close closeProfile"
                 onClick={() => {
                     setChat('');
+                    if(window.outerWidth<=800){
+                        setGo('')
+                    }
                 }}
                 aria-label="Close"
             >
@@ -93,7 +96,7 @@ const MessageRenderer = ({reciever}) => {
     )
 }
 
-function ChatingInterface({ chat, setChat }) {
+function ChatingInterface({ chat, setChat,setGo}) {
     const socket = useSocket()
     const userData = useSelector((state) => state.user);
     const callState = useSelector(state => state.call)
@@ -278,7 +281,7 @@ function ChatingInterface({ chat, setChat }) {
             {(chat.type == 'chat' && reciever) && (
                 <div className="conversationContainer">
                     <div className="conversationTopBar">
-                        <ConversationDetails setChat={setChat} reciever={reciever} />
+                        <ConversationDetails setGo={setGo} setChat={setChat} reciever={reciever} />
                         <div className="conversationMenu">
                             <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: {to:reciever._id,from:userData.value._id,conversationName:`CONVERSATION_${userData.value._id}`} })} alt="" />
                             <img src={menu} alt="" />
