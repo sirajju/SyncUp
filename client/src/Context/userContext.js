@@ -91,11 +91,21 @@ const callState = createSlice({
     },
   },
 });
+const chatState = createSlice({
+  name:"chatState",
+  initialState:{type:null,data:null},
+  reducers:{
+    setChat:(state,action)=>{
+      state=action.payload
+    }
+  }
+})
 
 export const { setConversations, resetConversation } = totalConversations.actions;
 export const { setCurrentChat, markDelivered, markSeen, addNewMessage,markSent } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setUserData } = userSlice.actions;
+export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;
 export const { setAuthConfig } = adminContext.actions
 const rootReducer = combineReducers({
@@ -104,7 +114,8 @@ const rootReducer = combineReducers({
   admin: adminContext.reducer,
   currentChat: currentchat.reducer,
   conversations: totalConversations.reducer,
-  call:callState.reducer
+  call:callState.reducer,
+  chat:chatState.reducer
 });
 export const store = configureStore({
   reducer: rootReducer,

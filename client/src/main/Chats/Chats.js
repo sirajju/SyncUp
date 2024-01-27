@@ -25,12 +25,19 @@ const ChatingInterface = React.memo(chatingUi)
 function Chats() {
     const [searchResult, setSearchData] = useState([])
     const socket = useSocket()
+    const [chat,setChat]=useState({type:null})
     const dispatch = useDispatch()
-    const [chat, setChat] = useState({ type: null })
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
     const history = useNavigate()
     useEffect(() => {
+        window.addEventListener('resize',()=>{
+            if(window.outerWidth <=800&&chat.type){
+                setGo('MobileChat')
+            }else{
+                setGo('')
+            }
+        })
         socket.on('connect', () => {
             if (userData.value._id) {
                 socket.emit('set-socketId', {
@@ -83,37 +90,9 @@ function Chats() {
             setChat({ type: 'videoCall', data, isRecieved: true })
             dispatch(setCallData({ userId: data.from, isRecieved: true, isAccepted: false, isEnded: false }))
         })
-        socket.on('callEnded', (data) => {
-            alert('CallEnded')
-            // const videos = document.querySelectorAll('video')
-            // videos.forEach(video => {
-            //     const stream = video.srcObject
-            //     stream.getVideoTracks().forEach(track => track.stop());
-            //     stream.getAudioTracks().forEach(track => track.stop());
-            //     video.srcObject = null
-            // })
-            window.location.reload()
-        })
-        socket.on('callDeclined', (data) => {
-            alert('call declined')
-            // const videos = document.querySelectorAll('video')
-            // videos.forEach(video => {
-            //     const stream = video.srcObject
-            //     stream.getVideoTracks().forEach(track => track.stop());
-            //     stream.getAudioTracks().forEach(track => track.stop());
-            //     video.srcObject = null
-            // })
-            window.location.reload()
-        })
+        
         socket.on('userOffline', (data) => {
             toast.error(`User ${data.userName} is offline`)
-            const videos = document.querySelectorAll('video')
-            videos.forEach(video => {
-                const stream = video.srcObject
-                stream.getVideoTracks().forEach(track => track.stop());
-                stream.getAudioTracks().forEach(track => track.stop());
-                video.srcObject = null
-            })
             setChat({ type: null })
         })
 

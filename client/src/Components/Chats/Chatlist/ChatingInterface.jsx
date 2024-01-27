@@ -96,7 +96,7 @@ const MessageRenderer = ({reciever}) => {
     )
 }
 
-function ChatingInterface({ chat, setChat,setGo}) {
+function ChatingInterface({setGo,setChat,chat}) {
     const socket = useSocket()
     const userData = useSelector((state) => state.user);
     const callState = useSelector(state => state.call)
@@ -122,10 +122,10 @@ function ChatingInterface({ chat, setChat,setGo}) {
             })
         }
         if (chat.type == 'videoCall') {
-            window.onbeforeunload = (e)=>{
-                e.preventDefault()
-                return false
-            }
+            // window.onbeforeunload = (e)=>{
+            //     e.preventDefault()
+            //     return false
+            // }
             socket.emit('onCall', chat.data)
         }
         const fetchUserData = async () => {
@@ -254,11 +254,11 @@ function ChatingInterface({ chat, setChat,setGo}) {
     }
     const hangUpCall = () => {
         socket.emit('onHangup',chat.data)
-        setChat({ type: null })
+        setChat({ type: 'chat',data:chat.data.to })
     }
     const declineCall = () => {
         socket.emit('onDeclined',chat.data)
-        setChat({ type: null })
+        setChat({ type: 'chat',data:chat.data.from })
     }
     const removeLastEmoji = () => {
         const regex = emojiRegex();

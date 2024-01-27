@@ -9,11 +9,11 @@
 
 }
 .videoContainer button {
-    background-color: #ED80FD;
+    /* background-color: #ED80FD; */
     height: 40px;
     border-radius: 10px;
     border: 1px solid white;
-    color: white;
+    /* color: white; */
 }
 .callOptions {
     padding: 10px;
@@ -53,6 +53,15 @@
     border-right: none;
     border-radius: 100%;
     animation: spin 0.7s linear infinite;
+}
+.btnHangup{
+    background-color: #ED80FD;
+    color: white;
+    font-size:13px;
+}
+.btnHangup img {
+    width:16px;
+    margin:5px;
 }
 @keyframes spin {
     0%{

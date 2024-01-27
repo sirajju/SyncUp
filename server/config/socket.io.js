@@ -42,7 +42,6 @@ function intializeSocket(server) {
                 }
             })
             socket.on('onCall', async (data) => {
-                console.log(data);
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
                 if(roomData){
@@ -79,8 +78,14 @@ function intializeSocket(server) {
                     socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                 }
             })
-            socket.on('userAcceptedACall', (data) => {
-                console.log(data);
+            socket.on('userAcceptedACall', async(data) => {
+                const userData = await Connection.findOne({userId:data.from})
+                console.log(new ObjectId(data.from))
+                if(userData){
+                    socket.to(userData.socketId).emit('callAccepted')
+                }else{
+                    socket.emit('callError',{message:"Err while connecting"})
+                }
             })
             socket.on('markMsgDeliver', async (data) => {
                 const senderConnection = await Connection.findOne({ userId: data.senderId })
