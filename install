@@ -1,18 +1,15 @@
 #!/bin/bash
 
-type=$1
-lib=$2
-
-if [ "$type" = "server" ]; then
-    echo "installing $lib for server"
-    cd server && npm i "$lib"
-elif [ "$type" = "client" ]; then
-    echo "installing $lib for client"
-    cd client && npm i "$lib"
-elif [ "$type" = "both" ]; then
-    echo "Installing $lib for both networks"
-    cd client && npm i "$lib"
-    cd ../server && npm i "$lib"
+if [ "$1" = "server" ]; then
+    echo "installing $2 for server"
+    cd server && npm i "$2"
+elif [ "$1" = "client" ]; then
+    echo "installing $2 for client"
+    cd client && npm i "$2"
+elif [ "$1" = "both" ]; then
+    echo "Installing $2 for both networks"
+    cd client && npm i "$2"
+    cd ../server && npm i "$2"
 else 
     echo  "\nType argument is missing or invalid"
 fi
