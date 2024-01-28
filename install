@@ -4,7 +4,9 @@ type=$1
 lib=$2
 
 if [ "$type" = "server" ]; then
+    echo "installing $lib for server"
     cd server && npm i "$lib"
 else
+    echo "installing $lib for client"
     cd client && npm i "$lib"
 fi
