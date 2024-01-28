@@ -31,6 +31,7 @@ function VideoCall({ hangUpCall, declineCall }) {
           });
     }
   }
+  //streamAdded : Add the participant's display to the UI
   const onStreamAddedHandler = function (stream) {
     if (stream.isRemote) {
       stream.addInDiv('opVideo', 'remote-media-' + stream.streamId, {}, false);

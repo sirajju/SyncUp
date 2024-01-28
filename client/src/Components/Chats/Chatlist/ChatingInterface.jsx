@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Ads from '../AdsInterface/Ads';
 import Axios from '../../../interceptors/axios';
-import toast from 'react-hot-toast';
+import toast, { LoaderIcon } from 'react-hot-toast';
 import cryptojs from 'crypto-js';
 import vidCall from '../../../assets/Images/videocall.png';
 import menu from '../../../assets/Images/menu.png';
@@ -104,6 +104,7 @@ function ChatingInterface({setGo,setChat,chat}) {
     const [message, setMessage] = useState('');
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
+    const [isLoading,setLoading]=useState(true)
     const [file, setFile] = useState(false)
     const inputRef = useRef();
     const fileInputRef = useRef();
@@ -127,6 +128,7 @@ function ChatingInterface({setGo,setChat,chat}) {
             //     return false
             // }
             socket.emit('onCall', chat.data)
+            setLoading(false)
         }
         const fetchUserData = async () => {
             if (inputRef.current) {
@@ -144,6 +146,7 @@ function ChatingInterface({setGo,setChat,chat}) {
                     }
                     Axios(options).then(async res => {
                         if (res.data.success) {
+                            setLoading(false)
                             setReciever(res.data.body);
                             const msgList = await GetMessages(res.data.body._id)
                             if (msgList?.length) {
@@ -160,6 +163,8 @@ function ChatingInterface({setGo,setChat,chat}) {
                     console.error(error);
                     toast.error(error.message);
                 }
+            }else if(!chat.type){
+                setLoading(false)
             }
         };
         fetchUserData();
@@ -272,7 +277,7 @@ function ChatingInterface({setGo,setChat,chat}) {
     };
     return (
         <>
-            {(!chat.type && userData.value.isPremium) && (
+            {isLoading?<h1>LOaing...</h1>:(!chat.type && userData.value.isPremium) && (
                 <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
                     <h1>Premium user</h1>
                 </div>
