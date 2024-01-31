@@ -272,6 +272,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 if (newMsg.content && newMsg.userEmail && newMsg.recieverId) {
                     socket.emit('sendMsg', newMsg)
                     dispatch(addNewMessage(newMsg))
+                    console.log(conversation.value);
+                    if(!conversation.value.length){
+                        GetChatList('from first message sender').then(res=>dispatch(setConversations(res)))
+                    }
                     // const currChat = conversation.value.filter(el => el.opponent[0]._id == chat.data)
                     // if (currChat[0] && currChat[0].messages) {
                     //     const anotherChats = conversation.value.filter(el => el.opponent[0]._id != chat.data)
