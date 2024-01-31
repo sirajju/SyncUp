@@ -39,7 +39,12 @@ const currentchat = createSlice({
       state.value = action.payload;
     },
     addNewMessage: (state, action) => {
-      state.value = [...state.value.filter(el=>el.sentTime!=action.payload.sentTime),action.payload];
+      if (state.value?.length) {
+        state.value = [...state.value.filter(el => el.sentTime != action.payload.sentTime), action.payload];
+      } else {
+        state.value = [action.payload];
+
+      }
     },
     markSeen: (state, action) => {
       state.value = state.value.map(el => {
@@ -51,15 +56,17 @@ const currentchat = createSlice({
       })
     },
     markDelivered: (state, action) => {
-      state.value = state.value.map(el => {
-        if (el.senderId == action.payload) {
-          return { ...el, isDelivered: true }
-        } else {
-          return el
-        }
-      })
+      if (state.value?.length) {
+        state.value = state.value.map(el => {
+          if (el.senderId == action.payload) {
+            return { ...el, isDelivered: true }
+          } else {
+            return el
+          }
+        })
+      }
     },
-    markSent:(state, action) => {
+    markSent: (state, action) => {
       state.value = state.value.map(el => {
         if (el.senderId == action.payload) {
           return { ...el, isSent: true }
@@ -84,26 +91,37 @@ const totalConversations = createSlice({
 });
 const callState = createSlice({
   name: "callState",
-  initialState:  {value:{}} ,
+  initialState: { value: {} },
   reducers: {
     setCallData: (state, action) => {
-      state.value = {...state.value,...action.payload}
+      state.value = { ...state.value, ...action.payload }
     },
   },
 });
 const chatState = createSlice({
-  name:"chatState",
-  initialState:{type:null,data:null},
-  reducers:{
-    setChat:(state,action)=>{
-      state=action.payload
+  name: "chatState",
+  initialState: { type: null, data: null },
+  reducers: {
+    setChat: (state, action) => {
+      state = action.payload
+    }
+  }
+})
+
+const adsData = createSlice({
+  name: 'ads',
+  initialState: { value: {} },
+  reducers: {
+    setAds: (state, action) => {
+      state.value = action.payload
     }
   }
 })
 
 export const { setConversations, resetConversation } = totalConversations.actions;
-export const { setCurrentChat, markDelivered, markSeen, addNewMessage,markSent } = currentchat.actions;
+export const { setCurrentChat, markDelivered, addNewMessage, markSent, markSeen } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
+export const { setAds } = adsData.actions
 export const { setUserData } = userSlice.actions;
 export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;
@@ -114,8 +132,9 @@ const rootReducer = combineReducers({
   admin: adminContext.reducer,
   currentChat: currentchat.reducer,
   conversations: totalConversations.reducer,
-  call:callState.reducer,
-  chat:chatState.reducer
+  call: callState.reducer,
+  chat: chatState.reducer,
+  ads: adsData.reducer,
 });
 export const store = configureStore({
   reducer: rootReducer,
