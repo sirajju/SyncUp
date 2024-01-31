@@ -1,0 +1,29 @@
+.loaderParent{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    position: absolute;
+    overflow: hidden;
+    z-index: 5489;
+
+}
+.loaderChild{
+    width: 80%;
+    height: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: #ED80FD; */
+    flex-direction: column;
+    padding:50px;
+    border-radius: 10px;
+    color: white;
+}
+.loaderChild div{
+    color: #ED80FD;
+    width: 80%;
+    background-color: transparent;
+}

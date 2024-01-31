@@ -1,0 +1,26 @@
+.forgetInput{
+    width: 50%;
+    text-align: start;
+    height: 45px;
+    border:2px solid #ED80FD;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 50px;
+    outline: none;
+}
+.invalid {
+    border:2px solid rgb(255, 130, 130) !important;
+}
+.verifyOtp:disabled{
+    opacity: 0.7;
+}
+.resetPassInput{
+    width: 50%;
+    text-align: start;
+    height: 45px;
+    border:2px solid #ED80FD;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 4px;
+    outline: none;   
+}

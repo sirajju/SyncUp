@@ -60,6 +60,7 @@ const getConversation = async (req, res) => {
                     if(connectData){
                         req.io.to(connectData.socketId).emit('msgSeen')
                     }
+        
                     const encData = encryptData(messageData)
                     res.json({ success: true, isExists: true, body: encData })
                 } else {
@@ -78,16 +79,16 @@ const getConversation = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-const sendMessage = async ({recieverId, message,userEmail}) => {
+const sendMessage = async ({recieverId, content,userEmail}) => {
     try {
-        if (recieverId && message) {
+        if (recieverId && content) {
             const userData = await User.findOne({ email: userEmail })
             const recieverData = await User.findOne({ _id: recieverId })
             const conversationData = await Conversation.findOne({ participents: { $all: [userData._id, recieverData._id] } })
             const newMessage = new Message({
                 senderId: userData._id,
                 recieverId,
-                content: message,
+                content,
                 sentTime: Date.now(),
                 isDelivered: false,
                 isReaded: false,
@@ -118,12 +119,12 @@ const sendMessage = async ({recieverId, message,userEmail}) => {
 const getCurrentConversations = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
-        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "last_message" } }, { $project: { _id: 1, opponent: 1, startedAt: 1, updatedAt: 1, last_message: { $slice: ['$last_message', -1] } } }, { $sort: { updatedAt: -1 } }])
+        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, opponent: 1, startedAt: 1, updatedAt: 1, messages: 1,last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
         if (conversationData) {
             await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } })
-            const sendersData = await Message.find({ recieverId: userData._id })
-            sendersData.forEach(async (el) => {
-                const connectData = await Connection.findOne({ userId: el.senderId })
+            const dlvrData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } },{$project:{participents:1}}])
+            dlvrData.forEach(async (el) => {
+                const connectData = await Connection.findOne({ userId: el.participents })
                 if (connectData) {
                     req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id })
                 }

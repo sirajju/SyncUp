@@ -90,6 +90,7 @@ function intializeSocket(server) {
             socket.on('markMsgDeliver', async (data) => {
                 const senderConnection = await Connection.findOne({ userId: data.senderId })
                 if (senderConnection) {
+                    console.log('marking deliever');
                     socket.to(senderConnection.socketId).emit('msgDelivered')
                 }
             })
@@ -112,6 +113,18 @@ function intializeSocket(server) {
                         recieverId: data.recieverId
                     }).save()
                     socket.join(newRoom.roomId)
+                }
+            })
+            socket.on('typingStarted',async(data)=>{
+                const roomData = await Room.findOne({ senderId: { $in: [data.from, data.to] }, recieverId: { $in: [data.from, data.to] } })
+                const connectData = await Connection.findOne({userId:data.to})
+                if(roomData){
+                    socket.to(roomData.roomId).emit('typing')
+                    socket.to(connectData.socketId).emit('typing')
+                    setTimeout(() => {
+                        socket.to(connectData.socketId).emit('typingEnd')
+                        socket.to(roomData.roomId).emit('typingEnd')
+                    }, 1000);
                 }
             })
             socket.on('disconnect', async (socket) => {

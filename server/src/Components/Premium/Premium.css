@@ -1,0 +1,76 @@
+.preimumPageContainer {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 50px;
+}
+.preimumPageContainer .closeBtn{
+    font-size: 20px;
+    background-color: #ED80FD;
+    width: 30px;
+    text-align: center;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.footer {
+    margin: 0;
+}
+.prChatPoints {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    color: white;
+    width: 50px ;
+    height: 25px;
+    border-radius: 10px;
+    text-align: center;
+    padding: 3px;   
+    font-size: 13px;
+    font-weight: bold;
+    position: absolute;
+    right:10px;
+    cursor: pointer;
+    animation: bigNsmall 1s linear infinite;
+    transition: 0.5s;
+
+}
+.buyWithChatPoint{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    color: #010851;
+    font-weight: bold;
+}
+.buyWithChatPoint font {
+    color: #ED80FD;
+}
+.buyWithChatPoint button {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    height: 40px;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    width: 200px;
+    cursor: pointer;
+}
+.buyWithChatPoint button:disabled {
+    background-color: grey;
+}
+.sharePremium {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    color: #010851;
+    padding: 70px;
+}
+@keyframes bigNsmall {
+    0%{
+        transform: scale(1.1);
+    }
+    100%{
+        transform: scale(1.2);
+    }
+}

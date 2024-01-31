@@ -1,0 +1,64 @@
+.adminLoginContainer{
+    width: 100%;
+    background: linear-gradient(135deg, #EE9AE5 0%, #5961F9 100%);
+    height: 100%;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.adminLoginBox{
+    width: 40%;
+    height: 80%;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.loginHead{
+    margin-top: 50px;
+    color: rgb(0, 0, 0);
+    height: 70px !important;
+    text-align: center;
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid rgb(71, 71, 71);
+}
+.inputBoxAdmin{
+    width: 80%;
+    height: 70%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 50px;
+}
+.inputBoxAdmin .item{
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+}
+.inputBoxAdmin input{
+    height: 45px;
+    border-radius: 10px;
+    outline: none;
+    background: white;
+    border: 1px solid black;
+    padding:10px
+}
+.inputBoxAdmin label{
+    color: black;
+    font-weight: 500;
+}
+.btnAdminLogin {
+    font-weight: 500;
+    height: 40px;
+    width: 45%;
+    background: #ED80FD;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    margin-top: 20px;
+}

@@ -1,0 +1,128 @@
+.loginBox {
+    width: 70%;
+    height: 32pc;
+    margin-top: 60px;
+    border: none;
+    box-shadow: 2px 2px 15px 1px rgb(213, 213, 213);
+}
+
+.leftBox {
+    background: linear-gradient(130deg, #ee9ae5ff 10%, #5961f9ff 100%);
+    width: 60%;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 70px;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loginImg {
+    width: 70%;
+    margin-left: 10%;
+}
+
+.leftTitle {
+    color: white;
+    font-size: 40px;
+}
+
+.leftDescription {
+    color: white;
+    font-weight: 400;
+    margin-top: 20px;
+}
+
+.loginContainer {
+    height: 100dvh;
+}
+
+.rightBox {
+    background: white;
+    width: 40%;
+    height: 100%;
+    flex-direction: column;
+}
+
+.formContainer {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.loginInput {
+    width: 80%;
+    background: #e3cbfa;
+    margin-top: 15px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    margin-left: 10%;
+}
+
+.loginInput::placeholder {
+    font-size: 15px;
+}
+
+.loginInput:focus {
+    outline: none;
+}
+
+.showPassLabel {
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 80%;
+}
+
+.btnLogin {
+    width: 130px;
+    height: 38px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(130deg, #ee9ae5ff 10%, #5961f9ff 100%);
+    color: white;
+    font-weight: bold;
+    margin-top: 20px;
+    transition: 0.5s;
+}
+
+.btnLogin:hover {
+    transform: scale(1.1);
+    transition: 0.5s;
+}
+.createHere {
+    font-size: 13px;
+    margin-top: 10px;
+}
+@media (max-width:1002px){
+    .leftBox {
+        display: none;
+    }
+    .rightBox {
+        width: 100%;
+    }
+    .loginContainer{
+        background: linear-gradient(130deg, #ee9ae5ff 10%, #5961f9ff 100%);
+    }
+    .loginBox{
+        box-shadow: none;
+    }
+    .showPassLabel,a{
+        font-size: 11px !important;
+    }
+    
+}

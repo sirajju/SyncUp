@@ -1,7 +1,8 @@
 import { useState } from "react"
 import Axios from "../../interceptors/axios"
 
-export default async function GetChatList() {
+export default async function GetChatList(from) {
+    console.log(`from ${from}`)
     const options = {
         route:"getCurrentConversations",
         crypto:true,

@@ -1,0 +1,35 @@
+.emailInput {
+    height:45px;
+    width: 300px;
+    margin-top:30px;
+    border-radius: 5px;
+    border:none;
+    border-right: 1px solid transparent;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding: 15px;
+}
+.btnSubmit{
+    height: 45px;
+    border-radius: 5px;
+    border: none;
+    border-left: none;
+    background: #ED80FD;
+    color: white;
+    width: 100px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+.emailInput:hover{
+    outline: none;
+}
+@media (max-width:690px){
+    .btnSubmit {
+        width: 300px;
+        margin-top: 20px;
+        border-radius: 10px;
+    }
+    .emailInput{
+        border-radius: 10px;
+    }
+}

@@ -1,0 +1,17 @@
+.newBox {
+    width: 100%;
+    background-color: red;
+    height: 88vh;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.boxAdd{
+    width: 40%;
+    background: white;
+    margin: 0px 0 0 200px;
+    border-radius: 10px;
+    height: 92%;
+}

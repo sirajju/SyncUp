@@ -1,0 +1,26 @@
+.premiumContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    color:#010851;
+}
+.child2{
+    display: flex;
+}
+@media (min-width:600px) and (max-width:1200px){
+    .premiumContainer{
+        flex-direction: column;
+        text-align: center;
+    }
+    
+}
+@media (max-width:599px){
+    .premiumContainer{
+        flex-direction: column;
+        text-align: center;
+    }
+    .child2{
+        flex-direction: column;
+    }
+}

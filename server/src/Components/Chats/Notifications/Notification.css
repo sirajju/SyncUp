@@ -1,0 +1,31 @@
+.btnAccept {
+    /* width: 40px; */
+    background: #ED80FD;
+    height: 38px;
+    border-radius: 10px;
+    border: none;
+    margin: 3px;
+}
+.notificationItem {
+    width: 100%;
+    height: 80px;
+    background: #F8F8F8;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    margin-top: 10px;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+    font-weight: bold;
+}
+.premiumNoti {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    color: white;
+    font-weight: bold;
+    font-size: 17px;
+}
+.closeBtn {
+    border: none;
+    background: transparent;
+}

@@ -1,0 +1,36 @@
+.contactContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.contact {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.contactInput {
+    width:37%;
+    height: 45px;
+    margin: 10px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    padding:20px;
+}
+.textArea {
+    width: 76%;
+    border: none;
+    outline: none;
+    padding: 20px;
+    border-radius: 5px;
+}
+@media (max-width:800px){
+    .contact {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .contactInput {
+        width: 76%;
+    }
+}

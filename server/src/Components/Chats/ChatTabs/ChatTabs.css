@@ -1,0 +1,16 @@
+.chatTabs {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 7px;
+    padding: 10px;
+    color: black;
+}
+.chatTabs h5 {
+    color: gray;
+    font-weight: 400;
+    margin-top: 5px;
+}
+.chatTabs .rightIcon{
+    width: 18px;
+}

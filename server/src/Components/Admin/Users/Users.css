@@ -1,0 +1,28 @@
+.usersList {
+    width: 80%;
+    background: white;
+    margin: 0px 0 0 200px;
+    border-radius: 10px;
+    height: 92%;
+}
+.inputSearch {
+    width: 250px;
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid grey;
+    padding: 10px;
+    outline: none;
+}
+.inputSearch:hover {
+    border: 1px solid #ED80FD;
+    outline: #ED80FD;
+}
+.btnSearch {
+    width: 100px;
+    height: 40px;
+    border-radius: 5px;
+    background-color: #ED80FD;
+    color: white;
+    border: none;
+    margin-left: 5px;
+}
