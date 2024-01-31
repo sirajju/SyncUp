@@ -128,11 +128,8 @@ function Chats() {
             alert('msgSent')
         })
         socket.on('messageRecieved', async (data) => {
-            // dispatch(setConversations(await GetChatList('messageReceived')))
-            console.log(chat.data, data.newMessage.senderId);
-            if (chat.data == data.newMessage.senderId) {
+            if(data.newMessage){
                 dispatch(addNewMessage(data.newMessage))
-            } else {
                 dispatch(setConversations(await GetChatList('messageReceived')))
             }
         })
