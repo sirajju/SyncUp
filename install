@@ -11,5 +11,5 @@ elif [ "$1" = "both" ]; then
     cd client && npm i "$2"
     cd ../server && npm i "$2"
 else 
-    echo  "\nType argument is missing or invalid"
+    echo  "\nArgument(s) is missing or invalid"
 fi
