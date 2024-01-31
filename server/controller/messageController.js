@@ -60,7 +60,6 @@ const getConversation = async (req, res) => {
                     if(connectData){
                         req.io.to(connectData.socketId).emit('msgSeen')
                     }
-        
                     const encData = encryptData(messageData)
                     res.json({ success: true, isExists: true, body: encData })
                 } else {
@@ -73,7 +72,6 @@ const getConversation = async (req, res) => {
         } else {
             res.json({ success: false, message: "Look like something is missing" });
         }
-
     } catch (error) {
         console.log(error);
         res.json({ message: error.message })

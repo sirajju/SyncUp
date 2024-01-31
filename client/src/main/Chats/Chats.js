@@ -34,9 +34,10 @@ function Chats() {
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
     const history = useNavigate()
-    const conversation = useSelector(state => state.chat)
+    const conversation = useSelector(state => state.conversations)
+    const currentChat = useSelector(state=>state.currentChat)
     useEffect(() => {
-        console.log('executing chat useEffect')
+        // Setting socket id and getting conversations (chat)
         function a() {
             if (userData.value._id) {
                 socket.emit('set-socketId', {
@@ -46,10 +47,12 @@ function Chats() {
             GetChatList('chat use effect').then(res => {
                 dispatch(setConversations(res))
                 console.log('getting users from chat');
+
                 getAds()
             })
         }
         a()
+        // Fetching ads from server
         function getAds() {
             const token = localStorage.getItem('SyncUp_Auth_Token')
             if (token && !userData.value.isPremium) {
@@ -73,6 +76,8 @@ function Chats() {
                 setLoading(false)
             }
         }
+
+        // Making responsive on mobile screen
         window.addEventListener('resize', () => {
             if (window.outerWidth <= 800 && chat.type) {
                 setGo('MobileChat')
@@ -80,6 +85,8 @@ function Chats() {
                 setGo('')
             }
         })
+
+        // Setting socket id on connected
         socket.on('connect', () => {
             if (userData.value._id) {
                 socket.emit('set-socketId', {
@@ -88,6 +95,7 @@ function Chats() {
             }
         })
         const handleUpdate = () => {
+            console.log('syncing userData');
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
                 route: "isAlive",
@@ -113,20 +121,17 @@ function Chats() {
         }
         const handleSeen = async () => {
             dispatch(markSeen(userData.value._id))
-            // dispatch(setConversations(await GetChatList('handleSeen function')))
         }
         const handleDelivered = async () => {
             dispatch(markDelivered(userData.value._id))
-            // console.log(conversation.value);
-            // dispatch(setConversations(await GetChatList('handleDelievered')))
         }
+
+        // Syncing userData whenever server calls
         socket.on('onUpdateNeeded', handleUpdate)
+        // Resetting userData whenever a logout is needed
         socket.on('logoutUser', handleLogout)
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
-        socket.on('msgSent', () => {
-            alert('msgSent')
-        })
         socket.on('messageRecieved', async (data) => {
             if(data.newMessage){
                 dispatch(addNewMessage(data.newMessage))
@@ -144,7 +149,7 @@ function Chats() {
         })
 
 
-    }, [])
+    }, [socket])
     const handleSearch = useCallback(async (e) => {
         if (e.target.value.trim()) {
             setChat({ type: null })
@@ -165,7 +170,9 @@ function Chats() {
             }
         } else {
             setSearchData([])
-            dispatch(setConversations(await GetChatList('searchFunction')))
+            if(!conversation?.value?.length){
+                dispatch(setConversations(await GetChatList('searchFunction')))
+            }
         }
     }, [])
     const props = {

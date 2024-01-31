@@ -62,7 +62,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
         socket.on('typingEnd', () => {
             setTyping(false)
         })
-    }, [reciever])
+    }, [reciever,socket])
     return (
         <div className='conversationTopBar'>
             <div className="conversationDetails">
@@ -153,27 +153,18 @@ const MessageRenderer = ({ reciever, setReciever }) => {
 function ChatingInterface({ setGo, setChat, chat }) {
     const socket = useSocket()
     const userData = useSelector((state) => state.user);
-    const callState = useSelector(state => state.call)
     const [reciever, setReciever] = useState(null);
     const [message, setMessage] = useState('');
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
-    const [isLoading, setLoading] = useState(true)
     const [file, setFile] = useState(false)
-    const [newMsg, setNewMsg] = useState(null)
     const inputRef = useRef();
-    const fileInputRef = useRef();
     const conversation = useSelector(state => state.conversations)
-    const navigate = useNavigate()
     const dispatch = useDispatch()
     useEffect(() => {
         if (chat.type == 'chat') {
-            // const handleDelivered = () => {
-            //     GetChatList('chating interface useEffect').then(res => {
-            //         dispatch(setConversations(res))
-            //     })
-            // }
-            // socket.on('msgDelivered', handleDelivered)
+            socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
+
             GetMessages(chat.data).then(msgList => {
                 if (msgList?.length) {
                     dispatch(setCurrentChat(msgList))
@@ -195,61 +186,19 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     setReciever(res.data.body)
                 })
             }
-
-            document.addEventListener('keyup', (e) => {
-                if (e.key == 'Escape') {
-                    setChat({ type: null })
-                } else if (e.key == 'Enter') {
-                    if (inputRef.current) {
-                        inputRef.current.focus()
-                    }
-                }
-            })
-            // try {
-            //     const token = localStorage.getItem('SyncUp_Auth_Token');
-            //     const options = {
-            //         route: "getUserInfo",
-            //         params: { userId: chat.data },
-            //         headers: { Authorization: `Bearer ${token}` },
-            //         crypto: true
-            //     }
-            //     Axios(options).then(res => {
-            //         if (res.data.success) {
-            //             setLoading(false)
-            //             setReciever(res.data.body);
-
-            //         } else {
-            //             toast.error(res.data.message);
-            //         }
-            //     })
-
-            // } catch (error) {
-            //     console.error(error);
-            //     toast.error(error.message);
-            // }
         }
-        if (chat.type == 'videoCall') {
-            // window.onbeforeunload = (e)=>{
-            //     e.preventDefault()
-            //     return false
-            // }
+        else if (chat.type == 'videoCall') {
             socket.emit('onCall', chat.data)
-            setLoading(false)
         }
-        const fetchUserData = () => {
-            if (inputRef.current) {
-                inputRef.current.focus();
+        document.addEventListener('keyup', (e) => {
+            if (e.key == 'Escape') {
+                setChat({ type: null })
+            } else if (e.key == 'Enter') {
+                if (inputRef.current) {
+                    inputRef.current.focus()
+                }
             }
-            if (chat.type === 'chat') {
-                socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
-
-            } else if (!chat.type) {
-                setLoading(false)
-            }
-        };
-        fetchUserData();
-
-
+        })
     }, [chat]);
     const sendMessage = async () => {
         if (isSending) {
@@ -266,15 +215,13 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     isSent: false,
                     sentTime: Date.now()
                 }
-                setNewMsg(newMsg)
                 setMessage('')
                 setSending(true)
                 if (newMsg.content && newMsg.userEmail && newMsg.recieverId) {
                     socket.emit('sendMsg', newMsg)
                     dispatch(addNewMessage(newMsg))
-                    console.log(conversation.value);
-                    if(!conversation.value.length){
-                        GetChatList('from first message sender').then(res=>dispatch(setConversations(res)))
+                    if (!conversation.value.length) {
+                        GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
                     }
                     // const currChat = conversation.value.filter(el => el.opponent[0]._id == chat.data)
                     // if (currChat[0] && currChat[0].messages) {
