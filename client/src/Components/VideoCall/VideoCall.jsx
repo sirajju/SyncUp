@@ -143,31 +143,31 @@ function VideoCall(props) {
       {userData && <div className='userDetailsVidCall'>
         <img src={userData.avatar_url} className='vidCallAvatar' alt="" />
         <h4>{userData.username}</h4>
-        </div>}
+      </div>}
       {callState.value && <div className="videoContainer">
         {isLoaded ? <>
-          <div className="callOptions">
+          {/* <div className="callOptions"> */}
             {chat.isRecieved && !chat.isAccepted ?
-              <>
+              <div className={chat.isAccepted?"AccpetedOPtions":"callOptions"}>
                 <button className="Accept" onClick={acceptCall} >Accept</button>
                 <button className="Decline" onClick={props.declineCall} >Decline</button>
-              </>
+              </div>
               :
-              <>
+              <div className={chat.isAccepted?"AccpetedOPtions":"callOptions"}>
                 <button onClick={props.hangUpCall}> <img src={imgDecline} alt="" /> </button>
-              </>}
-          </div>
+              </div>}
+          {/* </div> */}
           <div className="callUi">
             <div className="selfVideo" id='selfVideo'>
               <video id="local-video-stream" className='selfStream' autoPlay muted></video>
             </div>
             <div className="opVideo" id='opVideo'>
-              <video id="op-video-stream" className='selfStream' autoPlay muted></video>
+              <video id="op-video-stream" className='opponentVideo' autoPlay muted></video>
 
             </div>
           </div></> : <div className="vidLoading">
           <span className="spinner" />
-          <p className='text-light' >Connecting...</p>
+          <p className='text-light' >Waiting...</p>
           <button className='btnHangup' onClick={props.hangUpCall}> <img src={imgDecline} alt="" /></button>
 
         </div>}
