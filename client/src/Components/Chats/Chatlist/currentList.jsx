@@ -1,20 +1,24 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCurrentChat } from '../../../Context/userContext'
+import GetMessages from '../../../main/Chats/getMessages'
+import { useSocket } from '../../../Context/socketContext'
 
-function CurrentList({ setChat,setGo}) {
-    const conversations = useSelector(state=>state.conversations)
-    const setConversation = function(id){
-        setChat({type:'chat',data:id})
-        console.log(window.outerWidth);
-        if(window.outerWidth<=800){
-            setGo('MobileChat')
-        }
+function CurrentList({ setChat, setGo }) {
+    const conversations = useSelector(state => state.conversations)
+    const socket = useSocket()
+    const dispatch = useDispatch()
+    const setConversation = function (id) {
+        setChat({ type: 'chat', data: id })
+        socket.emit('markMsgSeen', { userId: id })
+        
     }
+
     return (
         <>
-            {conversations.value.map((el,key) => {
+            {conversations.value.length && conversations.value.map((el, key) => {
                 return (
-                    <div key={key} className="chatlistItem cursor-pointer p-3" onClick={()=>{setConversation(el.opponent[0]._id)}} >
+                    <div key={key} className="chatlistItem cursor-pointer p-3" onClick={() => { setConversation(el.opponent[0]._id) }} >
                         <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
                             <div className="userContent">

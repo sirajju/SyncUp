@@ -6,6 +6,7 @@
     justify-content: center;
     align-items: center;
     background-color: #EEE9EE;
+    overflow: hidden;
 
 }
 .chatsLeft {
@@ -14,11 +15,10 @@
     width: 40%;
     min-width: 25pc;
 }
-.chatsRight {
-    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
-}
 .chatsRight{
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
     width: 60%;
+    overflow: hidden;
 }
 .chatsStyle {
     height: 96vh;

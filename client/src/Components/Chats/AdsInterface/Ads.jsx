@@ -1,41 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { Carousel, initMDB } from "mdb-ui-kit";
 import './Ads.css'
-import axios from '../../../interceptors/axios'
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 initMDB({ Carousel });
 
 function Ads() {
-    const [ads, setAds] = useState([])
-    const userData = useSelector(state=>state.user)
-    useEffect(() => {
-        async function getAds(){
-            const token = localStorage.getItem('SyncUp_Auth_Token')
-            if (token&&!userData.value.isPremium) {
-                const options = {
-                    route:'getAds',
-                    headers:{Authorization: `Bearer ${token}`},
-                    crypto:true
-                }
-                axios(options).then(res=>{
-                    if (res.data.success) {
-                        setAds(res.data.body)
-                    } else {
-                        toast.error(res.data.message)
-                    }
-                })
-            }
-        }
-        getAds()
-    }, [])
+    const ads = useSelector(state=>state.ads)
     return (
         <>
             <div className="adsContainer">
                 <div id="carouselExampleSlidesOnly" className="carousel slide" data-ride="carousel">
                     <div className="carousel-inner">
-                        {ads.length && ads.map((el, ind) => {
+                        {ads.value.length && ads.value.map((el, ind) => {
                             return (
                                 <div key={ind} className={ind == 0 ? "carousel-item active" : "carousel-item"}>
                                     <Link to={el.redirect_url} target='_blank'>

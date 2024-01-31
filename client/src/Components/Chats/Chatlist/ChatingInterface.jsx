@@ -27,48 +27,102 @@ import Emoji from '../../Emojis/Emoji'
 import emojiRegex from 'emoji-regex';
 import VidConfig from '../../VideoCall/VidConfig';
 import msgSending from '../../../assets/Images/pending.png'
+import LinearProgress from '@mui/joy/LinearProgress';
+import lodash from 'lodash'
 
 
-const ConversationDetails = ({ reciever, setChat,setGo }) => {
+
+const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
+    const userData = useSelector(state => state.user)
+    const dispatch = useDispatch()
+    const [isLoading, setLoading] = useState(true)
+    const socket = useSocket()
+    const [isTyping, setTyping] = useState(false)
+    const conversation = useSelector(state => state.conversations)
+    useEffect(() => {
+        console.log('conversation userDetails top bar');
+        setLoading(true)
+        GetChatList('conversationTop').then(res => {
+            dispatch(setConversations(res))
+            setLoading(false)
+        })
+        const options = {
+            route: "getConversation",
+            params: { recieverId: reciever._id },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            crypto: true
+        }
+        Axios(options).then(res => {
+            dispatch(setCurrentChat((res.data.body)))
+        })
+        socket.on('typing', () => {
+            console.log('typing');
+            setTyping(true)
+        })
+        socket.on('typingEnd', () => {
+            setTyping(false)
+        })
+    }, [reciever])
     return (
-        <div className="conversationDetails">
-            <button
-                type="button"
-                className="close closeProfile"
-                onClick={() => {
-                    setChat('');
-                    if(window.outerWidth<=800){
-                        setGo('')
-                    }
-                }}
-                aria-label="Close"
-            >
-                <span aria-hidden="true">&times;</span>
-            </button>
-            <img src={reciever.avatar_url} alt="" className="conversationAvatar" />
-            <div className="conversationUserDetails">
-                <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} </span>
-                <span>{reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>
+        <div className='conversationTopBar'>
+            <div className="conversationDetails">
+                <button
+                    type="button"
+                    className="close closeProfile"
+                    onClick={() => {
+                        setChat('');
+                        if (window.outerWidth <= 800) {
+                            setGo('')
+                        }
+                    }}
+                    aria-label="Close"
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <img src={reciever.avatar_url} alt="" className="conversationAvatar" />
+                <div className="conversationUserDetails">
+                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} </span>
+                    <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>
+                </div>
+            </div>
+            <div className="conversationMenu">
+                {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
+                <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />
+                <img src={menu} alt="" />
             </div>
         </div>
     )
 
 };
 
-const MessageRenderer = ({reciever}) => {
-    const currentChat = useSelector(state => state.currentChat)
+const MessageRenderer = ({ reciever, setReciever }) => {
     const userData = useSelector(state => state.user)
-    const socket=useSocket()
+    const socket = useSocket()
     const doodleRef = useRef()
+    const [messages, setMessages] = useState([])
+    const conversation = useSelector(state => state.conversations)
+    const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
-        doodleRef.current.scrollTop = doodleRef.current.scrollHeight
-        socket.emit('markMsgSeen',{userId:reciever._id})
+        doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
+        if (!currentChat.value?.length) {
+            console.log('running on local chat');
+            const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
+            if (data.length) {
+                setMessages(data[0].messages)
+            } else {
+                setMessages([])
+            }
+        } else {
+            console.log('running on current chat');
+            setMessages(currentChat.value)
+        }
+
     }, [currentChat])
     return (
         <div className="chatinInterface">
             <div className="doodles" ref={doodleRef}>
-                {currentChat.value.length ? (
-                    currentChat.value.map((el, ind) => {
+                {messages?.length ? (
+                    messages.map((el, ind) => {
                         return (
                             el.senderId === userData.value._id ? (
                                 <div key={ind} className="message rightMessage">
@@ -96,7 +150,7 @@ const MessageRenderer = ({reciever}) => {
     )
 }
 
-function ChatingInterface({setGo,setChat,chat}) {
+function ChatingInterface({ setGo, setChat, chat }) {
     const socket = useSocket()
     const userData = useSelector((state) => state.user);
     const callState = useSelector(state => state.call)
@@ -104,14 +158,44 @@ function ChatingInterface({setGo,setChat,chat}) {
     const [message, setMessage] = useState('');
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
-    const [isLoading,setLoading]=useState(true)
+    const [isLoading, setLoading] = useState(true)
     const [file, setFile] = useState(false)
+    const [newMsg, setNewMsg] = useState(null)
     const inputRef = useRef();
     const fileInputRef = useRef();
+    const conversation = useSelector(state => state.conversations)
     const navigate = useNavigate()
     const dispatch = useDispatch()
     useEffect(() => {
         if (chat.type == 'chat') {
+            // const handleDelivered = () => {
+            //     GetChatList('chating interface useEffect').then(res => {
+            //         dispatch(setConversations(res))
+            //     })
+            // }
+            // socket.on('msgDelivered', handleDelivered)
+            GetMessages(chat.data).then(msgList => {
+                if (msgList?.length) {
+                    dispatch(setCurrentChat(msgList))
+                } else {
+                    dispatch(setCurrentChat([]))
+                }
+            })
+            const chatData = conversation.value.filter(el => el.opponent[0]._id == chat.data)
+            if (chatData && chatData[0]?.opponent[0]) {
+                setReciever(chatData[0].opponent[0])
+            } else {
+                const options = {
+                    route: "getUserInfo",
+                    params: { userId: chat.data },
+                    headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                    crypto: true
+                }
+                Axios(options).then(res => {
+                    setReciever(res.data.body)
+                })
+            }
+
             document.addEventListener('keyup', (e) => {
                 if (e.key == 'Escape') {
                     setChat({ type: null })
@@ -121,6 +205,28 @@ function ChatingInterface({setGo,setChat,chat}) {
                     }
                 }
             })
+            // try {
+            //     const token = localStorage.getItem('SyncUp_Auth_Token');
+            //     const options = {
+            //         route: "getUserInfo",
+            //         params: { userId: chat.data },
+            //         headers: { Authorization: `Bearer ${token}` },
+            //         crypto: true
+            //     }
+            //     Axios(options).then(res => {
+            //         if (res.data.success) {
+            //             setLoading(false)
+            //             setReciever(res.data.body);
+
+            //         } else {
+            //             toast.error(res.data.message);
+            //         }
+            //     })
+
+            // } catch (error) {
+            //     console.error(error);
+            //     toast.error(error.message);
+            // }
         }
         if (chat.type == 'videoCall') {
             // window.onbeforeunload = (e)=>{
@@ -130,44 +236,19 @@ function ChatingInterface({setGo,setChat,chat}) {
             socket.emit('onCall', chat.data)
             setLoading(false)
         }
-        const fetchUserData = async () => {
+        const fetchUserData = () => {
             if (inputRef.current) {
                 inputRef.current.focus();
             }
             if (chat.type === 'chat') {
-                socket.emit('join-room',{senderId:userData.value._id,recieverId:chat.data})
-                try {
-                    const token = localStorage.getItem('SyncUp_Auth_Token');
-                    const options = {
-                        route: "getUserInfo",
-                        params: { userId: chat.data },
-                        headers: { Authorization: `Bearer ${token}` },
-                        crypto: true
-                    }
-                    Axios(options).then(async res => {
-                        if (res.data.success) {
-                            setLoading(false)
-                            setReciever(res.data.body);
-                            const msgList = await GetMessages(res.data.body._id)
-                            if (msgList?.length) {
-                                dispatch(setCurrentChat(msgList))
-                            } else {
-                                dispatch(setCurrentChat([]))
-                            }
-                        } else {
-                            toast.error(res.data.message);
-                        }
-                    })
+                socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
 
-                } catch (error) {
-                    console.error(error);
-                    toast.error(error.message);
-                }
-            }else if(!chat.type){
+            } else if (!chat.type) {
                 setLoading(false)
             }
         };
         fetchUserData();
+
 
     }, [chat]);
     const sendMessage = async () => {
@@ -178,29 +259,45 @@ function ChatingInterface({setGo,setChat,chat}) {
                 const newMsg = {
                     recieverId: reciever._id,
                     senderId: userData.value._id,
-                    message: message.charAt(0).toUpperCase() + message.slice(1),
+                    content: message.charAt(0).toUpperCase() + message.slice(1),
                     userEmail: userData.value.email,
                     isDelivered: false,
                     isReaded: false,
                     isSent: false,
                     sentTime: Date.now()
                 }
+                setNewMsg(newMsg)
                 setMessage('')
                 setSending(true)
-                if (newMsg.message && newMsg.userEmail && newMsg.recieverId) {
+                if (newMsg.content && newMsg.userEmail && newMsg.recieverId) {
                     socket.emit('sendMsg', newMsg)
-                    dispatch(addNewMessage({ ...newMsg, content: newMsg.message }))
-                    dispatch(setConversations(await GetChatList()))
+                    dispatch(addNewMessage(newMsg))
+                    // const currChat = conversation.value.filter(el => el.opponent[0]._id == chat.data)
+                    // if (currChat[0] && currChat[0].messages) {
+                    //     const anotherChats = conversation.value.filter(el => el.opponent[0]._id != chat.data)
+                    //     let mixed;
+                    //     if (anotherChats.length) {
+                    //         mixed = [{ ...currChat[0], messages: [...currChat[0].messages, newMsg], last_message: [newMsg] }, { ...anotherChats[0] }]
+                    //     } else {
+                    //         mixed = [{ ...currChat[0], messages: [...currChat[0].messages, newMsg] }]
+                    //     }
+                    // } else {
+                    //     GetChatList('sendMessage').then(res => {
+                    //         dispatch(setConversations(res))
+                    //     })
+                    // }
+                } else {
+                    toast('No message')
                 }
-                const handleDelivered = () => {
-                    dispatch(markDelivered(userData.value._id))
-                }
-                socket.on('msgDelivered', handleDelivered)
-                
-                socket.on('msgSeen', () => {
-                    dispatch(markSeen(userData.value._id))
-                })
                 setSending(false)
+
+
+                // socket.on('msgSeen', () => {
+                //     const deep = lodash.cloneDeep(conversation)
+                //     dispatch(setConversations(deep.value.map(el=>{
+                //         return {...el,messages:el.messages.forEach(el => el.isReaded = true)}
+                //     })))
+                // })
 
             }
         }
@@ -258,12 +355,12 @@ function ChatingInterface({setGo,setChat,chat}) {
         }
     }
     const hangUpCall = () => {
-        socket.emit('onHangup',chat.data)
-        setChat({ type: 'chat',data:chat.data.to })
+        socket.emit('onHangup', chat.data)
+        setChat({ type: 'chat', data: chat.data.to })
     }
     const declineCall = () => {
-        socket.emit('onDeclined',chat.data)
-        setChat({ type: 'chat',data:chat.data.from })
+        socket.emit('onDeclined', chat.data)
+        setChat({ type: 'chat', data: chat.data.from })
     }
     const removeLastEmoji = () => {
         const regex = emojiRegex();
@@ -275,9 +372,26 @@ function ChatingInterface({setGo,setChat,chat}) {
             setMessage((msg) => msg.slice(0, -1));
         }
     };
+    const props = {
+        chat,
+        setChat,
+        reciever,
+        setGo,
+        setMessage,
+        setOpenEmoji,
+        handleFileInput,
+        handleInputChange,
+        inputRef,
+        isSending,
+        setSending,
+        sendMessage,
+        message,
+        sendMedia,
+        setReciever
+    }
     return (
         <>
-            {isLoading?<h1>LOaing...</h1>:(!chat.type && userData.value.isPremium) && (
+            {(!chat.type && userData.value.isPremium) && (
                 <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
                     <h1>Premium user</h1>
                 </div>
@@ -285,29 +399,26 @@ function ChatingInterface({setGo,setChat,chat}) {
             {(!userData.value.isPremium && !chat.type) && <Ads />}
             {(chat.type == 'chat' && reciever) && (
                 <div className="conversationContainer">
-                    <div className="conversationTopBar">
-                        <ConversationDetails setGo={setGo} setChat={setChat} reciever={reciever} />
-                        <div className="conversationMenu">
-                            <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: {to:reciever._id,from:userData.value._id,conversationName:`CONVERSATION_${userData.value._id}`} })} alt="" />
-                            <img src={menu} alt="" />
-                        </div>
-                    </div>
-                    <MessageRenderer reciever={reciever} />
-                    <div className="conversationBottom">
-                        <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
-                        <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onChange={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
-                        <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
-                        <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
-                        <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
-                    </div>
+                    <ConversationTopBar {...props} />
+                    <MessageRenderer {...props} />
+                    <ConversationBottom {...props} removeLastEmoji={removeLastEmoji} />
                 </div>
             )}
             {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
-            {(chat.type == 'videoCall') && (
-                <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
-            )}
+            {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
+            }
         </>
     );
 }
-
+const ConversationBottom = function ({ message, removeLastEmoji, sendMessage, handleFileInput, handleInputChange, isSending, setSending, setOpenEmoji, inputRef, fileInputRef }) {
+    return (
+        <div className="conversationBottom">
+            <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
+            <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
+            <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
+            <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
+            <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
+        </div>
+    )
+}
 export default ChatingInterface;

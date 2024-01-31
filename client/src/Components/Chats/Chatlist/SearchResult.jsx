@@ -4,7 +4,7 @@ import follow from '../../../assets/Images/follow.png'
 import message from '../../../assets/Images/message.png'
 import pending from '../../../assets/Images/pending.png'
 
-function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,copyLink,setChat}) {
+function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,copyLink,setChat,setSearchData}) {
     const userData = useSelector(state=>state.user)
     return (
         searchResult.map(el => {
@@ -47,7 +47,7 @@ function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,cop
                                     );
                                 } else if (rs == 'Accepted') {
                                     return (
-                                        <button onClick={() => setChat({ type: 'chat', data: el._id })} className="sendFrndRqst">
+                                        <button onClick={() =>{ setChat({ type: 'chat', data: el._id });setSearchData([])}} className="sendFrndRqst">
                                             <img style={{ 'width': '20px' }} src={message} alt="" />
                                         </button>
                                     );

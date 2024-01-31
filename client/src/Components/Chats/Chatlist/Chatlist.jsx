@@ -15,21 +15,21 @@ import EmptyChat from './EmptyChat'
 import SearchResult from './SearchResult'
 
 
-const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo }) {
+const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo,setSearchData }) {
     const conversation = useSelector(state => state.conversations)
     const userData = useSelector(state => state.user)
     const [status, setStatus] = useState({})
     const [contactsModal, openContactsModal] = useState(false)
     const dispatch = useDispatch()
-    useEffect(() => {
-        if (!searchResult) {
-            async function a() {
-                const mes = await GetChatList()
-                dispatch(setConversations(mes))
-            }
-            a()
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (!searchResult) {
+    //         async function a() {
+    //             const mes = await GetChatList()
+    //             dispatch(setConversations(mes))
+    //         }
+    //         a()
+    //     }
+    // }, [])
     const addToContact = (userId) => {
         const token = localStorage.getItem(`SyncUp_Auth_Token`)
         const options = {
@@ -100,7 +100,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo }) {
                 <EmptyChat openContactsModal={openContactsModal} />
             }
             {Boolean(searchResult.length) &&
-                <SearchResult addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact}/>
+                <SearchResult setSearchData={setSearchData} addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact}/>
             }
             {(searchResult.notfound && !conversation.value.length) &&
                 searchResult.data.map(el => {
