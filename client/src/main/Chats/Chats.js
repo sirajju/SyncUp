@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ChatBox from '../../Components/Chats/ChatBox/ChatBox'
 import Ads from '../../Components/Chats/AdsInterface/Ads'
 import TopBar from '../../Components/Chats/TopBar/TopBar'
@@ -19,6 +19,8 @@ import Axios from '../../interceptors/axios'
 import { useSocket } from '../../Context/socketContext'
 import { io } from 'socket.io-client'
 import Loader from '../../Components/Chats/Loader/Loader'
+import Joyride from '../../Components/Joyride/Joyride'
+
 
 
 const Chatlist = React.memo(Chatslst)
@@ -35,7 +37,7 @@ function Chats() {
     const userData = useSelector(state => state.user)
     const history = useNavigate()
     const conversation = useSelector(state => state.conversations)
-    const currentChat = useSelector(state=>state.currentChat)
+    const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         // Setting socket id and getting conversations (chat)
         function a() {
@@ -113,6 +115,16 @@ function Chats() {
                 }
             })
         }
+        const steps = [
+            {
+                target: '.step-1',
+                content: 'This is the first step.',
+            },
+            {
+                target: '.step-2',
+                content: 'This is the second step.',
+            },
+        ];
         const handleLogout = ({ message }) => {
             toast.error(message)
             localStorage.removeItem('SyncUp_Auth_Token')
@@ -133,7 +145,7 @@ function Chats() {
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
         socket.on('messageRecieved', async (data) => {
-            if(data.newMessage){
+            if (data.newMessage) {
                 dispatch(addNewMessage(data.newMessage))
                 dispatch(setConversations(await GetChatList('messageReceived')))
             }
@@ -170,11 +182,13 @@ function Chats() {
             }
         } else {
             setSearchData([])
-            if(!conversation?.value?.length){
+            if (!conversation?.value?.length) {
                 dispatch(setConversations(await GetChatList('searchFunction')))
             }
         }
     }, [])
+   
+    
     const props = {
         setChat,
         chat,
@@ -183,15 +197,18 @@ function Chats() {
     return (
         <>
             {isLoading && <Loader />}
+
             <ChatBox rightComponent={go != 'MobileChat' && <ChatingInterface {...props} />}>
                 {go == `Profile` && <Profile setGo={setGo} />}
                 {go == `Notifications` && <Notification setChat={setChat} setGo={setGo} />}
                 {go == 'MobileChat' && chat.type && <ChatingInterface {...props} />}
                 {!go &&
                     <>
+
                         <TopBar handleSearch={handleSearch} setGo={setGo} />
                         <ChatTabs activeTab={'Chats'} />
                         <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
+                        <Joyride/>
                     </>}
             </ChatBox>
         </>
