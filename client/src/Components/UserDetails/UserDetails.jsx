@@ -11,7 +11,7 @@ function UserDetails({chat,reciever}) {
         }
     },[])
     return (
-        <div className="userProfileParent">
+        <div className="userProfileParent ">
             <div className="userProfileChild">
                 <img className='avatrProfile' src={reciever.avatar_url} alt="" />
                 <h2 className="profileUsername">{reciever.username} {reciever.isPremium && <span className="badge badge-success rounded-pill d-inline premiumBadge align-top">Premium</span>}  </h2>
