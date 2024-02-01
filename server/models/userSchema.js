@@ -24,6 +24,10 @@ const user = mongoose.Schema({
             tryCount:Number
         }
     },
+    joyRideFinished:{
+        type:Boolean,
+        default:false
+    },
     googleSynced:{
         type:Boolean,
         default:false,
@@ -68,7 +72,8 @@ const user = mongoose.Schema({
         default:[]
     },
     invitedBy :{
-        type:String
+        type:String,
+        default:null
     },
     notifications:{
         type:Array,
@@ -93,6 +98,10 @@ const user = mongoose.Schema({
     last_seen:{
         type:String,
         default:Date.now()
+    },
+    last_seen_string:{
+        type:String,
+        default:new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
     },
     logged_devices:{
         default:0,

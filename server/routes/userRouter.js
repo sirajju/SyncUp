@@ -33,6 +33,8 @@ app.post('/sendMessage',isAuth,messageController.sendMessage)
 app.post('/sendMediaMessage',isAuth,messageController.sendMediaMessage)
 app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
 
+app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
+
 app.patch('/changePass',userController.changePasword)
 app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
 app.patch('/acceptReq',isAuth,userController.acceptReq)

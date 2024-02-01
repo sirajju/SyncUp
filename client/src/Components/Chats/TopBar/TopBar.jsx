@@ -58,12 +58,12 @@ function TopBar({ handleSearch, setGo }) {
       <div className="chatOptions">
         <div>
           {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}
-          <img src={notification} onClick={() => setGo(`Notifications`)} className='icon' alt='Notifcation' />
+          <img src={notification} onClick={() => setGo(`Notifications`)} className='icon notificationsIcon' alt='Notifcation' />
         </div>
         {/* <img src={settingIcon} className='icon settingsIcon' alt='Settings' /> */}
-        {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon' alt='Settings' />}
-        <img src={menuIcon} className='icon' alt='Menu' />
-        <img src={userData.value.avatar_url} onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon' alt='Dp' />
+        {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Settings' />}
+        <img src={menuIcon} className='icon menuIcon' alt='Menu' />
+        <img src={userData.value.avatar_url} onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon profileIcon' alt='Dp' />
       </div>
     </div>
   );

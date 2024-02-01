@@ -437,8 +437,8 @@ const addToContact = async (req, res) => {
         const friendData = await User.findOne({ _id: userId })
         const userData = await User.findOne({ email: req.userEmail })
         if (friendData) {
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { id:friendData._id, isAccepted: false, email: friendData.email } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { requests: { id: userData._id, isAccepted: false , email: userData.email}, notifications: { type: "request", userId: userData._id, email: userData.email, time: Date.now(), isReaded: false } } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { id: friendData._id, isAccepted: false, email: friendData.email } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { requests: { id: userData._id, isAccepted: false, email: userData.email }, notifications: { type: "request", userId: userData._id, email: userData.email, time: Date.now(), isReaded: false } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
                 if (ConnectData) {
@@ -482,8 +482,8 @@ const cancellRequest = async (req, res) => {
         const friendData = await User.findOne({ _id: userId })
         const userData = await User.findOne({ email: req.userEmail })
         if (friendData) {
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { contacts: { id: friendData._id, isAccepted: false,email:friendData.email }, requests: { id: userData._id, isAccepted: false } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $pull: { requests: { id: userData._id, isAccepted: false,email: userData.email }, notifications: { type: 'request', userId: userData._id,email:userData.email } } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { contacts: { id: friendData._id, isAccepted: false, email: friendData.email }, requests: { id: userData._id, isAccepted: false } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $pull: { requests: { id: userData._id, isAccepted: false, email: userData.email }, notifications: { type: 'request', userId: userData._id, email: userData.email } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
                 ConnectData.forEach((el) => {
@@ -508,7 +508,7 @@ const getNoti = async (req, res) => {
         let notiToSend = [...normal]
         if (requests.length) {
             requests.forEach(el => {
-                notiToSend.push({ ...el.notifications, email:el.notiData[0].email,userId: el.notiData[0]._id, avatar_url: el.notiData[0].avatar_url, username: el.notiData[0].username })
+                notiToSend.push({ ...el.notifications, email: el.notiData[0].email, userId: el.notiData[0]._id, avatar_url: el.notiData[0].avatar_url, username: el.notiData[0].username })
             })
         }
         if (notifications) {
@@ -530,10 +530,10 @@ const acceptReq = async (req, res) => {
         const userData = await User.findOne({ email: req.userEmail })
         const friendData = await User.findOne({ _id: userId })
         if (userId) {
-            await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { requests: { id: userId, isAccepted: false} } })
-            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { requests: { id: userId, isAccepted: true,email:friendData.email }, contacts: { id: friendData._id, isAccepted: true,email:friendData.email } } })
-            await User.findOneAndUpdate({ email: friendData.email }, { $pull: { contacts: { id:userData._id, isAccepted: false } } })
-            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { contacts: {id:userData._id , isAccepted: true,email: userData.email }, notifications: { type: 'acceptRQ', message: `${userData.username} has accepted your friend request`, userId: userData._id, email:userData.email ,avatar_url: userData.avatar_url, time: Date.now(), isReaded: false } } })
+            await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { requests: { id: userId, isAccepted: false } } })
+            const updateUser = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { requests: { id: userId, isAccepted: true, email: friendData.email }, contacts: { id: friendData._id, isAccepted: true, email: friendData.email } } })
+            await User.findOneAndUpdate({ email: friendData.email }, { $pull: { contacts: { id: userData._id, isAccepted: false } } })
+            const friendUpdate = await User.findOneAndUpdate({ email: friendData.email }, { $push: { contacts: { id: userData._id, isAccepted: true, email: userData.email }, notifications: { type: 'acceptRQ', message: `${userData.username} has accepted your friend request`, userId: userData._id, email: userData.email, avatar_url: userData.avatar_url, time: Date.now(), isReaded: false } } })
             if (updateUser && friendUpdate) {
                 const ConnectData = await Connection.find({ userId: { $in: [userData._id, friendData._id] } })
                 ConnectData.forEach((el) => {
@@ -636,12 +636,19 @@ const saveContacts = async (req, res) => {
         console.log(error);
     }
 }
-const getContacts = async(req,res)=>{
+const getContacts = async (req, res) => {
     try {
-        const contactData = await User.aggregate([{$match:{email:req.userEmail}},{$unwind:"$contacts"},{$lookup:{from:"users",foreignField:"email",localField:"contacts.email",as:"contactData"}},{$project:{'contactData.username':1,'contactData.avatar_url':1}}])
+        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username': 1, 'contactData.avatar_url': 1 } }])
         console.log(contactData);
     } catch (error) {
-        res.json({message:error.message})
+        res.json({ message: error.message })
+    }
+}
+const makeFinishedRide = async (req, res) => {
+    try {
+        const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { joyRideFinished: true } })
+    } catch (error) {
+        res.json({ success: false, message: error.message })
     }
 }
 module.exports = {
@@ -670,5 +677,6 @@ module.exports = {
     oAuthLoginUser,
     encryptData,
     saveContacts,
-    getContacts
+    getContacts,
+    makeFinishedRide
 }
