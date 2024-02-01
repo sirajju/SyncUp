@@ -30,6 +30,8 @@ import msgSending from '../../../assets/Images/pending.png'
 import LinearProgress from '@mui/joy/LinearProgress';
 import lodash from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
+import { ContextMenu } from 'primereact/contextmenu';
+
 
 
 
@@ -63,9 +65,9 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
         socket.on('typingEnd', () => {
             setTyping(false)
         })
-    }, [reciever,socket])
-    const goToProfile = function(e){
-        setChat({type:"UserProfile",data:reciever._id})
+    }, [reciever, socket])
+    const goToProfile = function (e) {
+        setChat({ type: "UserProfile", data: reciever._id })
     }
     return (
         <div className='conversationTopBar' >
@@ -106,6 +108,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const doodleRef = useRef()
     const [messages, setMessages] = useState([])
     const conversation = useSelector(state => state.conversations)
+    const cmRef = useRef(null)
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
@@ -123,14 +126,19 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         }
 
     }, [currentChat])
+    const items = [
+        { label: 'Delete',command:()=>alert('Delete') },
+        { label: 'Edit' }
+    ]
     return (
         <div className="chatinInterface">
+            <ContextMenu model={items} ref={cmRef} breakpoint="767px" />
             <div className="doodles" ref={doodleRef}>
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
                             el.senderId === userData.value._id ? (
-                                <div key={ind} className="message rightMessage">
+                                <div key={ind} className="message rightMessage" onContextMenu={(e) => cmRef.current.show(e)}>
                                     <div className='p-1'>{el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> </span>
                                 </div>
@@ -206,7 +214,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             }
         })
     }, [chat]);
-    
+
     const sendMessage = async () => {
         if (isSending) {
             return toast('Umm..trafic makes slow')
@@ -364,7 +372,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             )}
             {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
             {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />}
-            {chat.type=='UserProfile' && <UserDetails {...props}  />}
+            {chat.type == 'UserProfile' && <UserDetails {...props} />}
         </>
     );
 }

@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import Joyride from 'react-joyride'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Axios from '../../interceptors/axios';
 import toast from 'react-hot-toast';
+import { setUserData } from '../../Context/userContext';
 
 
 function JoyrideFunction() {
     const userData = useSelector(state => state.user)
+    const dispatch=useDispatch()
     const [isDislayed, setDisplay] = useState(true)
     useEffect(() => {
         if (!userData.value?.joyRideFinished) {
             setDisplay(false)
         }
-    }, [setDisplay])
+    }, [userData])
     const steps = [
         {
             target: '.searchBar',
@@ -43,6 +45,7 @@ function JoyrideFunction() {
     ];
     const handleJoyrideCallback = (data) => {
         if (data.action === 'skip' || data.status === 'finished') {
+            dispatch(setUserData({...userData.value,joyRideFinished:true}))
             const options = {
                 route:"joyrideFinished",
                 headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},

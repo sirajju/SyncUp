@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import './UserDetails.css'
 import { useSelector } from 'react-redux'
+import Axios from '../../interceptors/axios'
 
 function UserDetails({chat,reciever}) {
     // const userData = useSelector(state=>state.conversations)
@@ -8,13 +9,22 @@ function UserDetails({chat,reciever}) {
     useEffect(()=>{
         if(reciever){
             setUserData(reciever)
+            const options = {
+                route:"getUserInfo",
+                headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
+                params:{userId:chat.data},
+                crypto:true,
+            }
+            Axios(options).then(res=>{
+                setUserData(res.data.body)
+            })
         }
     },[])
     return (
         <div className="userProfileParent ">
             <div className="userProfileChild">
-                <img className='avatrProfile' src={reciever.avatar_url} alt="" />
-                <h2 className="profileUsername">{reciever.username} {reciever.isPremium && <span className="badge badge-success rounded-pill d-inline premiumBadge align-top">Premium</span>}  </h2>
+                <img className='avatrProfile' src={userData.avatar_url} alt="" />
+                <h2 className="profileUsername">{userData.username} {userData.isPremium && <span title='Premium member' className="badge badge-success rounded-pill d-inline premiumBadge align-top">Premium</span>}  </h2>
                 <div className="userStatus">
                     <div>
                         <h5>Notes</h5>
@@ -26,9 +36,12 @@ function UserDetails({chat,reciever}) {
                     </div>
                     <div>
                         <h5>Chat points</h5>
-                        <span>{reciever.chatpoints}</span>
+                        <span>{userData.chatpoints}</span>
                     </div>
                 </div>
+            </div>
+            <div className="userProfileChild">
+                
             </div>
         </div>
     )
