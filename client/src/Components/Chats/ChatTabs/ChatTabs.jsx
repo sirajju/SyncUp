@@ -7,7 +7,7 @@ function ChatTabs({ activeTab }) {
         <div className="chatTabs">
             <h2 className='activeTab'>{activeTab || 'Chats'}</h2>
             <img className='rightIcon' src={rightIcon} alt="" />
-            <h5>{activeTab == 'Chats' ? "Updates" : "Chats"}</h5>
+            <h5 className='inActiveTab' >{activeTab == 'Chats' ? "Updates" : "Chats"}</h5>
         </div>
     )
 }
