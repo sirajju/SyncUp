@@ -205,6 +205,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             }
         })
     }, [chat]);
+    
     const sendMessage = async () => {
         if (isSending) {
             return toast('Umm..trafic makes slow')
