@@ -651,6 +651,7 @@ const makeFinishedRide = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
 module.exports = {
     registerUser,
     loginUser,
@@ -678,5 +679,5 @@ module.exports = {
     encryptData,
     saveContacts,
     getContacts,
-    makeFinishedRide
+    makeFinishedRide,
 }

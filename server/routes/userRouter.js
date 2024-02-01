@@ -43,6 +43,7 @@ app.patch('/changeUsername',isAuth,userController.changeUsername)
 app.delete('/cancellRequest',isAuth,userController.cancellRequest)
 app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);
 app.delete('/removeContact',isAuth,userController.removeContact)
+app.delete('/deleteMessage',isAuth,messageController.deleteMessage)
 
 
 module.exports = app;

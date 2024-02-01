@@ -175,11 +175,28 @@ const sendMediaMessage = async(req,res)=>{
         console.log(error);
     }
 }
+const deleteMessage = async(req,res)=>{
+    try {
+        const {id} = req.query
+        if(id){
+            const updateData = await Message.findOneAndUpdate({_id:id},{$set:{isDeleted:true}})
+            if(updateData){
+                res.json({success:true})
+            }else{
+                res.json({success:false,message:'Err while deleting message'})
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+        
+    }
+}
 module.exports = {
     getUserInfo,
     getConversation,
     sendMessage,
     makeMsgSeen,
     getCurrentConversations,
-    sendMediaMessage
+    sendMediaMessage,
+    deleteMessage
 }
