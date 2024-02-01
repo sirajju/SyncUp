@@ -168,6 +168,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const dispatch = useDispatch()
     useEffect(() => {
         if (chat.type == 'chat') {
+            setMessage('')
             socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
 
             GetMessages(chat.data).then(msgList => {
