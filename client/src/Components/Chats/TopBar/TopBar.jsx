@@ -62,7 +62,7 @@ function TopBar({ handleSearch, setGo }) {
         </div>
         {/* <img src={settingIcon} className='icon settingsIcon' alt='Settings' /> */}
         {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Settings' />}
-        <img src={menuIcon} className='icon menuIcon' alt='Menu' />
+        <img src={menuIcon} className='icon menuIcon' alt='MenuIcon' />
         <img src={userData.value.avatar_url} onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon profileIcon' alt='Dp' />
       </div>
     </div>
