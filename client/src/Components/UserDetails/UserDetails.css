@@ -1,0 +1,23 @@
+.userProfileParent {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.userProfileChild{
+    background: rgba(255, 255, 255, 0.555);
+    width: 80%;
+    height: 85%;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding:20px;
+
+}
+.userProfileChild .avatrProfile {
+    width: 200px;
+    border-radius: 100%;
+    border:1px solid black;
+}

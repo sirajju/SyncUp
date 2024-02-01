@@ -29,6 +29,7 @@ import VidConfig from '../../VideoCall/VidConfig';
 import msgSending from '../../../assets/Images/pending.png'
 import LinearProgress from '@mui/joy/LinearProgress';
 import lodash from 'lodash'
+import UserDetails from '../../UserDetails/UserDetails';
 
 
 
@@ -63,14 +64,18 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
             setTyping(false)
         })
     }, [reciever,socket])
+    const goToProfile = function(e){
+        setChat({type:"UserProfile",data:reciever._id})
+    }
     return (
-        <div className='conversationTopBar'>
-            <div className="conversationDetails">
+        <div className='conversationTopBar' >
+            <div className="conversationDetails" onClick={goToProfile}   >
                 <button
                     type="button"
                     className="close closeProfile"
-                    onClick={() => {
+                    onClick={(e) => {
                         setChat('');
+                        e.stopPropagation()
                         if (window.outerWidth <= 800) {
                             setGo('')
                         }
@@ -356,8 +361,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 </div>
             )}
             {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
-            {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />
-            }
+            {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />}
+            {chat.type=='UserProfile' && <UserDetails {...props}  />}
         </>
     );
 }
