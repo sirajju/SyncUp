@@ -11,13 +11,39 @@
     height: 85%;
     border-radius: 10px;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    gap:15px;
     padding:20px;
+    color: black;
 
 }
 .userProfileChild .avatrProfile {
     width: 200px;
     border-radius: 100%;
-    border:1px solid black;
+    border:2px solid black;
+}
+.userProfileChild .userStatus{  
+    width: 230px;
+    height: 70px;
+    background: #ED80FD;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row;
+    gap:0px;
+    text-align:center;
+    align-items: center;
+    padding:10px;
+
+}
+
+.userStatus h5{
+    font-size:16px;
+    color:white;
+}
+   .userStatus span{
+    font-weight:bolder;
+    color:white;
 }

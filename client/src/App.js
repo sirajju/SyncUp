@@ -7,7 +7,7 @@ import Login from './main/Login/Login'
 import Register from './main/Register/Register'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Chats from './main/Chats/Chats';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import UserRoute from './Components/CheckLogin/userRoute';
 import GuestRoute from './Components/CheckLogin/guestRoute';
 import Forget from './Components/ForgetPassword/Forget';
@@ -18,12 +18,17 @@ import Dashboard from './Components/Admin/Dashboard/Dashboard';
 import Ads from './Components/Admin/Ads/Ads';
 import CreateAd from './Components/Admin/Ads/CreateAd';
 import Premium from './Components/Premium/Premium';
+import { hideLoading } from './Context/userContext';
+import _ from 'lodash';
 // import {GetToken} from './Context/firebaseConfig'
 // GetToken()
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
-
+  const dispatch = useDispatch()
+  useEffect(()=>{
+   _.delay(()=>dispatch(hideLoading()),5000)
+  },[])
   return (
     <React.Fragment>
       <div className='spinnerParent' style={{ display: isLoading ? "block" : 'none' }} ><span className="spinner-border" role="status" aria-hidden="true" /></div>
