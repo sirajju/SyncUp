@@ -108,7 +108,8 @@ function Register() {
                 dispatch(showLoading())
                 const options = {
                     route: "register",
-                    payload: userData
+                    payload: userData,
+                    method:"POST"
                 }
                 Axios(options).then(res => {
                     if (res.data) {
