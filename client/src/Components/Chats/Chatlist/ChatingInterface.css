@@ -138,3 +138,7 @@
 .newConversation div img {
     width: 50%;
 }
+.contextMenu {
+    background-color: #ED80FD;
+    border:2px solid white; 
+}

@@ -19,7 +19,7 @@ import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
 import GetChatList from '../../../main/Chats/getChatList';
 import GetMessages from '../../../main/Chats/getMessages';
-import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent } from '../../../Context/userContext';
+import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent, deleteMessage } from '../../../Context/userContext';
 import VideocallContextProvider from '../../../Context/videocallContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../../Context/socketContext';
@@ -30,10 +30,10 @@ import msgSending from '../../../assets/Images/pending.png'
 import LinearProgress from '@mui/joy/LinearProgress';
 import lodash from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
-import { ContextMenu } from 'primereact/contextmenu';
-
-
-
+import ContextMenu from './Context/Context'
+import {Menu,Item,Separator,Submenu,useContextMenu} from "react-contexify";
+import EditMessage from './EditMessage/EditMessage'
+import "react-contexify/dist/ReactContexify.css";
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
     const userData = useSelector(state => state.user)
@@ -108,7 +108,9 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const doodleRef = useRef()
     const [messages, setMessages] = useState([])
     const conversation = useSelector(state => state.conversations)
+    const dispatch = useDispatch()
     const cmRef = useRef(null)
+    const [messageId,setMessageId]=useState(null)
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
@@ -126,25 +128,59 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         }
 
     }, [currentChat])
-    const items = [
-        { label: 'Delete',command:()=>alert('Delete') },
-        { label: 'Edit' }
-    ]
+     // 🔥 you can use this hook from everywhere. All you need is the menu id
+     const { show } = useContextMenu({
+        id: 'MENU_ID'
+    });
+
+    function handleItemClick({ event, props, triggerEvent, data }) {
+        console.log(event, props, triggerEvent, data);
+    }
+
+    function displayMenu(e,id) {
+        // put whatever custom logic you need
+        // you can even decide to not display the Menu
+        setMessageId(id)
+        show({
+            event: e,
+        });
+    }
+    const onHide = function(e){
+        if(!e){
+            setMessageId('')
+        }
+    }
+    const deleteMsg = function(){
+        const options = {
+            route:"deleteMessage",
+            params:{id:messageId},
+            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
+            method:"DELETE"
+        }
+        Axios(options).then(res=>{
+            if(res.data.success){
+                dispatch(deleteMessage(messageId))
+            }else{
+                toast.error(res.data.message)
+            }
+        })
+    }
     return (
         <div className="chatinInterface">
-            <ContextMenu model={items} ref={cmRef} breakpoint="767px" />
             <div className="doodles" ref={doodleRef}>
+                <EditMessage/>
+                <ContextMenu deleteMsg={deleteMsg} onHide={onHide} MENU_ID={'MENU_ID'} />
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
                             el.senderId === userData.value._id ? (
-                                <div key={ind} className="message rightMessage" onContextMenu={(e) => cmRef.current.show(e)}>
-                                    <div className='p-1'>{el.content}</div>
+                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' :''}`} onContextMenu={el.isDeleted ?(e)=>e.preventDefault():(e)=>displayMenu(e,el._id)}>
+                                    <div className='p-1'>{el.isDeleted?"This message has been vanished":el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> </span>
                                 </div>
                             ) : (
                                 <div key={ind} className="message leftMessage">
-                                    <div className='p-1'>{el.content}</div>
+                                    <div className='p-1'>{el.isDeleted?"This message has been vanished":el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}</span>
                                 </div>
                             )

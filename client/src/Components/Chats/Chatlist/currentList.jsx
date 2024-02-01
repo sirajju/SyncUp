@@ -23,7 +23,7 @@ function CurrentList({ setChat, setGo }) {
                         <div className="chatDetails">
                             <div className="userContent">
                                 <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>} </h5>
-                                <p className="lastMessage">  {el.last_message[0].content}</p>
+                                <p className="lastMessage">  {el.last_message[0].isDeleted ? "This messsage has been vanished" :el.last_message[0].content}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">
                                 <h6 className='lastMsgTime'>{new Date(el.last_message[0].sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.last_message[0].sentTime).getMinutes().toString().padStart(2, '0')}</h6>
