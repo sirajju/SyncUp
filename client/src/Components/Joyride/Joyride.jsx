@@ -6,18 +6,19 @@ import toast from 'react-hot-toast';
 
 
 function JoyrideFunction() {
-    const userData = useSelector(state=>state.user)
-    const [isDislayed,setDisplay]=useState(true)
-    useEffect(()=>{
-        if(!userData.value?.joyRideFinished){
+    const userData = useSelector(state => state.user)
+    const [isDislayed, setDisplay] = useState(true)
+    useEffect(() => {
+        if (!userData.value?.joyRideFinished) {
             setDisplay(false)
         }
-    },[setDisplay])
+    }, [setDisplay])
     const steps = [
         {
             target: '.searchBar',
-            tittle: "search bar",
             content: 'You can search users here (Email/Username).',
+            disableBeacon: true,
+            disableOverlayClose: true,
         },
         {
             target: '.notificationsIcon',
@@ -60,9 +61,9 @@ function JoyrideFunction() {
             disableCloseOnEsc={true}
             showSkipButton
             styles={{
-                options:{
-                    arrowColor:'#ED80FD',
-                    primaryColor:'#ED80FD',
+                options: {
+                    arrowColor: '#ED80FD',
+                    primaryColor: '#ED80FD',
                 }
             }}
             floaterProps={{ autoOpen: true }}
