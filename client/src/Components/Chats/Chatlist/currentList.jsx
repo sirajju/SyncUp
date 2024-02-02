@@ -20,7 +20,7 @@ function CurrentList({ setChat, setGo }) {
         socket.emit('markMsgSeen', { userId: id })
     }
     const gettUnread = function (msgs) {
-        return msgs?.filter(el => (el?.isReaded == false && el.senderId!=userData.value._id))?.length
+        return msgs?.filter(el => (el?.isReaded == false && el.senderId!=userData.value._id && !el.isDeleted))?.length
     }
     return (
         <>
