@@ -11,7 +11,7 @@ import './Context.css'
 
 const MENU_ID = "menu-id";
 
-export default function App({ MENU_ID, onHide,deleteMsg }) {
+export default function App({ MENU_ID, onHide,displayConfirm }) {
     function handleItemClick({ event, props, triggerEvent, data }) {
         console.log(props, triggerEvent, data);
     }
@@ -29,11 +29,11 @@ export default function App({ MENU_ID, onHide,deleteMsg }) {
     };
     return (
         <div>
-            <Menu style={style} onVisibilityChange={onHide} onHidden={onHide} id={MENU_ID}>
+            <Menu style={style} onVisibilityChange={onHide} id={MENU_ID}>
                 <Item onClick={handleItemClick}>
                     Edit
                 </Item>
-                <Item onClick={deleteMsg}>
+                <Item onClick={()=>displayConfirm(true)}>
                     Delete
                 </Item>
             </Menu>

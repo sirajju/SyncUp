@@ -20,15 +20,15 @@ import CreateAd from './Components/Admin/Ads/CreateAd';
 import Premium from './Components/Premium/Premium';
 import { hideLoading } from './Context/userContext';
 import _ from 'lodash';
-// import {GetToken} from './Context/firebaseConfig'
-// GetToken()
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
   const dispatch = useDispatch()
-  useEffect(()=>{
-   _.delay(()=>dispatch(hideLoading()),5000)
-  },[])
+  useEffect(() => {
+    if (isLoading) {
+      _.delay(() => dispatch(hideLoading()), 5000)
+    }
+  }, [])
   return (
     <React.Fragment>
       <div className='spinnerParent' style={{ display: isLoading ? "block" : 'none' }} ><span className="spinner-border" role="status" aria-hidden="true" /></div>
@@ -46,6 +46,7 @@ function App() {
           <Route path='/admin/ads' element={<AdminRoute><Ads /></AdminRoute>} />
           <Route path='/admin/ads/new' element={<AdminRoute><CreateAd /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
+          
         </Routes>
       </Router>
     </React.Fragment>

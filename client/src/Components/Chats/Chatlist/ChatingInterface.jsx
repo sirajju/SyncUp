@@ -28,12 +28,14 @@ import emojiRegex from 'emoji-regex';
 import VidConfig from '../../VideoCall/VidConfig';
 import msgSending from '../../../assets/Images/pending.png'
 import LinearProgress from '@mui/joy/LinearProgress';
-import lodash from 'lodash'
+import lodash, { uniqueId } from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
 import ContextMenu from './Context/Context'
-import {Menu,Item,Separator,Submenu,useContextMenu} from "react-contexify";
+import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
 import EditMessage from './EditMessage/EditMessage'
 import "react-contexify/dist/ReactContexify.css";
+import { useScroll } from '@react-hooks-library/core'
+import ConfirmBox from '../../Confirmation/Dailogue'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
     const userData = useSelector(state => state.user)
@@ -109,8 +111,8 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const [messages, setMessages] = useState([])
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
-    const cmRef = useRef(null)
-    const [messageId,setMessageId]=useState(null)
+    const [messageId, setMessageId] = useState(null)
+    const [isConfirmed, displayConfirm] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
@@ -128,59 +130,56 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         }
 
     }, [currentChat])
-     // 🔥 you can use this hook from everywhere. All you need is the menu id
-     const { show } = useContextMenu({
+    const { show } = useContextMenu({
         id: 'MENU_ID'
     });
 
-    function handleItemClick({ event, props, triggerEvent, data }) {
-        console.log(event, props, triggerEvent, data);
-    }
-
-    function displayMenu(e,id) {
-        // put whatever custom logic you need
-        // you can even decide to not display the Menu
+    function displayMenu(e, id) {
         setMessageId(id)
         show({
             event: e,
         });
     }
-    const onHide = function(e){
-        if(!e){
-            setMessageId('')
+    const onHide = function (e) {
+        if (!e) {
+            // setMessageId('')
         }
     }
-    const deleteMsg = function(){
+    const deleteMsg = function () {
+        displayConfirm(false)
         const options = {
-            route:"deleteMessage",
-            params:{id:messageId},
-            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
-            method:"DELETE"
+            route: "deleteMessage",
+            params: { id: messageId },
+            headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
+            method: "DELETE"
         }
-        Axios(options).then(res=>{
-            if(res.data.success){
+        Axios(options).then(res => {
+            if (res.data.success) {
+                setMessageId('')
                 dispatch(deleteMessage(messageId))
-            }else{
+            } else {
                 toast.error(res.data.message)
             }
         })
     }
+
     return (
         <div className="chatinInterface">
-            <div className="doodles" ref={doodleRef}>
-                <EditMessage/>
-                <ContextMenu deleteMsg={deleteMsg} onHide={onHide} MENU_ID={'MENU_ID'} />
+            <div className="doodles" onClick={()=>setMessageId('')} ref={doodleRef}>
+                <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
+                <EditMessage />
+                <ContextMenu displayConfirm={displayConfirm} onHide={onHide} MENU_ID={'MENU_ID'} />
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
                             el.senderId === userData.value._id ? (
-                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' :''}`} onContextMenu={el.isDeleted ?(e)=>e.preventDefault():(e)=>displayMenu(e,el._id)}>
-                                    <div className='p-1'>{el.isDeleted?"This message has been vanished":el.content}</div>
+                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''}`} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                    <div className='p-1'>{el.isDeleted ? "This message has been vanished" : el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> </span>
                                 </div>
                             ) : (
                                 <div key={ind} className="message leftMessage">
-                                    <div className='p-1'>{el.isDeleted?"This message has been vanished":el.content}</div>
+                                    <div className='p-1'>{el.isDeleted ? "This message has been vanished" : el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}</span>
                                 </div>
                             )
@@ -257,6 +256,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         } else {
             if (message.length) {
                 const newMsg = {
+                    _id: new uniqueId(),
                     recieverId: reciever._id,
                     senderId: userData.value._id,
                     content: message.charAt(0).toUpperCase() + message.slice(1),
