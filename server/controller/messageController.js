@@ -6,6 +6,7 @@ const crypto = require('crypto-js')
 const Connection = require('../models/connectionModel')
 const Conversation = require('../models/conversationSchema')
 const Message = require('../models/messageSchema')
+const Room = require('../models/roomModel')
 const {encryptData} = require('./userController')
 const {ObjectId} = require('mongodb')
 
@@ -179,8 +180,12 @@ const deleteMessage = async(req,res)=>{
     try {
         const {id} = req.query
         if(id){
-            const updateData = await Message.findOneAndUpdate({_id:id},{$set:{isDeleted:true}})
+            const updateData = await Message.findOneAndUpdate({_id:id},{$set:{isDeleted:true}},{new:true})
             if(updateData){
+                const roomData = await Room.findOne({ senderId: { $in: [updateData.senderId, updateData.recieverId] }, recieverId: { $in: [updateData.senderId, updateData.recieverId] } })
+                if(roomData){
+                    req.io.to(roomData.roomId).emit('msgDeleted',{id:updateData._id})
+                }
                 res.json({success:true})
             }else{
                 res.json({success:false,message:'Err while deleting message'})

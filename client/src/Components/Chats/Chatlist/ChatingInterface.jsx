@@ -147,6 +147,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     }
     const deleteMsg = function () {
         displayConfirm(false)
+        console.log(messageId);
         const options = {
             route: "deleteMessage",
             params: { id: messageId },
@@ -264,6 +265,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     isDelivered: false,
                     isReaded: false,
                     isSent: false,
+                    isDeleted:false,
                     sentTime: Date.now()
                 }
                 setMessage('')

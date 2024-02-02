@@ -7,7 +7,7 @@ import Chatslst from '../../Components/Chats/Chatlist/Chatlist'
 import crypto from 'crypto-js'
 import Profile from '../../Components/Profile/Profile'
 import { useDispatch, useSelector } from 'react-redux'
-import { addNewMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setOpponent, setUserData } from '../../Context/userContext'
+import { addNewMessage, deleteMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setOpponent, setUserData } from '../../Context/userContext'
 import Notification from '../../Components/Chats/Notifications/Notification'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -75,7 +75,9 @@ function Chats() {
 
                 })
             } else {
-                setLoading(false)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 500)
             }
         }
 
@@ -97,11 +99,11 @@ function Chats() {
             }
         })
         const handleUpdate = () => {
-            console.log('syncing userData');
+            console.log('syncing userDsata');
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
                 route: "isAlive",
-                params: { getData: true },
+                params: { getData: true},
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
             }
@@ -115,16 +117,7 @@ function Chats() {
                 }
             })
         }
-        const steps = [
-            {
-                target: '.step-1',
-                content: 'This is the first step.',
-            },
-            {
-                target: '.step-2',
-                content: 'This is the second step.',
-            },
-        ];
+     
         const handleLogout = ({ message }) => {
             toast.error(message)
             localStorage.removeItem('SyncUp_Auth_Token')
@@ -149,6 +142,10 @@ function Chats() {
                 dispatch(addNewMessage(data.newMessage))
                 dispatch(setConversations(await GetChatList('messageReceived')))
             }
+        })
+        socket.on('msgDeleted',async(data)=>{
+            dispatch(deleteMessage(data.id))
+            dispatch(setConversations(await GetChatList('Message deleted')))
         })
         socket.on('callRecieved', (data) => {
             setChat({ type: 'videoCall', data, isRecieved: true })
