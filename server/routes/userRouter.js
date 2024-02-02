@@ -32,6 +32,8 @@ app.post('/saveContacts',isAuth,userController.saveContacts)
 app.post('/sendMessage',isAuth,messageController.sendMessage)
 app.post('/sendMediaMessage',isAuth,messageController.sendMediaMessage)
 app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
+app.post('/reportContact',isAuth,userController.reportContact)
+app.post('/blockContact',isAuth,userController.blockContact)
 
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
 

@@ -9,6 +9,7 @@ const crypto = require('crypto-js')
 const Connection = require('../models/connectionModel')
 const webPush = require('web-push')
 const Premium = require('../models/premiumModel')
+const Report = require('../models/reportSchema')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -651,7 +652,58 @@ const makeFinishedRide = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+const reportContact = async (req, res) => {
+    try {
+        const { reason, userId } = req.body
+        const user = await User.findById({ _id: userId })
+        if (user) {
+            const userData = await User.findOne({ email: req.userEmail })
+            const existingReport = await Report.findOne({ userId, reportedBy: userData._id })
+            if (!existingReport) {
+                const report = new Report({
+                    userId: user._id,
+                    reportedBy: userData._id,
+                    reason: reason || null
+                })
+                if (await report.save()) {
+                    res.json({ success: true, message: "Your report have been submitted" })
+                } else {
+                    res.json({ success: false, message: "Err while reporting" })
+                }
+            } else {
+                res.json({ success: false, message: "Another report is already on pending" })
 
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
+const blockContact = async (req, res) => {
+    try {
+        const { userId } = req.body
+        if (userId) {
+            const user = await User.findById({ _id: userId })
+            const alreadyBlocked = await User.findOne({ email: req.userEmail, blockedContacts: { $elemMatch: { userId: user._id } } })
+            if (!alreadyBlocked) {
+                const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { blockedContacts: { userId: user._id, blockedAt: Date.now() } } })
+                if (userData) {
+                    const connectData = await Connection.findOne({userId:user._id})
+                    if(connectData){
+                        req.io.to(connectData.socketId).emit('conversationBlocked',{userId:userData._id})
+                    }
+                    res.json({ success: true, message: 'User blocked' })
+                } else {
+                    res.json({ success: false, message: 'Err while blocking' })
+                }
+            }else{
+                res.json({ success: false, message: 'User already blocked' })
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -680,4 +732,6 @@ module.exports = {
     saveContacts,
     getContacts,
     makeFinishedRide,
+    reportContact,
+    blockContact
 }

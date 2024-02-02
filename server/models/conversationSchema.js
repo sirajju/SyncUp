@@ -15,6 +15,8 @@ const conversationSchema = new mongoose.Schema({
         default: 'personal', 
         required: true
     },
+    isLocked:{type:Boolean,default:false},
+    password:{type:String},
     startedAt: {
         type: Number,
         default: Date.now()

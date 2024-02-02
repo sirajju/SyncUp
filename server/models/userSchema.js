@@ -71,6 +71,7 @@ const user = mongoose.Schema({
         type:Array,
         default:[]
     },
+    blockedContacts:{type:Array,default:[]},
     invitedBy :{
         type:String,
         default:null

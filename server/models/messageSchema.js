@@ -10,7 +10,8 @@ const message = new mongoose.Schema({
     isDeleted:{type:Boolean,default:false},
     isReaded:{type:Boolean,default:false},
     isSent:{type:Boolean,default:false},
-    type:String,
+    isCleared:{type:Boolean,default:false},
+    type:{type:String},
     sentTime:{
         type:Number,
         default:Date.now()
