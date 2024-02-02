@@ -1,0 +1,9 @@
+.confirmInput {
+    height: 50px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    outline:none;
+    margin:20px 5px 5px 5px;    
+    border:1px solid grey;
+}

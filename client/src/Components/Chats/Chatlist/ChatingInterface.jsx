@@ -19,7 +19,7 @@ import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
 import GetChatList from '../../../main/Chats/getChatList';
 import GetMessages from '../../../main/Chats/getMessages';
-import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent, deleteMessage } from '../../../Context/userContext';
+import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent, deleteMessage, setUserData } from '../../../Context/userContext';
 import VideocallContextProvider from '../../../Context/videocallContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../../Context/socketContext';
@@ -37,7 +37,7 @@ import "react-contexify/dist/ReactContexify.css";
 import { useScroll } from '@react-hooks-library/core'
 import ConfirmBox from '../../Confirmation/Dailogue'
 
-const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
+const ConversationTopBar = ({ reciever, setChat, setGo, chat,isBlocked }) => {
     const userData = useSelector(state => state.user)
     const dispatch = useDispatch()
     const [isLoading, setLoading] = useState(true)
@@ -96,7 +96,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />
+                {!isBlocked&&<img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -166,7 +166,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
 
     return (
         <div className="chatinInterface">
-            <div className="doodles" onClick={()=>setMessageId('')} ref={doodleRef}>
+            <div className="doodles" onClick={() => setMessageId('')} ref={doodleRef}>
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
                 <EditMessage />
                 <ContextMenu displayConfirm={displayConfirm} onHide={onHide} MENU_ID={'MENU_ID'} />
@@ -204,6 +204,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const userData = useSelector((state) => state.user);
     const [reciever, setReciever] = useState(null);
     const [message, setMessage] = useState('');
+    const [isBlocked, setBlocked] = useState(false)
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
     const [file, setFile] = useState(false)
@@ -211,6 +212,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     useEffect(() => {
+        socket.on('conversationBlocked',(data)=>{
+            dispatch(setUserData({...userData.value,blockedContacts:[...userData.value.blockedContacts,{userId:data.userId,blockedAt:Date.now()}]}))
+            setBlocked(true)
+        })
         if (chat.type == 'chat') {
             setMessage('')
             socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
@@ -224,6 +229,9 @@ function ChatingInterface({ setGo, setChat, chat }) {
             })
             const chatData = conversation.value.filter(el => el.opponent[0]._id == chat.data)
             if (chatData && chatData[0]?.opponent[0]) {
+                const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
+                const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el=>el.userId==userData.value._id).length
+                setBlocked(blocked || anotherBlock)
                 setReciever(chatData[0].opponent[0])
             } else {
                 const options = {
@@ -233,6 +241,9 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     crypto: true
                 }
                 Axios(options).then(res => {
+                    const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
+                    const anotherBlock = res.data.body.blockedContacts.filter(el=>el.userId==userData.value._id)
+                    setBlocked(blocked || anotherBlock)
                     setReciever(res.data.body)
                 })
             }
@@ -265,7 +276,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     isDelivered: false,
                     isReaded: false,
                     isSent: false,
-                    isDeleted:false,
+                    isDeleted: false,
                     sentTime: Date.now()
                 }
                 setMessage('')
@@ -391,7 +402,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
         sendMessage,
         message,
         sendMedia,
-        setReciever
+        setReciever,
+        isBlocked
     }
     return (
         <>
@@ -414,14 +426,15 @@ function ChatingInterface({ setGo, setChat, chat }) {
         </>
     );
 }
-const ConversationBottom = function ({ message, removeLastEmoji, sendMessage, handleFileInput, handleInputChange, isSending, setSending, setOpenEmoji, inputRef, fileInputRef }) {
+const ConversationBottom = function ({ isBlocked, message, removeLastEmoji, sendMessage, handleFileInput, handleInputChange, isSending, setSending, setOpenEmoji, inputRef, fileInputRef }) {
     return (
         <div className="conversationBottom">
-            <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
-            <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
-            <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
-            <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
-            <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />
+            {isBlocked ? <div className='blockedDiv'> <p style={{ color: 'grey', fontSize: '13px' }}>This conversation has been ended</p> </div> : <>
+                <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
+                <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
+                <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
+                <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
+                <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" /></>}
         </div>
     )
 }
