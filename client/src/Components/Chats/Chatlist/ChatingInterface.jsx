@@ -208,6 +208,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
     const [file, setFile] = useState(false)
+    const fileInputRef = useRef()
     const inputRef = useRef();
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
@@ -215,6 +216,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
         socket.on('conversationBlocked',(data)=>{
             dispatch(setUserData({...userData.value,blockedContacts:[...userData.value.blockedContacts,{userId:data.userId,blockedAt:Date.now()}]}))
             setBlocked(true)
+        })
+        socket.on('conversationUnblocked',(data)=>{
+            dispatch(setUserData({...userData.value,blockedContacts:userData.value.blockedContacts.filter(el=>el.userId!=data.userId)}))
+            setBlocked(false)
         })
         if (chat.type == 'chat') {
             setMessage('')
@@ -403,7 +408,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
         message,
         sendMedia,
         setReciever,
-        isBlocked
+        isBlocked,
+        fileInputRef
     }
     return (
         <>

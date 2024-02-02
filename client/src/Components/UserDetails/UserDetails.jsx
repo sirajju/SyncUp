@@ -72,6 +72,23 @@ function UserDetails({ chat, reciever }) {
         })
         openBlockConfirm(false)
     }
+    const unBlockContact = function () {
+        const options = {
+            route: 'unBlockContact',
+            payload: { userId: userData._id },
+            method: "POST",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` }
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                dispatch(setUserData({...me.value,blockedContacts:me.value.blockedContacts.filter(el=>el.userId!=userData._id)}))
+                toast.success(res.data.message)
+            } else {
+                toast.error(res.data.message)
+            }
+        })
+        openBlockConfirm(false)
+    }
     return (
         <div className="userProfileParent ">
             <div className="userProfileChild">
@@ -110,7 +127,7 @@ function UserDetails({ chat, reciever }) {
                         <button className="profileBtn viewNotes" onClick={() => openConfirmBox(true)} >Report</button>
                         {!isBlocked ?
                             <button className="profileBtn chatLock btnBlk" onClick={() => openBlockConfirm(true)} >Block</button> :
-                            <button className="profileBtn chatLock btnBlk" onClick={() => openBlockConfirm(true)} >Unblock</button>
+                            <button className="profileBtn chatLock btnBlk" onClick={unBlockContact} >Unblock</button>
                         }
                         <button className="profileBtn chatLock btnBlk">Remove friend</button>
                     </div>

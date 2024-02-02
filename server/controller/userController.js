@@ -704,6 +704,31 @@ const blockContact = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+const unBlockContact = async (req, res) => {
+    try {
+        const { userId } = req.body
+        if (userId) {
+            const user = await User.findById({ _id: userId })
+            const alreadyBlocked = await User.findOne({ email: req.userEmail, blockedContacts: { $elemMatch: { userId: user._id } } })
+            if (alreadyBlocked) {
+                const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { blockedContacts: { userId: user._id} } })
+                if (userData) {
+                    const connectData = await Connection.findOne({userId:user._id})
+                    if(connectData){
+                        req.io.to(connectData.socketId).emit('conversationUnblocked',{userId:userData._id})
+                    }
+                    res.json({ success: true, message: 'User Unblocked' })
+                } else {
+                    res.json({ success: false, message: 'Err while blocking' })
+                }
+            }else{
+                res.json({ success: false, message: 'User already Unblocked' })
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
 module.exports = {
     registerUser,
     loginUser,
@@ -733,5 +758,6 @@ module.exports = {
     getContacts,
     makeFinishedRide,
     reportContact,
-    blockContact
+    blockContact,
+    unBlockContact
 }
