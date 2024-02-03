@@ -157,8 +157,7 @@ const makeMsgSeen = async (req, res) => {
 const sendMediaMessage = async (req, res) => {
     try {
         const data = req.body
-        console.log(data);
-        if (secure_url) {
+        if (data.secure_url) {
             const userData = await User.findOne({ email: req.userEmail })
             const recieverData = await User.findOne({ _id: new ObjectId(data.reciever) })
             const messageData = new Message({
@@ -168,9 +167,15 @@ const sendMediaMessage = async (req, res) => {
                 isMedia: true,
                 mediaConfig: {
                     url: data.secure_url,
-                    type: data.type
+                    type: data.type,
+                    caption:data.caption || false
                 }
             })
+            if(await messageData.save()){
+                res.json({success:true,message:"Media sent"})
+            }
+        }else{
+            res.json({success:false,message:"No media to send"})
         }
     } catch (error) {
         console.log(error);

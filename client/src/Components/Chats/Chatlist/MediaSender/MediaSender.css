@@ -1,0 +1,46 @@
+.mediaSenderContainer {
+    width: 30%;
+    height: auto;
+    position: absolute;
+    background-color: #ED80FD;
+    bottom: 5%;
+    right: 13%;
+    border-radius: 5px;
+    border: 2px solid white;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    flex-direction: column;
+}
+
+.imageToSend {
+    border-radius: 10px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.mediaSenderOptions {
+    width: 100%;
+}
+
+.captionInput {
+    outline: none;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    width: 80%;
+
+}
+.btnSendMedia {
+    width: 15%;
+    height: 42px;
+    background-color: transparent;
+    border: 1px solid white;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+.btnSendMedia img{
+    width: 70%;
+}

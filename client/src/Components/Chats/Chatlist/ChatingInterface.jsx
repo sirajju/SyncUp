@@ -39,6 +39,8 @@ import ConfirmBox from '../../Confirmation/Dailogue'
 import { v4 } from 'uuid'
 import { MDBIcon } from 'mdb-react-ui-kit';
 import _ from 'lodash';
+import axios from 'axios';
+import MediaSender from './MediaSender/MediaSender';
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -198,7 +200,8 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
-                            el.senderId === userData.value._id ? (
+                            <>
+                            {!el?.isMedia ? el.senderId === userData.value._id ? (
                                 <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
                                     <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : el.content}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
@@ -209,7 +212,8 @@ const MessageRenderer = ({ reciever, setReciever }) => {
 
                                     <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
                                 </div>
-                            )
+                            ):""}
+                            </>
                         )
                     })
                 ) : (
@@ -233,9 +237,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const [isBlocked, setBlocked] = useState(false)
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
-    const [file, setFile] = useState(false)
+    const [file, setMedia] = useState(false)
     const fileInputRef = useRef()
     const inputRef = useRef();
+    const [caption,setCaption]=useState(null)
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     useEffect(() => {
@@ -248,7 +253,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(setConversations(res))
             }
         })
-        socket.on('conversationUnblocked', async(data) => {
+        socket.on('conversationUnblocked', async (data) => {
             if (reciever) {
                 dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
                 setBlocked(false)
@@ -258,7 +263,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             }
         })
         socket.on('msgEdited', (data) => {
-            if(chat.type){
+            if (chat.type) {
                 dispatch(markEdited({ msgId: data.msgId, content: data.content }))
             }
         })
@@ -364,39 +369,35 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
     };
     const handleFileInput = async (e) => {
-        const reader = new FileReader()
-        reader.onload = (ev) => {
-            const obj = { data: ev.target.result, type: e.target.files[0].type }
-            alert(obj)
-            setFile(obj)
-            sendMedia()
+        if (e.target.files[0]) {
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+                const obj = { data: ev.target.result, type: e.target.files[0].type }
+                setMedia(obj)
+            }
+            reader.readAsDataURL(e.target.files[0])
         }
-        reader.readAsDataURL(e.target.files[0])
     }
     const sendMedia = async () => {
-        setSending(true)
         const formData = new FormData();
-        console.log(file);
         formData.append('file', file.data);
+        setSending(true)
         formData.append('upload_preset', 'syncup_preset');
-
-        const data = await fetch('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', {
-            method: 'POST',
-            body: formData,
-        }).catch(err => toast(err.message))
-        const { secure_url } = await data.json()
+        const res = await axios.post('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', formData).catch(err => toast(err.message))
+        const { secure_url } = res?.data
         if (secure_url) {
             const options = {
                 route: "/sendMediaMessage",
                 headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                payload: { secure_url, reciever: reciever._id, type: file.type },
+                payload: { secure_url, reciever: reciever._id, type: file.type,caption },
                 method: "POST"
             }
             Axios(options).then(res => {
                 if (res.data.success) {
+                    setMedia(null)
                     setSending(false)
-                    toast('Media sent')
                 } else {
+                    setSending(false)
                     toast(res.data.message)
                 }
             })
@@ -454,6 +455,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     <ConversationTopBar {...props} />
                     <MessageRenderer {...props} />
                     <ConversationBottom {...props} removeLastEmoji={removeLastEmoji} />
+                    {file?.data && <MediaSender isSending={isSending} setCaption={setCaption} sendMedia={sendMedia} fileInputRef={fileInputRef} setMedia={setMedia} file={file} />}
                 </div>
             )}
             {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
