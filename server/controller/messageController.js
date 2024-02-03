@@ -7,8 +7,8 @@ const Connection = require('../models/connectionModel')
 const Conversation = require('../models/conversationSchema')
 const Message = require('../models/messageSchema')
 const Room = require('../models/roomModel')
-const {encryptData} = require('./userController')
-const {ObjectId} = require('mongodb')
+const { encryptData } = require('./userController')
+const { ObjectId } = require('mongodb')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -58,7 +58,7 @@ const getConversation = async (req, res) => {
                         recieverId: { $in: [userData._id, recieverData._id] },
                     }).sort({ sentTime: 1 });
                     const connectData = await Connection.findOne({ userId: recieverData._id })
-                    if(connectData){
+                    if (connectData) {
                         req.io.to(connectData.socketId).emit('msgSeen')
                     }
                     const encData = encryptData(messageData)
@@ -78,7 +78,7 @@ const getConversation = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-const sendMessage = async ({recieverId, content,userEmail}) => {
+const sendMessage = async ({ recieverId, content, userEmail }) => {
     try {
         if (recieverId && content) {
             const userData = await User.findOne({ email: userEmail })
@@ -92,7 +92,7 @@ const sendMessage = async ({recieverId, content,userEmail}) => {
                 isDelivered: false,
                 isReaded: false,
                 isDeleted: false,
-                isSent:true
+                isSent: true
             })
             await newMessage.save()
             if (!conversationData) {
@@ -107,7 +107,7 @@ const sendMessage = async ({recieverId, content,userEmail}) => {
                     { participents: [recieverData._id, userData._id] }
                 ]
             }, { $push: { messages: newMessage._id } })
-            return {newMessage}
+            return { newMessage }
         }
         return false
     } catch (error) {
@@ -118,10 +118,10 @@ const sendMessage = async ({recieverId, content,userEmail}) => {
 const getCurrentConversations = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
-        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, opponent: 1, startedAt: 1, updatedAt: 1, messages: 1,last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
+        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, opponent: 1, startedAt: 1, updatedAt: 1, messages: 1, last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
         if (conversationData) {
             await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } })
-            const dlvrData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } },{$project:{participents:1}}])
+            const dlvrData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $project: { participents: 1 } }])
             dlvrData.forEach(async (el) => {
                 const connectData = await Connection.findOne({ userId: el.participents })
                 if (connectData) {
@@ -129,7 +129,7 @@ const getCurrentConversations = async (req, res) => {
                 }
             })
             const encData = encryptData(conversationData)
-            res.json({ success: true, body: encData }) 
+            res.json({ success: true, body: encData })
         } else {
             res.json({ success: false })
         }
@@ -154,21 +154,21 @@ const makeMsgSeen = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-const sendMediaMessage = async(req,res)=>{
+const sendMediaMessage = async (req, res) => {
     try {
-        const data=req.body
+        const data = req.body
         console.log(data);
-        if(secure_url){
-            const userData = await User.findOne({email:req.userEmail})
-            const recieverData = await User.findOne({_id:new ObjectId(data.reciever)})
+        if (secure_url) {
+            const userData = await User.findOne({ email: req.userEmail })
+            const recieverData = await User.findOne({ _id: new ObjectId(data.reciever) })
             const messageData = new Message({
                 senderId: userData._id,
-                recieverId:recieverData._id,
+                recieverId: recieverData._id,
                 sentTime: Date.now(),
-                isMedia:true,
-                mediaConfig:{
-                    url:data.secure_url,
-                    type:data.type
+                isMedia: true,
+                mediaConfig: {
+                    url: data.secure_url,
+                    type: data.type
                 }
             })
         }
@@ -176,24 +176,42 @@ const sendMediaMessage = async(req,res)=>{
         console.log(error);
     }
 }
-const deleteMessage = async(req,res)=>{
+const deleteMessage = async (req, res) => {
     try {
-        const {id} = req.query
-        if(id){
-            const updateData = await Message.findOneAndUpdate({_id:id},{$set:{isDeleted:true}},{new:true})
-            if(updateData){
+        const { id } = req.query
+        if (id) {
+            const updateData = await Message.findOneAndUpdate({ _id: id }, { $set: { isDeleted: true } }, { new: true })
+            if (updateData) {
                 const roomData = await Room.findOne({ senderId: { $in: [updateData.senderId, updateData.recieverId] }, recieverId: { $in: [updateData.senderId, updateData.recieverId] } })
-                if(roomData){
-                    req.io.to(roomData.roomId).emit('msgDeleted',{id:updateData._id})
+                if (roomData) {
+                    req.io.to(roomData.roomId).emit('msgDeleted', { id: updateData._id })
                 }
-                res.json({success:true})
-            }else{
-                res.json({success:false,message:'Err while deleting message'})
+                res.json({ success: true })
+            } else {
+                res.json({ success: false, message: 'Err while deleting message' })
             }
         }
     } catch (error) {
         res.json({ success: false, message: error.message })
-        
+
+    }
+}
+const editMessage = async (req, res) => {
+    try {
+        const { msgId, message } = req.body
+        if (msgId && message) {
+            const messageData = await Message.findById({ _id: msgId })
+            if (messageData) {
+                messageData.isEdited = true
+                messageData.editedContent = messageData.content
+                messageData.content = message
+                if (await messageData.save()){
+                    res.json({success:true,message:"Edited"})
+                }
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
     }
 }
 module.exports = {
@@ -203,5 +221,6 @@ module.exports = {
     makeMsgSeen,
     getCurrentConversations,
     sendMediaMessage,
-    deleteMessage
+    deleteMessage,
+    editMessage
 }

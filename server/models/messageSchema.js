@@ -11,6 +11,8 @@ const message = new mongoose.Schema({
     isReaded:{type:Boolean,default:false},
     isSent:{type:Boolean,default:false},
     isCleared:{type:Boolean,default:false},
+    isEdited:{type:Boolean,default:false},
+    editedContent:{type:String},
     type:{type:String},
     sentTime:{
         type:Number,

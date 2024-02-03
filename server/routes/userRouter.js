@@ -36,6 +36,7 @@ app.post('/reportContact',isAuth,userController.reportContact)
 app.post('/blockContact',isAuth,userController.blockContact)
 app.post('/unBlockContact',isAuth,userController.unBlockContact)
 
+app.put('/editMessage',isAuth,messageController.editMessage)
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
 
 app.patch('/changePass',userController.changePasword)
