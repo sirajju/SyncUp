@@ -19,7 +19,7 @@ import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
 import GetChatList from '../../../main/Chats/getChatList';
 import GetMessages from '../../../main/Chats/getMessages';
-import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent, deleteMessage, setUserData } from '../../../Context/userContext';
+import { markDelivered, setConversations, setCurrentChat, markSeen, addNewMessage, setCallData, markSent, deleteMessage, setUserData, markEdited } from '../../../Context/userContext';
 import VideocallContextProvider from '../../../Context/videocallContext';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../../Context/socketContext';
@@ -36,6 +36,9 @@ import EditMessage from './EditMessage/EditMessage'
 import "react-contexify/dist/ReactContexify.css";
 import { useScroll } from '@react-hooks-library/core'
 import ConfirmBox from '../../Confirmation/Dailogue'
+import { v4 } from 'uuid'
+import { MDBIcon } from 'mdb-react-ui-kit';
+import _ from 'lodash';
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -71,25 +74,24 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const goToProfile = function (e) {
         setChat({ type: "UserProfile", data: reciever._id })
     }
+    const closeChat = function (e) {
+        e.stopPropagation()
+        const par = document.querySelector('.conversationContainer')
+        par.style.transition = '0.7s'
+        par.style.transform = "translateX(100%)"
+        _.delay(() => {
+            setChat({type:null,data:null});
+            if (window.outerWidth <= 800) {
+                setGo('')
+            }
+        }, 700)
+    }
     return (
         <div className='conversationTopBar' >
-            <div className="conversationDetails" onClick={goToProfile}   >
-                <button
-                    type="button"
-                    className="close closeProfile"
-                    onClick={(e) => {
-                        setChat('');
-                        e.stopPropagation()
-                        if (window.outerWidth <= 800) {
-                            setGo('')
-                        }
-                    }}
-                    aria-label="Close"
-                >
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <img src={reciever.avatar_url} alt="" className="conversationAvatar" />
-                <div className="conversationUserDetails">
+            <div className="conversationDetails">
+                <MDBIcon fas icon="arrow-right" onClick={closeChat} size='sm' style={{ color: "white" }} />
+                <img src={reciever.avatar_url} alt="" onClick={goToProfile} className="conversationAvatar" />
+                <div className="conversationUserDetails" onClick={goToProfile}>
                     <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} </span>
                     {!isBlocked && <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>}
                 </div>
@@ -121,13 +123,12 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         if (!currentChat.value?.length) {
             console.log('running on local chat');
             const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
-            if (data.length) {
+            if (data[0]?.messages?.length) {
                 setMessages(data[0].messages)
             } else {
                 setMessages([])
             }
         } else {
-            console.log('running on current chat');
             setMessages(currentChat.value)
         }
 
@@ -149,7 +150,6 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     }
     const deleteMsg = function () {
         displayConfirm(false)
-        console.log(messageId);
         const options = {
             route: "deleteMessage",
             params: { id: messageId },
@@ -171,12 +171,15 @@ const MessageRenderer = ({ reciever, setReciever }) => {
             route: "editMessage",
             payload: { msgId: messageId, message: editedMessage },
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            method:"PUT"
+            method: "PUT"
         }
         Axios(options).then(res => {
             if (res.data.success) {
-                alert('edited')
-            }else{
+                dispatch(markEdited({ msgId: messageId, content: editedMessage }))
+                setEdited('')
+                setMessageId('')
+                openEdit(false)
+            } else {
                 alert(res.data.message)
             }
         })
@@ -184,10 +187,10 @@ const MessageRenderer = ({ reciever, setReciever }) => {
 
     return (
         <div className="chatinInterface">
-            <div className="doodles" onClick={() => setMessageId('')} ref={doodleRef}>
+            <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
                 <ConfirmBox func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
-                    <input onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
+                    <input onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
 
                 </ConfirmBox>
                 <EditMessage />
@@ -196,14 +199,15 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                     messages.map((el, ind) => {
                         return (
                             el.senderId === userData.value._id ? (
-                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''}`} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
-                                    <div className='p-1'>{el.isDeleted ? "This message has been vanished" : el.content}</div>
-                                    <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> </span>
+                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : el.content}</div>
+                                    <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
                                 </div>
                             ) : (
-                                <div key={ind} className="message leftMessage">
-                                    <div className='p-1'>{el.isDeleted ? "This message has been vanished" : el.content}</div>
-                                    <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}</span>
+                                <div key={ind} className={`message leftMessage `}>
+                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : el.content}</div>
+
+                                    <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
                                 </div>
                             )
                         )
@@ -236,7 +240,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const dispatch = useDispatch()
     useEffect(() => {
         socket.on('conversationBlocked', (data) => {
-            if(reciever){
+            if (reciever) {
                 setReciever({ ...reciever, blockedContacts: [...reciever.blockedContacts, { userId: userData.value._id, blockedAt: Date.now() }] })
             }
             setBlocked(true)
@@ -244,6 +248,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
         socket.on('conversationUnblocked', (data) => {
             dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
             setBlocked(false)
+        })
+        socket.on('msgEdited', (data) => {
+            console.log(data);
+            dispatch(markEdited({ msgId: data.msgId, content: data.content }))
         })
         if (chat.type == 'chat') {
             setMessage('')
@@ -260,6 +268,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             if (chatData && chatData[0]?.opponent[0]) {
                 const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
                 const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el => el.userId == userData.value._id).length
+                console.log(blocked || anotherBlock);
                 setBlocked(blocked || anotherBlock)
                 setReciever(chatData[0].opponent[0])
             } else {
@@ -270,8 +279,10 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     crypto: true
                 }
                 Axios(options).then(res => {
-                    const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
-                    const anotherBlock = res.data.body.blockedContacts.filter(el => el.userId == userData.value._id)
+                    const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length).length
+                    const anotherBlock = res.data.body.blockedContacts.filter(el => el.userId == userData.value._id).length
+                    console.log(blocked || anotherBlock);
+
                     setBlocked(blocked || anotherBlock)
                     setReciever(res.data.body)
                 })
@@ -297,7 +308,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         } else {
             if (message.length) {
                 const newMsg = {
-                    _id: new uniqueId(),
+                    _id: v4(),
                     recieverId: reciever._id,
                     senderId: userData.value._id,
                     content: message.charAt(0).toUpperCase() + message.slice(1),
@@ -316,20 +327,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     if (!conversation.value.length) {
                         GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
                     }
-                    // const currChat = conversation.value.filter(el => el.opponent[0]._id == chat.data)
-                    // if (currChat[0] && currChat[0].messages) {
-                    //     const anotherChats = conversation.value.filter(el => el.opponent[0]._id != chat.data)
-                    //     let mixed;
-                    //     if (anotherChats.length) {
-                    //         mixed = [{ ...currChat[0], messages: [...currChat[0].messages, newMsg], last_message: [newMsg] }, { ...anotherChats[0] }]
-                    //     } else {
-                    //         mixed = [{ ...currChat[0], messages: [...currChat[0].messages, newMsg] }]
-                    //     }
-                    // } else {
-                    //     GetChatList('sendMessage').then(res => {
-                    //         dispatch(setConversations(res))
-                    //     })
-                    // }
                 } else {
                     toast('No message')
                 }

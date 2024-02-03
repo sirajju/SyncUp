@@ -4,9 +4,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import Axios from '../../interceptors/axios'
 import ConfirmBox from '../Confirmation/Dailogue'
 import toast from 'react-hot-toast'
-import {setUserData} from '../../Context/userContext'
+import { setUserData} from '../../Context/userContext'
+import { MDBIcon } from 'mdb-react-ui-kit'
+import _ from 'lodash'
 
-function UserDetails({ chat, reciever }) {
+function UserDetails({ chat, reciever ,setChat}) {
     const allConversation = useSelector(state => state.conversations)
     const me = useSelector(state => state.user)
     const [userData, setUser] = useState([])
@@ -35,7 +37,7 @@ function UserDetails({ chat, reciever }) {
             }
         }
         const data = allConversation.value.filter(el => el.opponent[0]._id == reciever._id)
-        setConversation(data)
+        setConversation(data || false)
     }, [me])
     const reportContact = function () {
         const options = {
@@ -88,8 +90,15 @@ function UserDetails({ chat, reciever }) {
         })
         openBlockConfirm(false)
     }
+    const closeProfile = function(){
+        const par = document.querySelector('.userProfileParent')
+        par.style.transition='0.7s'
+        par.style.transform = "translateX(100%)"
+        _.delay(()=>setChat({type:'chat',data:userData._id}),700)
+    }
     return (
-        <div className="userProfileParent ">
+        <div className="userProfileParent">
+            <MDBIcon animate='beat' className='text-light' style={{cursor:'pointer'}} onClick={closeProfile} fas icon="arrow-right" />
             <div className="userProfileChild">
                 <ConfirmBox func={openConfirmBox} posFunc={reportContact} title="Do you..?" content='Ok we will review the report and take appropriate action based on its Community Guidelines.' value={isConfirmOpened}>
                     <input value={reason} className='confirmInput' onChange={(e) => setReason(e.target.value)} type="text" placeholder={'Enter reason behind this...'} />
@@ -115,7 +124,7 @@ function UserDetails({ chat, reciever }) {
                 <button className="profileBtn viewNotes">View notes</button>
                 <button className="profileBtn chatLock">Chatlock</button>
             </div>
-            {conversation && <div className="userProfileChild">
+            {conversation&& conversation[0] && <div className="userProfileChild">
                 <div className="stausContainer">
                     <h1>Status</h1>
                     <div className="statusText text-start">

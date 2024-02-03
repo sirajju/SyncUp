@@ -150,3 +150,7 @@
     border-radius: 5px;
     padding:10px
 }
+.editedMsg {
+    background: #796df4;
+    color: white;
+}

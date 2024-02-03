@@ -206,9 +206,15 @@ const editMessage = async (req, res) => {
                 messageData.editedContent = messageData.content
                 messageData.content = message
                 if (await messageData.save()){
+                    const connectionData = await Connection.findOne({userId:messageData.recieverId})
+                    if(connectionData){
+                        req.io.to(connectionData.socketId).emit('msgEdited',{content:message,msgId:messageData._id})
+                    }
                     res.json({success:true,message:"Edited"})
                 }
             }
+        }else{
+            res.json({success:false,message:"No message"})
         }
     } catch (error) {
         res.json({ success: false, message: error.message })

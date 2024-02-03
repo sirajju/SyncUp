@@ -77,6 +77,17 @@ const currentchat = createSlice({
         })
       }
     },
+    markEdited:(state,action)=>{
+      if(state.value?.length){
+        state.value = state.value.map(el=>{
+          if(el._id==action.payload.msgId){
+            return {...el,isEdited:true,editedContent:el.content,content:action.payload.content}
+          }else{
+            return el
+          }
+        })
+      }
+    },
     markSent: (state, action) => {
       state.value = state.value.map(el => {
         if (el.senderId == action.payload) {
@@ -130,7 +141,7 @@ const adsData = createSlice({
 })
 
 export const { setConversations, resetConversation } = totalConversations.actions;
-export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen } = currentchat.actions;
+export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen,markEdited } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setAds } = adsData.actions
 export const { setUserData } = userSlice.actions;
