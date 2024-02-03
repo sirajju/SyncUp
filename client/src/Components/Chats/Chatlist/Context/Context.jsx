@@ -11,7 +11,7 @@ import './Context.css'
 
 const MENU_ID = "menu-id";
 
-export default function App({ MENU_ID, onHide,displayConfirm }) {
+export default function App({ MENU_ID, onHide,displayConfirm ,openEdit}) {
     function handleItemClick({ event, props, triggerEvent, data }) {
         console.log(props, triggerEvent, data);
     }
@@ -30,7 +30,7 @@ export default function App({ MENU_ID, onHide,displayConfirm }) {
     return (
         <div>
             <Menu style={style} onVisibilityChange={onHide} id={MENU_ID}>
-                <Item onClick={handleItemClick}>
+                <Item onClick={openEdit}>
                     Edit
                 </Item>
                 <Item onClick={()=>displayConfirm(true)}>

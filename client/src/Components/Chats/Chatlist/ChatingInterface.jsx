@@ -37,7 +37,7 @@ import "react-contexify/dist/ReactContexify.css";
 import { useScroll } from '@react-hooks-library/core'
 import ConfirmBox from '../../Confirmation/Dailogue'
 
-const ConversationTopBar = ({ reciever, setChat, setGo, chat,isBlocked }) => {
+const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
     const dispatch = useDispatch()
     const [isLoading, setLoading] = useState(true)
@@ -91,12 +91,12 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat,isBlocked }) => {
                 <img src={reciever.avatar_url} alt="" className="conversationAvatar" />
                 <div className="conversationUserDetails">
                     <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} </span>
-                    <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>
+                    {!isBlocked && <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>}
                 </div>
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked&&<img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -113,6 +113,8 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const dispatch = useDispatch()
     const [messageId, setMessageId] = useState(null)
     const [isConfirmed, displayConfirm] = useState(false)
+    const [editedMessage, setEdited] = useState('')
+    const [showEdit, openEdit] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
@@ -164,12 +166,32 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         })
     }
 
+    const saveMessage = function () {
+        const options = {
+            route: "editMessage",
+            payload: { msgId: messageId, message: editedMessage },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            method:"PUT"
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                alert('edited')
+            }else{
+                alert(res.data.message)
+            }
+        })
+    }
+
     return (
         <div className="chatinInterface">
             <div className="doodles" onClick={() => setMessageId('')} ref={doodleRef}>
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
+                <ConfirmBox func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
+                    <input onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
+
+                </ConfirmBox>
                 <EditMessage />
-                <ContextMenu displayConfirm={displayConfirm} onHide={onHide} MENU_ID={'MENU_ID'} />
+                <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} onHide={onHide} MENU_ID={'MENU_ID'} />
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
@@ -213,12 +235,14 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     useEffect(() => {
-        socket.on('conversationBlocked',(data)=>{
-            dispatch(setUserData({...userData.value,blockedContacts:[...userData.value.blockedContacts,{userId:data.userId,blockedAt:Date.now()}]}))
+        socket.on('conversationBlocked', (data) => {
+            if(reciever){
+                setReciever({ ...reciever, blockedContacts: [...reciever.blockedContacts, { userId: userData.value._id, blockedAt: Date.now() }] })
+            }
             setBlocked(true)
         })
-        socket.on('conversationUnblocked',(data)=>{
-            dispatch(setUserData({...userData.value,blockedContacts:userData.value.blockedContacts.filter(el=>el.userId!=data.userId)}))
+        socket.on('conversationUnblocked', (data) => {
+            dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
             setBlocked(false)
         })
         if (chat.type == 'chat') {
@@ -235,7 +259,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
             const chatData = conversation.value.filter(el => el.opponent[0]._id == chat.data)
             if (chatData && chatData[0]?.opponent[0]) {
                 const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
-                const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el=>el.userId==userData.value._id).length
+                const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el => el.userId == userData.value._id).length
                 setBlocked(blocked || anotherBlock)
                 setReciever(chatData[0].opponent[0])
             } else {
@@ -247,7 +271,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 }
                 Axios(options).then(res => {
                     const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
-                    const anotherBlock = res.data.body.blockedContacts.filter(el=>el.userId==userData.value._id)
+                    const anotherBlock = res.data.body.blockedContacts.filter(el => el.userId == userData.value._id)
                     setBlocked(blocked || anotherBlock)
                     setReciever(res.data.body)
                 })

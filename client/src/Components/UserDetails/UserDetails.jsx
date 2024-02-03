@@ -30,7 +30,6 @@ function UserDetails({ chat, reciever }) {
             })
             if (me) {
                 const res = me.value.blockedContacts?.filter(el => el.userId == reciever._id)?.length
-                console.log(res);
                 setBlocked(res)
 
             }
