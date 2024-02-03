@@ -80,7 +80,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
         par.style.transition = '0.7s'
         par.style.transform = "translateX(100%)"
         _.delay(() => {
-            setChat({type:null,data:null});
+            setChat({ type: null, data: null });
             if (window.outerWidth <= 800) {
                 setGo('')
             }
@@ -239,19 +239,28 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     useEffect(() => {
-        socket.on('conversationBlocked', (data) => {
+        socket.on('conversationBlocked', async (data) => {
             if (reciever) {
                 setReciever({ ...reciever, blockedContacts: [...reciever.blockedContacts, { userId: userData.value._id, blockedAt: Date.now() }] })
+                setBlocked(true)
+            } else {
+                const res = await GetChatList()
+                dispatch(setConversations(res))
             }
-            setBlocked(true)
         })
-        socket.on('conversationUnblocked', (data) => {
-            dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
-            setBlocked(false)
+        socket.on('conversationUnblocked', async(data) => {
+            if (reciever) {
+                dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
+                setBlocked(false)
+            } else {
+                const res = await GetChatList()
+                dispatch(setConversations(res))
+            }
         })
         socket.on('msgEdited', (data) => {
-            console.log(data);
-            dispatch(markEdited({ msgId: data.msgId, content: data.content }))
+            if(chat.type){
+                dispatch(markEdited({ msgId: data.msgId, content: data.content }))
+            }
         })
         if (chat.type == 'chat') {
             setMessage('')
