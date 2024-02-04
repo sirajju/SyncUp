@@ -11,12 +11,9 @@ import './Context.css'
 
 const MENU_ID = "menu-id";
 
-export default function App({ MENU_ID, onHide,displayConfirm ,openEdit}) {
-    function handleItemClick({ event, props, triggerEvent, data }) {
-        console.log(props, triggerEvent, data);
-    }
+export default function App({ MENU_ID, onHide, displayConfirm, openEdit }) {
     const style = {
-        backgroundColor: '#ed80fd', 
+        backgroundColor: '#ed80fd',
         "--contexify-menu-bgColor": "#ed80fd",
         "--contexify-separator-color": "#ffffff",
         "--contexify-item-color": "#ffffff",
@@ -28,15 +25,13 @@ export default function App({ MENU_ID, onHide,displayConfirm ,openEdit}) {
         "--contexify-activeArrow-color": "#fff",
     };
     return (
-        <div>
-            <Menu style={style} onVisibilityChange={onHide} id={MENU_ID}>
-                <Item onClick={openEdit}>
-                    Edit
-                </Item>
-                <Item onClick={()=>displayConfirm(true)}>
-                    Delete
-                </Item>
-            </Menu>
-        </div>
+        <Menu style={style} onVisibilityChange={onHide} id={MENU_ID}>
+            <Item onClick={openEdit}>
+                Edit
+            </Item>
+            <Item onClick={() => displayConfirm(true)}>
+                Delete
+            </Item>
+        </Menu>
     );
 }

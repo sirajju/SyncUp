@@ -31,7 +31,7 @@ import LinearProgress from '@mui/joy/LinearProgress';
 import lodash, { uniqueId } from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
 import ContextMenu from './Context/Context'
-import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
+import {  useContextMenu } from "react-contexify";
 import EditMessage from './EditMessage/EditMessage'
 import "react-contexify/dist/ReactContexify.css";
 import { useScroll } from '@react-hooks-library/core'
@@ -120,6 +120,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const [editedMessage, setEdited] = useState('')
     const [showEdit, openEdit] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
+    const { show } = useContextMenu({id: 'MENU_ID'});
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         if (!currentChat.value?.length) {
@@ -135,20 +136,11 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         }
 
     }, [currentChat])
-    const { show } = useContextMenu({
-        id: 'MENU_ID'
-    });
-
     function displayMenu(e, id) {
         setMessageId(id)
         show({
             event: e,
         });
-    }
-    const onHide = function (e) {
-        if (!e) {
-            // setMessageId('')
-        }
     }
     const deleteMsg = function () {
         displayConfirm(false)
@@ -196,7 +188,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
 
                 </ConfirmBox>
                 <EditMessage />
-                <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} onHide={onHide} MENU_ID={'MENU_ID'} />
+                <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
@@ -307,12 +299,15 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         document.addEventListener('keyup', (e) => {
             if (e.key == 'Escape') {
+                if(file){
+                    setMedia(null)
+                }
+                fileInputRef?.current?.destroy()
+                inputRef?.current?.destroy()
                 setChat({ type: null })
             } else if (e.key == 'Enter') {
-                if (inputRef.current) {
-                    inputRef.current.focus()
+                    inputRef?.current?.focus()
                 }
-            }
         })
     }, [chat]);
 
@@ -372,8 +367,13 @@ function ChatingInterface({ setGo, setChat, chat }) {
         if (e.target.files[0]) {
             const reader = new FileReader()
             reader.onload = (ev) => {
-                const obj = { data: ev.target.result, type: e.target.files[0].type }
-                setMedia(obj)
+                const obj = { data: ev.target.result, type: e.target.files[0].type,size:e.target.files[0].size }
+                if(!obj.type.startsWith('image')){
+                    toast.error('Please select an image')
+                }
+                else{
+                    setMedia(obj)
+                }
             }
             reader.readAsDataURL(e.target.files[0])
         }
@@ -470,7 +470,7 @@ const ConversationBottom = function ({ isBlocked, message, removeLastEmoji, send
             {isBlocked ? <div className='blockedDiv'> <p style={{ color: 'grey', fontSize: '13px' }}>This conversation has been ended</p> </div> : <>
                 <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
                 <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
-                <img src={add} onClick={() => fileInputRef.current.click()} alt="" />
+                <img src={add} id='imageAdd' onClick={() => fileInputRef.current.click()} alt="" />
                 <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
                 <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" /></>}
         </div>
