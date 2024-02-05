@@ -193,18 +193,22 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                     messages.map((el, ind) => {
                         return (
                             <>
-                            {!el?.isMedia ? el.senderId === userData.value._id ? (
-                                <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
-                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : el.content}</div>
+                            {el.senderId === userData.value._id ? (
+                                <div key={ind}  className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : (!el.isMedia?el.content:<>
+                                    <img src={el.mediaConfig.url} alt="" className="mediaMessage" />
+                                    </>)}</div>
                                     <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
                                 </div>
                             ) : (
-                                <div key={ind} className={`message leftMessage `}>
-                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : el.content}</div>
+                                <div key={ind}  className={`message leftMessage `}>
+                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : (!el.isMedia?el.content:<>
+                                    <img src={el.mediaConfig.url} alt="" className="mediaMessage" />
+                                    </>)}</div>
 
                                     <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
                                 </div>
-                            ):""}
+                            )}
                             </>
                         )
                     })
@@ -302,8 +306,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 if(file){
                     setMedia(null)
                 }
-                fileInputRef?.current?.destroy()
-                inputRef?.current?.destroy()
                 setChat({ type: null })
             } else if (e.key == 'Enter') {
                     inputRef?.current?.focus()
