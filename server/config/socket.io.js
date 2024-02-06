@@ -44,7 +44,7 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
-                if(roomData){
+                if (roomData) {
                     console.log('Joining room');
                     socket.join(roomData.roomId)
                 }
@@ -78,13 +78,29 @@ function intializeSocket(server) {
                     socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                 }
             })
-            socket.on('userAcceptedACall', async(data) => {
-                const userData = await Connection.findOne({userId:data.from})
+            socket.on('sendMedia', async (data) => {
+                const response= await messageController.sendMediaMessage(data)
+                if (response?.newMessage) {
+                    let newMessage = response.newMessage
+                    const senderConnection = await Connection.findOne({ userId: newMessage.senderId })
+                    const recieverConnection = await Connection.findOne({ userId: newMessage.recieverId })
+                    if (senderConnection && recieverConnection) {
+                        if (senderConnection.socketId != socket.id) {
+                            await Connection.findOneAndUpdate({ socketId: senderConnection.socketId }, { $set: { socketId: socket.id } })
+                        }
+                        const roomData = await Room.findOne({ senderId: { $in: [data.senderId, data.recieverId] }, recieverId: { $in: [data.senderId, data.recieverId] } })
+                        socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
+                        socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
+                    }
+                }
+            })
+            socket.on('userAcceptedACall', async (data) => {
+                const userData = await Connection.findOne({ userId: data.from })
                 console.log(new ObjectId(data.from))
-                if(userData){
+                if (userData) {
                     socket.to(userData.socketId).emit('callAccepted')
-                }else{
-                    socket.emit('callError',{message:"Err while connecting"})
+                } else {
+                    socket.emit('callError', { message: "Err while connecting" })
                 }
             })
             socket.on('markMsgDeliver', async (data) => {
@@ -115,10 +131,10 @@ function intializeSocket(server) {
                     socket.join(newRoom.roomId)
                 }
             })
-            socket.on('typingStarted',async(data)=>{
+            socket.on('typingStarted', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.from, data.to] }, recieverId: { $in: [data.from, data.to] } })
-                const connectData = await Connection.findOne({userId:data.to})
-                if(roomData){
+                const connectData = await Connection.findOne({ userId: data.to })
+                if (roomData) {
                     socket.to(roomData.roomId).emit('typing')
                     socket.to(connectData.socketId).emit('typing')
                     setTimeout(() => {

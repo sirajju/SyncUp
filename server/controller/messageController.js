@@ -154,31 +154,46 @@ const makeMsgSeen = async (req, res) => {
         res.json({ message: error.message })
     }
 }
-const sendMediaMessage = async (req, res) => {
+const sendMediaMessage = async (data) => {
     try {
-        const data = req.body
-        if (data.secure_url) {
-            const userData = await User.findOne({ email: req.userEmail })
-            const recieverData = await User.findOne({ _id: new ObjectId(data.reciever) })
+        if (data) {
+            const userData = await User.findOne({ email: data.userEmail })
+            const recieverData = await User.findOne({ _id: new ObjectId(data.recieverId) })
+            const conversationData = await Conversation.findOne({ participents: { $all: [userData._id, recieverData._id] } })
             const messageData = new Message({
                 senderId: userData._id,
                 recieverId: recieverData._id,
-                sentTime: Date.now(),
+                content: data.content || '',
+                sentTime: data.sentTime,
                 isMedia: true,
-                mediaConfig: {
-                    url: data.secure_url,
-                    type: data.type,
-                    caption:data.caption || false
-                }
+                mediaConfig: { ...data.mediaConfig },
+                isDelivered: false,
+                isReaded: false,
+                isDeleted: false,
+                isSent: true
             })
-            if(await messageData.save()){
-                res.json({success:true,message:"Media sent"})
+
+            if (await messageData.save()) {
+                if (!conversationData) {
+                    await new Conversation({
+                        participents: [userData._id, recieverData._id],
+                        type: 'personal',
+                    }).save()
+                }
+                await Conversation.findOneAndUpdate({
+                    $or: [
+                        { participents: [userData._id, recieverData._id] },
+                        { participents: [recieverData._id, userData._id] }
+                    ]
+                }, { $push: { messages: messageData._id } })
+                return { newMessage:messageData }
             }
-        }else{
-            res.json({success:false,message:"No media to send"})
+        } else {
+            return false
         }
     } catch (error) {
         console.log(error);
+        return false
     }
 }
 const deleteMessage = async (req, res) => {
@@ -210,16 +225,16 @@ const editMessage = async (req, res) => {
                 messageData.isEdited = true
                 messageData.editedContent = messageData.content
                 messageData.content = message
-                if (await messageData.save()){
-                    const connectionData = await Connection.findOne({userId:messageData.recieverId})
-                    if(connectionData){
-                        req.io.to(connectionData.socketId).emit('msgEdited',{content:message,msgId:messageData._id})
+                if (await messageData.save()) {
+                    const connectionData = await Connection.findOne({ userId: messageData.recieverId })
+                    if (connectionData) {
+                        req.io.to(connectionData.socketId).emit('msgEdited', { content: message, msgId: messageData._id })
                     }
-                    res.json({success:true,message:"Edited"})
+                    res.json({ success: true, message: "Edited" })
                 }
             }
-        }else{
-            res.json({success:false,message:"No message"})
+        } else {
+            res.json({ success: false, message: "No message" })
         }
     } catch (error) {
         res.json({ success: false, message: error.message })
