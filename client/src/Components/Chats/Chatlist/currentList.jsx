@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setCurrentChat } from '../../../Context/userContext'
 import GetMessages from '../../../main/Chats/getMessages'
 import { useSocket } from '../../../Context/socketContext'
+import imageIcon from '../../../assets/Images/image.png'
 
 function CurrentList({ setChat, setGo }) {
     const conversations = useSelector(state => state.conversations)
@@ -32,7 +33,7 @@ function CurrentList({ setChat, setGo }) {
                         <div className="chatDetails">
                             <div className="userContent">
                                 <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>} </h5>
-                                <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : el.last_message[0]?.content}</p>
+                                <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : !el.last_message[0].isMedia ? el.last_message[0]?.content:<img style={{width:"20px"}} src={imageIcon}/>}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">
                                 <h6 className='lastMsgTime'>{new Date(el.last_message[0]?.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.last_message[0]?.sentTime).getMinutes().toString().padStart(2, '0')}</h6>

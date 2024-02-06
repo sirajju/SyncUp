@@ -77,6 +77,7 @@ export default function Basic() {
 const HandleUpload = async (base64File) => {
   const formData = new FormData();
   formData.append('file', base64File);
+  formData.append('quality', 'auto:low');
   formData.append('upload_preset', 'syncup_preset');
 
   try {

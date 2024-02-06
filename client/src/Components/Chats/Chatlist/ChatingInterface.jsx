@@ -31,7 +31,7 @@ import LinearProgress from '@mui/joy/LinearProgress';
 import lodash, { uniqueId } from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
 import ContextMenu from './Context/Context'
-import {  useContextMenu } from "react-contexify";
+import { useContextMenu } from "react-contexify";
 import EditMessage from './EditMessage/EditMessage'
 import "react-contexify/dist/ReactContexify.css";
 import { useScroll } from '@react-hooks-library/core'
@@ -41,6 +41,7 @@ import { MDBIcon } from 'mdb-react-ui-kit';
 import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
+import {saveAs} from 'file-saver'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -120,7 +121,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const [editedMessage, setEdited] = useState('')
     const [showEdit, openEdit] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
-    const { show } = useContextMenu({id: 'MENU_ID'});
+    const { show } = useContextMenu({ id: 'MENU_ID' });
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         if (!currentChat.value?.length) {
@@ -134,7 +135,6 @@ const MessageRenderer = ({ reciever, setReciever }) => {
         } else {
             setMessages(currentChat.value)
         }
-
     }, [currentChat])
     function displayMenu(e, id) {
         setMessageId(id)
@@ -178,37 +178,42 @@ const MessageRenderer = ({ reciever, setReciever }) => {
             }
         })
     }
-
+    const downloadImage = function (el){
+        saveAs(el.mediaConfig.url,`image_syncUp_${el.sentTime}`)
+    }
     return (
         <div className="chatinInterface">
             <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
+                {/*Confirm message for deleted message*/}
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
+                {/*Message editor*/}
                 <ConfirmBox func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
                     <input onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
-
                 </ConfirmBox>
-                <EditMessage />
+                {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
                             <>
-                            {el.senderId === userData.value._id ? (
-                                <div key={ind}  className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
-                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : (!el.isMedia?el.content:<>
-                                    <img src={el.mediaConfig.url} alt="" className="mediaMessage" />
-                                    </>)}</div>
-                                    <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
-                                </div>
-                            ) : (
-                                <div key={ind}  className={`message leftMessage `}>
-                                    <div className='p-1'>{el?.isDeleted ? "This message has been vanished" : (!el.isMedia?el.content:<>
-                                    <img src={el.mediaConfig.url} alt="" className="mediaMessage" />
-                                    </>)}</div>
+                                {el.senderId === userData.value._id ? (
+                                    <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
+                                            <img src={el.mediaConfig.url} alt="d" onClick={()=>downloadImage(el)}  className="mediaMessage" />
+                                            <p className='p-1 text-start' >{el.content}</p>
+                                        </>)}</div>
+                                        <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
+                                    </div>
+                                ) : (
+                                    <div key={ind} className={`message leftMessage `}>
+                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
+                                            <img src={el.mediaConfig.url} alt="d" onClick={()=>downloadImage(el)} loading='lazy' className="mediaMessage" />
+                                            <p className='p-1' >{el.content}</p>
+                                        </>)}</div>
 
-                                    <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
-                                </div>
-                            )}
+                                        <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
+                                    </div>
+                                )}
                             </>
                         )
                     })
@@ -236,7 +241,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const [file, setMedia] = useState(false)
     const fileInputRef = useRef()
     const inputRef = useRef();
-    const [caption,setCaption]=useState(null)
+    const [caption, setCaption] = useState(null)
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     useEffect(() => {
@@ -303,13 +308,13 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         document.addEventListener('keyup', (e) => {
             if (e.key == 'Escape') {
-                if(file){
+                if (file) {
                     setMedia(null)
                 }
                 setChat({ type: null })
             } else if (e.key == 'Enter') {
-                    inputRef?.current?.focus()
-                }
+                inputRef?.current?.focus()
+            }
         })
     }, [chat]);
 
@@ -335,22 +340,11 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 if (newMsg.content && newMsg.userEmail && newMsg.recieverId) {
                     socket.emit('sendMsg', newMsg)
                     dispatch(addNewMessage(newMsg))
-                    if (!conversation.value.length) {
-                        GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
-                    }
+                    GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
                 } else {
                     toast('No message')
                 }
                 setSending(false)
-
-
-                // socket.on('msgSeen', () => {
-                //     const deep = lodash.cloneDeep(conversation)
-                //     dispatch(setConversations(deep.value.map(el=>{
-                //         return {...el,messages:el.messages.forEach(el => el.isReaded = true)}
-                //     })))
-                // })
-
             }
         }
     };
@@ -369,11 +363,11 @@ function ChatingInterface({ setGo, setChat, chat }) {
         if (e.target.files[0]) {
             const reader = new FileReader()
             reader.onload = (ev) => {
-                const obj = { data: ev.target.result, type: e.target.files[0].type,size:e.target.files[0].size }
-                if(!obj.type.startsWith('image')){
+                const obj = { data: ev.target.result, type: e.target.files[0].type, size: e.target.files[0].size }
+                if (!obj.type.startsWith('image')) {
                     toast.error('Please select an image')
                 }
-                else{
+                else {
                     setMedia(obj)
                 }
             }
@@ -383,26 +377,34 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const sendMedia = async () => {
         const formData = new FormData();
         formData.append('file', file.data);
+        formData.append('quality', 'auto:low');
         setSending(true)
         formData.append('upload_preset', 'syncup_preset');
         const res = await axios.post('https://api.cloudinary.com/v1_1/drjubxrbt/image/upload', formData).catch(err => toast(err.message))
         const { secure_url } = res?.data
         if (secure_url) {
-            const options = {
-                route: "/sendMediaMessage",
-                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                payload: { secure_url, reciever: reciever._id, type: file.type,caption },
-                method: "POST"
+            const newMsg = {
+                _id: v4(),
+                recieverId: reciever._id,
+                senderId: userData.value._id,
+                content: caption,
+                userEmail: userData.value.email,
+                isMedia: true,
+                mediaConfig: {
+                    url: secure_url,
+                    type: file.type
+                },
+                sentTime: Date.now()
             }
-            Axios(options).then(res => {
-                if (res.data.success) {
-                    setMedia(null)
-                    setSending(false)
-                } else {
-                    setSending(false)
-                    toast(res.data.message)
-                }
-            })
+            if (newMsg?.mediaConfig?.url && newMsg.userEmail && newMsg.recieverId) {
+                socket.emit('sendMedia', newMsg)
+                dispatch(addNewMessage(newMsg))
+                setMedia(null)
+                setSending(false)
+                GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
+            } else {
+                toast('No message')
+            }
         } else {
             toast.error('Err while sending media')
         }
