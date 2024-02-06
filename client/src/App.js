@@ -20,6 +20,7 @@ import CreateAd from './Components/Admin/Ads/CreateAd';
 import Premium from './Components/Premium/Premium';
 import { hideLoading } from './Context/userContext';
 import _ from 'lodash';
+import { requestPermission } from './Context/firebaseConfig';
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)

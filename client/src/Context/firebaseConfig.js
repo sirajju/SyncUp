@@ -40,3 +40,13 @@ export const GetToken = () => {
     fetchToken();
 
 };
+export async function requestPermission() {
+    const permission = await Notification.requestPermission();
+    if(permission === 'granted'){
+      //generate token
+      const token = await getFirebaseToken(messaging, {vapidKey: "BLNCzGskONW7-Cj3P8TjIk9ArrAVCAY5dT25pDF6FtsZM7iNARh4UKIh0hSxqnl9pMY0TiwoVdGf1kOSK_BXtCw"})
+      console.log('token', token)
+    }else if(permission === 'denied'){
+      alert("You denied for the notification")
+    }
+  }

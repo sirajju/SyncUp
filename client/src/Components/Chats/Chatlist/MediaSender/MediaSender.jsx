@@ -26,14 +26,14 @@ export default function ({ file, setMedia, fileInputRef, sendMedia, setCaption,i
         setCaption(null)
     }
     return (
-        <div className="mediaSenderContainer" ref={myRef}>
+        <div className="mediaSenderContainer" onKeyUp={(e)=>{e.key=='Enter'&&sendMedia()}}  ref={myRef}>
             <ConfirmBox value={displayConfirm} title="Think again" content="Do you want to remove added image..?" func={setConfirm} posFunc={discardChanges} />
             <img className='imageToSend' onClick={() => fileInputRef.current.click()} src={file.data} />
             <div className="mediaSenderOptions">
                 <p className='text-danger' >{isBig && `Please choose image with lessthan 2Mb size`}</p>
                 <input onChange={(e) => setCaption(e.target.value)} type="text" placeholder='Write caption here...' className="captionInput" />
-                {!isBig&&<button className="btnSendMedia" >
-                    <img src={isSending ? timerIcon :sendIcon} onClick={sendMedia} alt="" />
+                {!isBig&&<button  onClick={sendMedia}className="btnSendMedia" >
+                    <img src={isSending ? timerIcon :sendIcon}alt="" />
                 </button>}
             </div>
         </div>

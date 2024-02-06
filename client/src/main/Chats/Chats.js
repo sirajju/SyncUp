@@ -103,7 +103,7 @@ function Chats() {
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
                 route: "isAlive",
-                params: { getData: true},
+                params: { getData: true },
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
             }
@@ -117,7 +117,7 @@ function Chats() {
                 }
             })
         }
-     
+
         const handleLogout = ({ message }) => {
             toast.error(message)
             localStorage.removeItem('SyncUp_Auth_Token')
@@ -137,13 +137,18 @@ function Chats() {
         socket.on('logoutUser', handleLogout)
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
+        socket.on('callDeclined', (data) => {
+            toast.error('Call declined')
+            setChat({ type: 'chat', data: data.userId })
+        })
+        
         socket.on('messageRecieved', async (data) => {
             if (data.newMessage) {
                 dispatch(addNewMessage(data.newMessage))
                 dispatch(setConversations(await GetChatList('messageReceived')))
             }
         })
-        socket.on('msgDeleted',async(data)=>{
+        socket.on('msgDeleted', async (data) => {
             dispatch(deleteMessage(data.id))
             dispatch(setConversations(await GetChatList('Message deleted')))
         })
@@ -184,8 +189,8 @@ function Chats() {
             }
         }
     }, [])
-   
-    
+
+
     const props = {
         setChat,
         chat,
@@ -205,7 +210,7 @@ function Chats() {
                         <TopBar handleSearch={handleSearch} setGo={setGo} />
                         <ChatTabs activeTab={'Chats'} />
                         <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
-                        <Joyride/>
+                        <Joyride />
                     </>}
             </ChatBox>
         </>

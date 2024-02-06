@@ -400,6 +400,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 socket.emit('sendMedia', newMsg)
                 dispatch(addNewMessage(newMsg))
                 setMedia(null)
+                setCaption('')
                 setSending(false)
                 GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
             } else {
@@ -411,7 +412,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
     }
     const hangUpCall = () => {
         socket.emit('onHangup', chat.data)
-        setChat({ type: 'chat', data: chat.data.to })
     }
     const declineCall = () => {
         socket.emit('onDeclined', chat.data)
@@ -463,7 +463,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 </div>
             )}
             {openEmoji && <Emoji setMessage={setMessage} setOpenEmoji={setOpenEmoji} />}
-            {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} chat={chat} hangUpCall={hangUpCall} />}
+            {(chat.type == 'videoCall') && <VidConfig declineCall={declineCall} setChat={setChat} chat={chat} hangUpCall={hangUpCall} />}
             {chat.type == 'UserProfile' && <UserDetails {...props} />}
         </>
     );

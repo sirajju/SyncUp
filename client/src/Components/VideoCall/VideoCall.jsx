@@ -7,7 +7,6 @@ import { useSocket } from '../../Context/socketContext';
 import Axios from '../../interceptors/axios';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { setChat } from '../../Context/userContext';
 
 function VideoCall(props) {
   const socket = useSocket()
@@ -16,7 +15,12 @@ function VideoCall(props) {
   const [chat, setChat] = useState(props.chat)
   const [isLoaded, setLoaded] = useState(false)
   const [localStream, setLocalStream] = useState(null)
+  const [remoteStream, setRemote] = useState(null)
+  const [ua, setUa] = useState(new UserAgent({
+    uri: 'apiKey:58fe00be7be7c9805c1c0b98b195669a'
+  }))
   const callState = useSelector(state => state.call)
+
   const onStreamListChangedHandler = function (streamInfo) {
     if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
 
@@ -24,6 +28,14 @@ function VideoCall(props) {
         conversationRef.current.subscribeToStream(streamInfo.streamId)
           .then((stream) => {
             console.log('subscribeToStream success', stream);
+          }).catch((err) => {
+            console.error('subscribeToStream error', err);
+          });
+    } else {
+      if (conversationRef.current)
+        conversationRef.current.unsubscribeToStream(streamInfo.streamId)
+          .then((stream) => {
+            alert('removed')
           }).catch((err) => {
             console.error('subscribeToStream error', err);
           });
@@ -37,7 +49,6 @@ function VideoCall(props) {
   }
   //streamRemoved: Remove the participant's display from the UI
   const onStreamRemovedHandler = function (stream) {
-    console.log(stream);
     stream.removeFromDiv('opVideo', 'remote-media-' + stream.streamId)
   }
   useEffect(() => {
@@ -60,38 +71,45 @@ function VideoCall(props) {
         }
       })
     }
+    socket.on('callEnded', (data) => {
+      if (conversationRef.current) {
+        conversationRef.current.leave().then(() => {
+          conversationRef.current.destroy()
+        })
+      }
+      toast.error('Call ended')
+    })
     socket.on('callAccepted', () => {
-      setChat({ ...chat, isAccepted: true })
+      props.setChat({ ...chat, isAccepted: true })
       initializeVideo().then(() => {
         setLoaded(true)
       })
     })
-    socket.on('callEnded', (data) => {
-      // const videos = document.querySelectorAll('video')
-      // videos.forEach(video => {
-      //     const stream = video.srcObject
-      //     stream.getVideoTracks().forEach(track => track.stop());
-      //     stream.getAudioTracks().forEach(track => track.stop());
-      //     video.srcObject = null
-      // })
-    })
-    socket.on('callDeclined', (data) => {
-      // const videos = document.querySelectorAll('video')
-      // videos.forEach(video => {
-      //     const stream = video.srcObject
-      //     stream.getVideoTracks().forEach(track => track.stop());
-      //     stream.getAudioTracks().forEach(track => track.stop());
-      //     video.srcObject = null
-      // })
-    })
+    // socket.on('callEnded', (data) => {
+    //   const videos = document.querySelectorAll('video')
+    //   videos.forEach(video => {
+    //       const stream = video.srcObject
+    //       stream.getVideoTracks().forEach(track => track.stop());
+    //       stream.getAudioTracks().forEach(track => track.stop());
+    //       video.srcObject = null
+    //   })
+    // })
+    // socket.on('callDeclined', (data) => {
+    //   const videos = document.querySelectorAll('video')
+    //   videos.forEach(video => {
+    //       const stream = video.srcObject
+    //       stream.getVideoTracks().forEach(track => track.stop());
+    //       stream.getAudioTracks().forEach(track => track.stop());
+    //       video.srcObject = null
+    //   })
+    // })
   }, [socket])
   const initializeVideo = async () => {
-
-    let localStream = null;
     const apikey = "58fe00be7be7c9805c1c0b98b195669a"
-    const ua = new UserAgent({
-      uri: 'apiKey:' + apikey
-    })
+    // const ua = new UserAgent({
+    //   uri: 'apiKey:' + apikey
+    // })
+    // setUa(ua)
     //Connect the UserAgent and get a session
     ua.register().then((session) => {
 
@@ -113,13 +131,13 @@ function VideoCall(props) {
       })
         .then((stream) => {
           let strm = stream
+          setLocalStream(stream)
           stream.attachToElement(document.getElementById('local-video-stream'));
           conversation.join()
             .then((response) => {
               conversation
                 .publish(strm)
                 .then(() => {
-                  setLocalStream(stream)
                   console.log('local published')
                 })
                 .catch((err) => {
@@ -138,6 +156,15 @@ function VideoCall(props) {
     setChat({ ...chat, isAccepted: true })
     initializeVideo()
   }
+  const hangupCall = function () {
+    if (conversationRef.current) {
+      conversationRef.current.leave().then(() => {
+        conversationRef.current.destroy()
+      })
+      socket.emit('onHangup', chat.data)
+
+    }
+  }
   return (
     <>
       {userData && <div className='userDetailsVidCall'>
@@ -147,15 +174,15 @@ function VideoCall(props) {
       {callState.value && <div className="videoContainer">
         {isLoaded ? <>
           {/* <div className="callOptions"> */}
-            {chat.isRecieved && !chat.isAccepted ?
-              <div className={chat.isAccepted?"AccpetedOPtions":"callOptions"}>
-                <button className="Accept" onClick={acceptCall} >Accept</button>
-                <button className="Decline" onClick={props.declineCall} >Decline</button>
-              </div>
-              :
-              <div className={chat.isAccepted?"AccpetedOPtions":"callOptions"}>
-                <button onClick={props.hangUpCall}> <img src={imgDecline} alt="" /> </button>
-              </div>}
+          {chat.isRecieved && !chat.isAccepted ?
+            <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
+              <button className="Accept" onClick={acceptCall} >Accept</button>
+              <button className="Decline" onClick={props.declineCall} >Decline</button>
+            </div>
+            :
+            <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
+              <button onClick={hangupCall}> <img src={imgDecline} alt="" /> </button>
+            </div>}
           {/* </div> */}
           <div className="callUi">
             <div className="selfVideo" id='selfVideo'>
@@ -168,7 +195,7 @@ function VideoCall(props) {
           </div></> : <div className="vidLoading">
           <span className="spinner" />
           <p className='text-light' >Waiting...</p>
-          <button className='btnHangup' onClick={props.hangUpCall}> <img src={imgDecline} alt="" /></button>
+          <button className='btnHangup' onClick={hangupCall}> <img src={imgDecline} alt="" /></button>
 
         </div>}
       </div>
