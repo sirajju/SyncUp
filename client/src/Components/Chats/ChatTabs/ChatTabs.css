@@ -14,3 +14,6 @@
 .chatTabs .rightIcon{
     width: 18px;
 }
+.inActiveTab{
+    cursor: pointer;
+}

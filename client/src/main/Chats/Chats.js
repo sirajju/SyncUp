@@ -20,6 +20,7 @@ import { useSocket } from '../../Context/socketContext'
 import { io } from 'socket.io-client'
 import Loader from '../../Components/Chats/Loader/Loader'
 import Joyride from '../../Components/Joyride/Joyride'
+import Notes from '../Notes/Notes'
 
 
 
@@ -37,6 +38,7 @@ function Chats() {
     const userData = useSelector(state => state.user)
     const history = useNavigate()
     const conversation = useSelector(state => state.conversations)
+    const [activeTab, setActiveTab] = useState('Chats')
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
         // Setting socket id and getting conversations (chat)
@@ -141,7 +143,7 @@ function Chats() {
             toast.error('Call declined')
             setChat({ type: 'chat', data: data.userId })
         })
-        
+
         socket.on('messageRecieved', async (data) => {
             if (data.newMessage) {
                 dispatch(addNewMessage(data.newMessage))
@@ -208,8 +210,12 @@ function Chats() {
                     <>
 
                         <TopBar handleSearch={handleSearch} setGo={setGo} />
-                        <ChatTabs activeTab={'Chats'} />
-                        <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
+                        <ChatTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+                        {
+                            activeTab == 'Notes' ?
+                                <Notes /> :
+                                <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
+                        }
                         <Joyride />
                     </>}
             </ChatBox>
