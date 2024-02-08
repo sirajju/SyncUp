@@ -11,11 +11,14 @@ import Axios from '../../../interceptors/axios';
 import { useNavigate } from 'react-router-dom';
 import { setUserData } from '../../../Context/userContext';
 import toast from 'react-hot-toast';
+import NotesMenu from './NotesMenu'
+import { Dropdown } from 'antd';
 
-function TopBar({ handleSearch, setGo }) {
+function TopBar({ handleSearch, setGo,activeTab }) {
   let userData = useSelector(state => state.user)
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const [isOpen, setOpen] = useState(false)
   const [notiNum, setNotiNum] = useState(0)
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => saveCondact(codeResponse),
@@ -52,6 +55,30 @@ function TopBar({ handleSearch, setGo }) {
       setNotiNum(userData.value.notifications.filter(el => !el.isReaded).length)
     }
   }, [userData])
+  const notesItems = [
+    {
+      label: 'My notes',
+      key: '0',
+    },
+    {
+      label: 'Create note',
+      key: '1',
+    },
+  ];
+  const chatsItems = [
+    {
+      label: <span className='premiumRequired' >Schedule message</span> ,
+      key: '0',
+    },
+    {
+      label: <span className='premiumRequired' >Premium</span>,
+      key: '1',
+    },
+    {
+      label: 'Reffer freinds',
+      key: '2',
+    },
+  ];
   return (
     <div className="topBarContainer">
       <input type="text" onChange={handleSearch} maxLength={20} placeholder='Enter username' className="searchBar" />
@@ -62,7 +89,15 @@ function TopBar({ handleSearch, setGo }) {
         </div>
         {/* <img src={settingIcon} className='icon settingsIcon' alt='Settings' /> */}
         {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Settings' />}
-        <img src={menuIcon} className='icon menuIcon' alt='MenuIcon' />
+        <Dropdown
+        arrow
+          menu={{
+            items:activeTab=='Notes'?notesItems:chatsItems,
+          }}
+          trigger={['hover']}
+        >
+          <img src={menuIcon} className='icon menuIcon' alt='MenuIcon' />
+        </Dropdown>
         <img src={userData.value.avatar_url} onClick={() => setGo(`Profile`)} style={{ borderRadius: "50px" }} className='icon profileIcon' alt='Dp' />
       </div>
     </div>

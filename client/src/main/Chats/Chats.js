@@ -209,7 +209,7 @@ function Chats() {
                 {!go &&
                     <>
 
-                        <TopBar handleSearch={handleSearch} setGo={setGo} />
+                        <TopBar activeTab={activeTab} handleSearch={handleSearch} setGo={setGo} />
                         <ChatTabs activeTab={activeTab} setActiveTab={setActiveTab} />
                         {
                             activeTab == 'Notes' ?

@@ -16,9 +16,11 @@
     color: white;
     background: #ED80FD;
 }
-.icon{
+
+.icon {
     cursor: pointer;
 }
+
 .chatOptions {
     width: 40%;
     display: flex;
@@ -32,16 +34,19 @@
 .inputImg {
     width: 40px;
 }
+
 .chatOptions .icon {
     width: 35px;
     margin: 5px;
 }
+
 .settingsIcon:hover {
     transition: 0.5s;
     cursor: pointer;
     animation: rotate 800ms linear;
 }
-.notiNum{
+
+.notiNum {
     position: absolute;
     color: white;
     background-color: red;
@@ -55,11 +60,40 @@
     justify-content: center;
     align-items: center;
 }
+
+.premiumRequired {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    background-clip: text;
+    color: transparent;
+}
+
+.premiumRequired::after {
+    content: "👑";
+    font-size: 8px;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    background-clip: text;
+    color: transparent;
+    margin: 3px;
+}
+
+.chatPointsBubble {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    width: fit-content;
+    color: white;
+    border-radius: 10px;
+    width: 40px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    margin-left: 30%;
+}
+
 @keyframes rotate {
-    0%{
+    0% {
         transform: rotate(180deg);
     }
-    100%{
+
+    100% {
         transform: rotate(360deg);
     }
 }
