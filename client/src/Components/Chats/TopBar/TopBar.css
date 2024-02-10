@@ -67,15 +67,6 @@
     color: transparent;
 }
 
-.premiumRequired::after {
-    content: "👑";
-    font-size: 8px;
-    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
-    background-clip: text;
-    color: transparent;
-    margin: 3px;
-}
-
 .chatPointsBubble {
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
     width: fit-content;
@@ -87,7 +78,9 @@
     text-align: center;
     margin-left: 30%;
 }
-
+.menuIcon {
+    width: 10px;
+}
 @keyframes rotate {
     0% {
         transform: rotate(180deg);

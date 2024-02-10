@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react'
 import './VideoCall.css'
 import imgDecline from '../../assets/Images/decline.png'
+import imgAccept from '../../assets/Images/accept.png'
 import { useDispatch, useSelector } from 'react-redux'
 import { UserAgent } from '@apirtc/apirtc';
 import { useSocket } from '../../Context/socketContext';
@@ -176,12 +177,16 @@ function VideoCall(props) {
           {/* <div className="callOptions"> */}
           {chat.isRecieved && !chat.isAccepted ?
             <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
-              <button className="Accept" onClick={acceptCall} >Accept</button>
-              <button className="Decline" onClick={props.declineCall} >Decline</button>
+              <button className="callBtn Accept" onClick={acceptCall} >
+                <img src={imgAccept} alt="" />
+              </button>
+              <button className="callBtn Decline" onClick={props.declineCall} >
+                <img src={imgDecline} alt="" />
+              </button>
             </div>
             :
             <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
-              <button onClick={hangupCall}> <img src={imgDecline} alt="" /> </button>
+              <button onClick={props.declineCall}> <img src={imgDecline} alt="" /> </button>
             </div>}
           {/* </div> */}
           <div className="callUi">
@@ -195,7 +200,7 @@ function VideoCall(props) {
           </div></> : <div className="vidLoading">
           <span className="spinner" />
           <p className='text-light' >Waiting...</p>
-          <button className='btnHangup' onClick={hangupCall}> <img src={imgDecline} alt="" /></button>
+          <button className='btnHangup' onClick={props.declineCall}> <img src={imgDecline} alt="" /></button>
 
         </div>}
       </div>

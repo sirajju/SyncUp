@@ -17,6 +17,8 @@ const { intializeSocket } = require('./config/socket.io')
 const webPush = require('web-push')
 const { ExpressPeerServer } = require('peer')
 const peerServer = ExpressPeerServer(http, { debug: true })
+const cron = require('node-cron')
+const messageController = require('./controller/messageController')
 app.use(cors())
 
 // if (cluster.isMaster) {
@@ -47,6 +49,10 @@ app.use(cors())
 
   app.get('*', (req, res) => {
     res.json({ err: "Not found" })
+  })
+
+  cron.schedule('0 0 * * *',()=>{
+    messageController.checkExpiredItems()
   })
 
   // error handler

@@ -77,12 +77,12 @@ const currentchat = createSlice({
         })
       }
     },
-    markEdited:(state,action)=>{
-      if(state.value?.length){
-        state.value = state.value.map(el=>{
-          if(el._id==action.payload.msgId){
-            return {...el,isEdited:true,editedContent:el.content,content:action.payload.content}
-          }else{
+    markEdited: (state, action) => {
+      if (state.value?.length) {
+        state.value = state.value.map(el => {
+          if (el._id == action.payload.msgId) {
+            return { ...el, isEdited: true, editedContent: el.content, content: action.payload.content }
+          } else {
             return el
           }
         })
@@ -140,10 +140,44 @@ const adsData = createSlice({
   }
 })
 
+const notesData = createSlice({
+  name: "notes",
+  initialState: { value: {} },
+  reducers: {
+    setNotes: (state, action) => {
+      state.value = action.payload
+    },
+    addNote: (state, action) => {
+      state.value = [...state.value, action.payload]
+    },
+    setExpired:(state)=>{
+      state.value = state.value.map(el=>el.notes.isExpired=true)
+    }
+  }
+})
+
+const myNotes = createSlice({
+  name: "myNotes",
+  initialState: { value: {} },
+  reducers: {
+    setMyNotes: (state, action) => {
+      state.value = action.payload
+    },
+    addMyNote: (state, action) => {
+      state.value = [...state.value, action.payload]
+    },
+    setArchived:(state)=>{
+      state.value = state.value.map(el=>el.isExpired=true)
+    }
+  }
+})
+
 export const { setConversations, resetConversation } = totalConversations.actions;
-export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen,markEdited } = currentchat.actions;
+export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen, markEdited } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setAds } = adsData.actions
+export const { setNotes, addNote,setExpired } = notesData.actions
+export const { setMyNotes, addMyNote,setArchived } = myNotes.actions
 export const { setUserData } = userSlice.actions;
 export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;
@@ -157,6 +191,8 @@ const rootReducer = combineReducers({
   call: callState.reducer,
   chat: chatState.reducer,
   ads: adsData.reducer,
+  notes: notesData.reducer,
+  myNotes: myNotes.reducer
 });
 export const store = configureStore({
   reducer: rootReducer,

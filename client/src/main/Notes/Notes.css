@@ -51,7 +51,12 @@
 }
 .notesState .time {
     color: #010851;
-    font-size: 13px;
+    font-size: 11px;
+    display: flex;
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* color: rgb(184, 184, 184); */
 }
 .notesListItem .textReply {
     display: flex;
@@ -59,5 +64,13 @@
     align-items: flex-end;
     color: #010851;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+}
+.notesListItem .btnDelete{
+    width: 20px;
+    cursor: pointer;
+    transition: all 0.5s;
+}
+.notesListItem .btnDelete:hover{
+    transform: scale(1.1);
 }

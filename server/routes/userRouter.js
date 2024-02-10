@@ -20,6 +20,8 @@ app.get('/getConversation',isAuth,messageController.getConversation);
 app.get('/getCurrentConversations',isAuth,messageController.getCurrentConversations);
 app.get('/makeMsgSeen',isAuth,messageController.makeMsgSeen);
 app.get('/verifyPremium',isAuth,paymentController.verifyPremium);
+app.get('/getNotes',isAuth,messageController.getNotes);
+app.get('/getMyNotes',isAuth,messageController.getMyNotes);
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);
@@ -35,6 +37,7 @@ app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
 app.post('/reportContact',isAuth,userController.reportContact)
 app.post('/blockContact',isAuth,userController.blockContact)
 app.post('/unBlockContact',isAuth,userController.unBlockContact)
+app.post('/publishNote',isAuth,messageController.publishNote)
 
 app.put('/editMessage',isAuth,messageController.editMessage)
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
@@ -48,6 +51,7 @@ app.delete('/cancellRequest',isAuth,userController.cancellRequest)
 app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);
 app.delete('/removeContact',isAuth,userController.removeContact)
 app.delete('/deleteMessage',isAuth,messageController.deleteMessage)
+app.delete('/deleteNote',isAuth,messageController.deleteNote)
 
 
 module.exports = app;

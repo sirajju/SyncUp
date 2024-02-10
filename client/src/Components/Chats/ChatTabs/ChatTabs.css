@@ -11,9 +11,19 @@
     font-weight: 400;
     margin-top: 5px;
 }
+.activeTab {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 .chatTabs .rightIcon{
     width: 18px;
 }
 .inActiveTab{
     cursor: pointer;
+}
+.chatTabs div {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding:5px;
 }

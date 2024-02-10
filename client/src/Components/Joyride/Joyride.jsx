@@ -42,6 +42,10 @@ function JoyrideFunction() {
             target: '.inActiveTab',
             content: 'Clck here to view updates or to create notes',
         },
+        {
+            target: '.callLogIcon',
+            content: 'This icon let you know about previos calls',
+        },
     ];
     const handleJoyrideCallback = (data) => {
         if (data.action === 'skip' || data.status === 'finished') {

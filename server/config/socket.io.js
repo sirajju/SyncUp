@@ -4,6 +4,7 @@ const Connection = require('../models/connectionModel')
 const User = require('../models/userSchema')
 const messageController = require('../controller/messageController')
 const Room = require('../models/roomModel')
+const call_log = require('../models/callLogSchema')
 const { ObjectId } = require('mongodb')
 
 function intializeSocket(server) {
@@ -44,13 +45,14 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
+                createLog({ ...data })
                 if (roomData) {
                     console.log('Joining room');
                     socket.join(roomData.roomId)
                 }
-                else{
-                    const newRoom =  await createRoom({senderId:data.to,recieverId:data.from})
-                    if(newRoom){
+                else {
+                    const newRoom = await createRoom({ senderId: data.to, recieverId: data.from })
+                    if (newRoom) {
                         console.log('Joining a room');
                         socket.join(newRoom.roomId)
                     }
@@ -62,7 +64,7 @@ function intializeSocket(server) {
             })
             socket.on('userAcceptedACall', async (data) => {
                 const userData = await Connection.findOne({ userId: data.from })
-                console.log(new ObjectId(data.from))
+                await call_log.findOneAndUpdate({conversationName:data.conversationName},{$set:{isAccepted:true}})
                 if (userData) {
                     socket.to(userData.socketId).emit('callAccepted')
                 } else {
@@ -71,13 +73,18 @@ function intializeSocket(server) {
             })
             socket.on('onHangup', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
+                const callData = await call_log.findOne({conversationName:data?.conversationName})
+                if(callData){
+                    callData.duration = new Date().getSeconds() - new Date(callData.createdAt).getSeconds()
+                    callData.endTime = Date.now()
+                    callData.save()
+                }
                 if (roomData) {
                     socket.to(roomData.roomId).emit('callEnded', { userId: data })
                 }
             })
             socket.on('onDeclined', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
-                console.log(roomData);
                 if (roomData) {
                     socket.to(roomData.roomId).emit('callDeclined', { userId: data.to })
                 }
@@ -96,7 +103,7 @@ function intializeSocket(server) {
                 }
             })
             socket.on('sendMedia', async (data) => {
-                const response= await messageController.sendMediaMessage(data)
+                const response = await messageController.sendMediaMessage(data)
                 if (response?.newMessage) {
                     let newMessage = response.newMessage
                     const senderConnection = await Connection.findOne({ userId: newMessage.senderId })
@@ -111,7 +118,7 @@ function intializeSocket(server) {
                     }
                 }
             })
-            
+
             socket.on('markMsgDeliver', async (data) => {
                 const senderConnection = await Connection.findOne({ userId: data.senderId })
                 if (senderConnection) {
@@ -132,30 +139,30 @@ function intializeSocket(server) {
                     socket.join(roomData.roomId)
                 } else {
                     const newRoom = await createRoom(data)
-                    if(newRoom){
+                    if (newRoom) {
                         console.log('joining room');
                         socket.join(newRoom.roomId)
-                    }else{
-                       console.log(`Joining failed ${JSON.stringify(data)}`);
+                    } else {
+                        console.log(`Joining failed ${JSON.stringify(data)}`);
                     }
                 }
             })
-            const createRoom = async function(data){
+            const createRoom = async function (data) {
                 console.log(`creating a room`);
-                if(data.senderId && data.recieverId){
+                if (data.senderId && data.recieverId) {
                     const newRoom = await new Room({
                         roomId: `${data.senderId}_${data.recieverId}`,
                         senderId: data.senderId,
                         recieverId: data.recieverId
                     }).save()
-                    if(newRoom){
+                    if (newRoom) {
                         return newRoom
                     }
                     return false
-                }else{
+                } else {
                     console.log('No room data to create one');
                 }
-               
+
             }
             socket.on('typingStarted', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.from, data.to] }, recieverId: { $in: [data.from, data.to] } })
@@ -172,6 +179,24 @@ function intializeSocket(server) {
             socket.on('disconnect', async (socket) => {
                 await Connection.findOneAndDelete({ socketId: socket.id })
             });
+
+
+            // Creating call logs
+
+            const createLog = async function ({ from, to, conversationName, duration, isAccepted, endTime }) {
+                console.log('Creating call log')
+                if (from, to, conversationName) {
+                    await new call_log({
+                        conversationName: conversationName || delete this.conversationName,
+                        from,
+                        to,
+                        isAccepted,
+                        duration,
+                        endTime: endTime || delete this.endTime
+                    }).save()
+                }
+
+            }
         });
     } catch (err) {
         console.log('error');

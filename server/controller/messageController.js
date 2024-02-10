@@ -7,6 +7,7 @@ const Connection = require('../models/connectionModel')
 const Conversation = require('../models/conversationSchema')
 const Message = require('../models/messageSchema')
 const Room = require('../models/roomModel')
+const Note = require('../models/noteSchema')
 const { encryptData } = require('./userController')
 const { ObjectId } = require('mongodb')
 
@@ -186,7 +187,7 @@ const sendMediaMessage = async (data) => {
                         { participents: [recieverData._id, userData._id] }
                     ]
                 }, { $push: { messages: messageData._id } })
-                return { newMessage:messageData }
+                return { newMessage: messageData }
             }
         } else {
             return false
@@ -240,6 +241,90 @@ const editMessage = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+const publishNote = async (req, res) => {
+    try {
+        const { note } = req.body
+        console.log(req.body);
+        if (note) {
+            const userData = await User.findOne({ email: req.userEmail })
+            if (userData) {
+                const newNote = new Note({
+                    userId: userData._id,
+                    content: note.content,
+                    email: userData.email
+                })
+                if (await newNote.save()) {
+                    const encData = encryptData(newNote)
+                    res.json({ success: true, message: "New note have been published", body: encData })
+                }
+            }
+        } else {
+            res.json({ success: false, message: "Something is missing" })
+        }
+    } catch (error) {
+        res.json({ succes: false, message: 'Err while creating a note' })
+    }
+}
+
+const getNotes = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            await Note.updateMany({ isExpired: false, expiresAt: { $lte: Date.now() } }, { $set: { isExpired: true } })
+            const notesData = await User.aggregate([{ $match: { email: userData.email } }, { $unwind: "$contacts" }, { $lookup: { from: "notes", localField: "contacts.email", foreignField: "email", as: "notes" } }, { $unwind: "$notes" }, { $match: { 'notes.isExpired': false } }, { $lookup: { from: "users", localField: "contacts.email", foreignField: "email", as: "userData" } }, { $sort: { 'notes.createdAt': -1 } }, { $project: { userData: 1, notes: 1 } }])
+            const validNotesData = notesData.filter((el => el.notes.length != 0))
+            const encNotes = encryptData(validNotesData)
+            if (encNotes) {
+                res.json({ success: true, body: encNotes })
+            } else {
+                res.json({ success: false, message: "Err while getting notes" })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: `Err while getting notes` })
+    }
+}
+
+const getMyNotes = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            const notesData = await Note.find({ email: userData.email,isCleared:false })
+            if (notesData) {
+                const encData = encryptData(notesData)
+                console.log(notesData);
+                res.json({ success: true, body: encData })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Err while getting notes" })
+    }
+}
+
+const checkExpiredItems = async () => {
+    try {
+        await Note.updateMany({ isExpired: false, expiresAt: { $lte: Date.now() } }, { $set: { isExpired: true } })
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const deleteNote = async(req,res)=>{
+    try {
+        const deleteData = await Note.findOneAndUpdate({email:req.userEmail,isExpired:false},{$set:{isExpired:true}})
+        if(deleteData){
+            res.json({success:true,message:"Note have been deleted"})
+        }else{
+            res.json({success:false,message:"Something went wrong"})
+        }
+    } catch (error) {
+        res.json({success:false,err:'Err while deleting note'})
+    }
+}
+
 module.exports = {
     getUserInfo,
     getConversation,
@@ -248,5 +333,10 @@ module.exports = {
     getCurrentConversations,
     sendMediaMessage,
     deleteMessage,
-    editMessage
+    editMessage,
+    publishNote,
+    getNotes,
+    getMyNotes,
+    checkExpiredItems,
+    deleteNote
 }

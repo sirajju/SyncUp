@@ -7,7 +7,7 @@ import Chatslst from '../../Components/Chats/Chatlist/Chatlist'
 import crypto from 'crypto-js'
 import Profile from '../../Components/Profile/Profile'
 import { useDispatch, useSelector } from 'react-redux'
-import { addNewMessage, deleteMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setOpponent, setUserData } from '../../Context/userContext'
+import { addNewMessage, deleteMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setMyNotes, setNotes, setOpponent, setUserData } from '../../Context/userContext'
 import Notification from '../../Components/Chats/Notifications/Notification'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -30,6 +30,7 @@ const ChatingInterface = React.memo(chatingUi)
 function Chats() {
     const [searchResult, setSearchData] = useState([])
     const ads = useSelector(state => state.ads)
+    const notes = useSelector(state => state.notes)
     const socket = useSocket()
     const [chat, setChat] = useState({ type: null })
     const [isLoading, setLoading] = useState(true)
@@ -41,21 +42,41 @@ function Chats() {
     const [activeTab, setActiveTab] = useState('Chats')
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
-        // Setting socket id and getting conversations (chat)
-        function a() {
-            if (userData.value._id) {
-                socket.emit('set-socketId', {
-                    userId: userData.value._id
-                })
-            }
-            GetChatList('chat use effect').then(res => {
-                dispatch(setConversations(res))
-                console.log('getting users from chat');
 
-                getAds()
+        // Fetch selfNotes
+
+        const fetchMyNotes = async function () {
+            const options = {
+                route: "getMyNotes",
+                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                crypto: true
+            }
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    dispatch(setMyNotes(res.data.body))
+                } else {
+                    toast.error(res.data.message)
+                }
             })
         }
-        a()
+
+        // Fetching notesData
+        const fetchNotes = function () {
+            const options = {
+                route: "getNotes",
+                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                crypto: true
+            }
+            Axios(options).then(res => {
+                if (res.data.success) {
+
+                    dispatch(setNotes(res.data.body))
+                } else {
+                    toast.error(res.data.message)
+                }
+            })
+        }
+
         // Fetching ads from server
         function getAds() {
             const token = localStorage.getItem('SyncUp_Auth_Token')
@@ -67,21 +88,49 @@ function Chats() {
                 }
                 Axios(options).then(res => {
                     if (res.data.success) {
+                        console.log(res.data.body);
                         dispatch(setAds(res.data.body))
                     } else {
                         toast.error(res.data.message)
                     }
+                })
+            }
+        }
+
+        // Setting socket id and getting conversations (chat)
+        function a() {
+            if (userData.value._id) {
+                socket.emit('set-socketId', {
+                    userId: userData.value._id
+                })
+            }
+            GetChatList('chat use effect').then(res => {
+                dispatch(setConversations(res))
+                console.log('getting users from chat');
+            })
+            if (!ads?.value?.length) {
+                getAds()
+            }else{
+                setTimeout(() => {
+                    setLoading(false)
+                }, 500)
+            }
+            if (!notes?.value?.length) {
+                fetchNotes()
+                fetchMyNotes().then(() => {
                     setTimeout(() => {
                         setLoading(false)
                     }, 500)
-
                 })
-            } else {
+
+            }else{
                 setTimeout(() => {
                     setLoading(false)
                 }, 500)
             }
         }
+        a()
+
 
         // Making responsive on mobile screen
         window.addEventListener('resize', () => {
@@ -186,9 +235,7 @@ function Chats() {
             }
         } else {
             setSearchData([])
-            if (!conversation?.value?.length) {
-                dispatch(setConversations(await GetChatList('searchFunction')))
-            }
+            dispatch(setConversations(await GetChatList('searchFunction')))
         }
     }, [])
 
@@ -209,11 +256,11 @@ function Chats() {
                 {!go &&
                     <>
 
-                        <TopBar activeTab={activeTab} handleSearch={handleSearch} setGo={setGo} />
+                        <TopBar activeTab={activeTab} setActiveTab={setActiveTab} handleSearch={handleSearch} setGo={setGo} />
                         <ChatTabs activeTab={activeTab} setActiveTab={setActiveTab} />
                         {
-                            activeTab == 'Notes' ?
-                                <Notes /> :
+                            ['Notes', 'My Notes'].includes(activeTab) ?
+                                <Notes activeTab={activeTab} /> :
                                 <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
                         }
                         <Joyride />
