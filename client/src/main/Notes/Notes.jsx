@@ -9,74 +9,86 @@ import CreateNote from './CreateNote/CreateNote'
 import toast from 'react-hot-toast'
 import { setArchived, setExpired, setMyNotes, setNotes } from '../../Context/userContext'
 import Axios from '../../interceptors/axios'
+import { useSocket } from '../../Context/socketContext'
 
 export default function Notes({ activeTab }) {
+    const socket = useSocket()
     const userData = useSelector(state => state.user)
     const notesData = useSelector(state => state.notes)
     const myNotes = useSelector(state => state.myNotes)
+    const [isLiked, setLiked] = useState(false)
     const dispatch = useDispatch()
     const [notes, setLocalNotes] = useState([])
+    const refreshNotes = function () {
+        const options = {
+            route: "getNotes",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            crypto: true
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                dispatch(setNotes(res.data.body))
+                setLocalNotes(res.data.body)
+            } else {
+                toast.error(res.data.message)
+            }
+        })
+    }
+    const refreshMyNotes = function () {
+        const options = {
+            route: "getMyNotes",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            crypto: true
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                dispatch(setMyNotes(res.data.body))
+                setLocalNotes(res.data.body)
+            } else {
+                toast.error(res.data.message)
+            }
+        })
+    }
     useEffect(() => {
         if (activeTab == 'My Notes') {
             setLocalNotes(myNotes.value)
-            const options = {
-                route: "getMyNotes",
-                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                crypto: true
-            }
-            Axios(options).then(res => {
-                if (res.data.success) {
-                    dispatch(setMyNotes(res.data.body))
-                    setLocalNotes(res.data.body)
-                } else {
-                    toast.error(res.data.message)
-                }
-            })
+            // refreshMyNotes()
         } else {
             setLocalNotes(notesData.value)
-            const options = {
-                route: "getNotes",
-                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                crypto: true
-            }
-            Axios(options).then(res => {
-                if (res.data.success) {
-                    console.log(res.data.body);
-                    dispatch(setNotes(res.data.body))
-                    setLocalNotes(res.data.body)
-                } else {
-                    toast.error(res.data.message)
-                }
-            })
+            // refreshNotes()
         }
-
-    }, [activeTab])
-    const [isLiked, setLiked] = useState(false)
+        console.log('Rendering');
+    }, [activeTab, myNotes, notesData])
+    socket.on('noteDeleted', () => {
+        refreshNotes()
+    })
+    socket.on('newNote', () => {
+        refreshNotes()
+    })
     const changeLike = function (e) {
         setLiked(!isLiked)
     }
-    const deleteNote = function(){
-        const options={
-            route:"deleteNote",
-            headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
-            method:"DELETE"
+    const deleteNote = function () {
+        const options = {
+            route: "deleteNote",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            method: "DELETE"
         }
-        Axios(options).then(res=>{
-            if(res.data.success){
-                dispatch(setArchived())
-                setLocalNotes(notes.map(el=>el.isExpired=true))
+        Axios(options).then(res => {
+            if (res.data.success) {
+                dispatch(setMyNotes(myNotes.value.map(el => ({ ...el, isExpired: true }))))
                 toast.success(res.data.message)
-            }else{
+            } else {
                 toast.error(res.data.message)
             }
         })
     }
     return (
         <div className="notesContainer" data-aos="fade-up" data-aos-duration="700">
-            {activeTab=='My Notes' && <p style={{width:'100%',textAlign:'center',color:'rgb(184, 184, 184)'}} >Note : You cannot publish two notes at a time.</p>}
+            {activeTab == 'My Notes' && <p style={{ width: '100%', textAlign: 'center', color: 'rgb(184, 184, 184)' }} >Note : You cannot publish two notes at a time.</p>}
             {Boolean(activeTab == 'Notes' && notes.length) && notes.map(el => {
                 return (
-                    <div className="notesListItem"  onDoubleClick={changeLike} >
+                    <div className="notesListItem" onDoubleClick={changeLike} >
                         <img src={el.userData[0].avatar_url} alt="" className="notesAvatar" />
                         <div className="notesDetails">
                             <h4 className="username">{el.userData[0].username}</h4>
@@ -102,15 +114,18 @@ export default function Notes({ activeTab }) {
                         </div>
                         <div className="notesState">
                             <p className='time' >{new Date(el.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
-                            <p>{el.isExpired ? "Archived":<img className='btnDelete' onClick={deleteNote} src={deleteIcon} /> }</p>
+                            <p style={{ fontSize: '10px' }}>{el.isExpired ? "Expired" : <img className='btnDelete' onClick={deleteNote} src={deleteIcon} />}</p>
                         </div>
                     </div>
                 )
             })}
             {Boolean(!notes.length && (!notesData.value?.length || !myNotes.value.length)) &&
+            <div className="notesEmptyContainer">
                 <h3>
                     Currenly there is no notes available
-                </h3>}
+                </h3>
+            </div>
+            }
         </div>
     )
 }

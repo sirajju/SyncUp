@@ -130,8 +130,6 @@ function Chats() {
             }
         }
         a()
-
-
         // Making responsive on mobile screen
         window.addEventListener('resize', () => {
             if (window.outerWidth <= 800 && chat.type) {

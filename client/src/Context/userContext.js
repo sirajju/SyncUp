@@ -158,16 +158,25 @@ const notesData = createSlice({
 
 const myNotes = createSlice({
   name: "myNotes",
-  initialState: { value: {} },
+  initialState: { value: [] },
   reducers: {
     setMyNotes: (state, action) => {
       state.value = action.payload
     },
     addMyNote: (state, action) => {
-      state.value = [...state.value, action.payload]
+      state.value.push(action.payload)
     },
     setArchived:(state)=>{
-      state.value = state.value.map(el=>el.isExpired=true)
+      state.value = state.value.map(el => ({...el, isExpired: true}));
+    },
+    clearNotes:(state)=>{
+      state.value = state.value.map(el => {
+        if(!el.isExpired){
+          return el
+        }else {
+          return
+        }
+      }); 
     }
   }
 })
@@ -177,7 +186,7 @@ export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, mark
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setAds } = adsData.actions
 export const { setNotes, addNote,setExpired } = notesData.actions
-export const { setMyNotes, addMyNote,setArchived } = myNotes.actions
+export const { setMyNotes, addMyNote,setArchived,clearNotes } = myNotes.actions
 export const { setUserData } = userSlice.actions;
 export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;

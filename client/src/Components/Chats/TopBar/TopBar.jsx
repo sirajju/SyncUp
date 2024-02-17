@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import Axios from '../../../interceptors/axios';
-import { setUserData } from '../../../Context/userContext';
+import { clearNotes, setArchived, setMyNotes, setUserData } from '../../../Context/userContext';
 import toast from 'react-hot-toast';
 import { Dropdown } from 'antd';
 import CreateNote from '../../../main/Notes/CreateNote/CreateNote';
@@ -89,21 +89,36 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
       toast.error('Failed to copy link');
     }
   };
-
+  const clearUserNotes = function () {
+    const options = {
+      route: "clearNotes",
+      headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+      method: "DELETE"
+    }
+    Axios(options).then(res => {
+      if (res.data.success) {
+        dispatch(setMyNotes(myNotes.value.filter(el=>el.isExpired==false)))
+        toast.success(res.data.message)
+      } else {
+        toast.error(res.data.message)
+      }
+    })
+  }
+  
   const itemFunction = {
     reffer: copyLink,
     createNote: () => setOpen(!isOpen),
     myNotes: () => setActiveTab('My Notes'),
     premium: () => navigate('/plans'),
+    clearNotes:clearUserNotes
   };
   const canCreateNote = function () {
     if (myNotes?.value?.length) {
       if (typeof myNotes.value == 'object') {
-        return !myNotes.value.filter(el=>el.isExpired==false).length
+        return !myNotes.value.filter(el => el.isExpired == false).length
       }
-    } else {
-      return true
     }
+    return true
   }
   const notesItems = [
     {
@@ -129,7 +144,8 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     {
       label: 'Clear expired notes',
       key: 'clearNotes',
-      icon: <img className='menuIcon' src={deleteIcon} alt='Create Note' />,
+      icon: <img className='menuIcon' src={deleteIcon} alt='Clear notes' />,
+      disabled:!myNotes.value?.filter(el=>el?.isExpired==true).length
     },
   ];
 
@@ -152,9 +168,9 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     },
   ];
   const menuItems = {
-    'Notes':notesItems,
-    'Chats':chatsItems,
-    'My Notes':myNotesItems
+    'Notes': notesItems,
+    'Chats': chatsItems,
+    'My Notes': myNotesItems
   }
   return (
     <div className="topBarContainer">

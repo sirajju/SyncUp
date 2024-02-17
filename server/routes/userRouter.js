@@ -52,6 +52,7 @@ app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);
 app.delete('/removeContact',isAuth,userController.removeContact)
 app.delete('/deleteMessage',isAuth,messageController.deleteMessage)
 app.delete('/deleteNote',isAuth,messageController.deleteNote)
+app.delete('/clearNotes',isAuth,messageController.clearExpiredNotes)
 
 
 module.exports = app;

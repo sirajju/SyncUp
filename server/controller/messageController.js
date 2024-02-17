@@ -254,6 +254,14 @@ const publishNote = async (req, res) => {
                     email: userData.email
                 })
                 if (await newNote.save()) {
+                    if(newNote.visibility=='contacts'){
+                        userData.contacts.forEach(async el=>{
+                            const connectionData = await Connection.findOne({userId:el.id})
+                            if(connectionData){
+                                req.io.to(connectionData.socketId).emit('newNote',{newNote})
+                            }
+                        })
+                    }
                     const encData = encryptData(newNote)
                     res.json({ success: true, message: "New note have been published", body: encData })
                 }
@@ -292,8 +300,7 @@ const getMyNotes = async (req, res) => {
         if (userData) {
             const notesData = await Note.find({ email: userData.email,isCleared:false })
             if (notesData) {
-                const encData = encryptData(notesData)
-                console.log(notesData);
+                const encData = encryptData(notesData.reverse())
                 res.json({ success: true, body: encData })
             }
         }
@@ -314,8 +321,19 @@ const checkExpiredItems = async () => {
 
 const deleteNote = async(req,res)=>{
     try {
-        const deleteData = await Note.findOneAndUpdate({email:req.userEmail,isExpired:false},{$set:{isExpired:true}})
+        const deleteData = await Note.findOneAndUpdate({email:req.userEmail,isExpired:false},{$set:{isExpired:true}},{new:true})
         if(deleteData){
+            const userData = await User.findOne({email:req.userEmail})
+            if(deleteData.visibility=='contacts'){
+                userData.contacts.forEach(async el=>{
+                    const connectionData = await Connection.findOne({userId:el.id})
+                    if(connectionData){
+                        req.io.to(connectionData.socketId).emit('noteDeleted',{name:"hello world"})
+                    }else{
+                        console.log('Connection data is not found');
+                    }
+                })
+            }
             res.json({success:true,message:"Note have been deleted"})
         }else{
             res.json({success:false,message:"Something went wrong"})
@@ -324,7 +342,18 @@ const deleteNote = async(req,res)=>{
         res.json({success:false,err:'Err while deleting note'})
     }
 }
-
+const clearExpiredNotes = async(req,res)=>{
+    try {
+        const deleteData = await Note.updateMany({email:req.userEmail,isExpired:true},{$set:{isCleared:true}})
+        if(deleteData){
+            res.json({success:true,message:"Notes have been cleared"})
+        }else{
+            res.json({success:false,message:"Something went wrong"})
+        }
+    } catch (error) {
+        res.json({success:false,err:'Err while clearing note'})
+    }
+}
 module.exports = {
     getUserInfo,
     getConversation,
@@ -338,5 +367,6 @@ module.exports = {
     getNotes,
     getMyNotes,
     checkExpiredItems,
-    deleteNote
+    deleteNote,
+    clearExpiredNotes
 }

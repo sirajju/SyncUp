@@ -12,9 +12,12 @@ import {
 } from 'mdb-react-ui-kit';
 import Axios from '../../../interceptors/axios'
 import toast from 'react-hot-toast';
+import { setMyNotes } from '../../../Context/userContext';
+import { useDispatch } from 'react-redux';
 
 export default function App({ isOpen, setOpen }) {
   const [note, setNote] = useState({ content: '' })
+  const dispatch = useDispatch()
   const handleInput = function (e) {
     setNote({ ...note, content: e.target.value })
   }
@@ -22,6 +25,20 @@ export default function App({ isOpen, setOpen }) {
     setOpen(false)
     setNote({ content: '' })
   }
+  const refreshMyNotes = function () {
+    const options = {
+        route: "getMyNotes",
+        headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+        crypto: true
+    }
+    Axios(options).then(res => {
+        if (res.data.success) {
+            dispatch(setMyNotes(res.data.body))
+        } else {
+            toast.error(res.data.message)
+        }
+    })
+}
   const publishNote = function () {
     if (note.content.length) {
       const options = {
@@ -35,6 +52,7 @@ export default function App({ isOpen, setOpen }) {
         if (res.data.success) {
           toast.success(res.data.message)
           setOpen(false)
+          refreshMyNotes()
         } else {
           toast.error(res.data.message)
         }
