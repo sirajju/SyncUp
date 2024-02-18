@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const userController = require('../controller/userController');
 const messageController = require('../controller/messageController')
+const noteController = require('../controller/noteController')
 const paymentController = require('../controller/paymentController')
 const isAuth = require('../middlewares/isAuth');
 
@@ -20,8 +21,8 @@ app.get('/getConversation',isAuth,messageController.getConversation);
 app.get('/getCurrentConversations',isAuth,messageController.getCurrentConversations);
 app.get('/makeMsgSeen',isAuth,messageController.makeMsgSeen);
 app.get('/verifyPremium',isAuth,paymentController.verifyPremium);
-app.get('/getNotes',isAuth,messageController.getNotes);
-app.get('/getMyNotes',isAuth,messageController.getMyNotes);
+app.get('/getNotes',isAuth,noteController.getNotes);
+app.get('/getMyNotes',isAuth,noteController.getMyNotes);
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);
@@ -37,10 +38,12 @@ app.post('/stripePaymentSession',isAuth,paymentController.createPaymentSession)
 app.post('/reportContact',isAuth,userController.reportContact)
 app.post('/blockContact',isAuth,userController.blockContact)
 app.post('/unBlockContact',isAuth,userController.unBlockContact)
-app.post('/publishNote',isAuth,messageController.publishNote)
+app.post('/publishNote',isAuth,noteController.publishNote)
 
 app.put('/editMessage',isAuth,messageController.editMessage)
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
+app.put('/likeNote',isAuth,noteController.likeNote)
+app.put('/unLikeNote',isAuth,noteController.unLikeNote)
 
 app.patch('/changePass',userController.changePasword)
 app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
@@ -51,8 +54,8 @@ app.delete('/cancellRequest',isAuth,userController.cancellRequest)
 app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);
 app.delete('/removeContact',isAuth,userController.removeContact)
 app.delete('/deleteMessage',isAuth,messageController.deleteMessage)
-app.delete('/deleteNote',isAuth,messageController.deleteNote)
-app.delete('/clearNotes',isAuth,messageController.clearExpiredNotes)
+app.delete('/deleteNote',isAuth,noteController.deleteNote)
+app.delete('/clearNotes',isAuth,noteController.clearExpiredNotes)
 
 
 module.exports = app;

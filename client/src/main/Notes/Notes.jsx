@@ -65,9 +65,6 @@ export default function Notes({ activeTab }) {
     socket.on('newNote', () => {
         refreshNotes()
     })
-    const changeLike = function (e) {
-        setLiked(!isLiked)
-    }
     const deleteNote = function () {
         const options = {
             route: "deleteNote",
@@ -83,12 +80,41 @@ export default function Notes({ activeTab }) {
             }
         })
     }
+    const likeNote = function(noteId){
+        const options ={
+            route:"likeNote",
+            headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
+            payload:{noteId},
+            method:"PUT"
+        }
+        Axios(options).then(res=>{
+            refreshNotes()
+            if(!res.data.success){
+                toast.error(res.data.message)
+            }
+        })
+    }
+    const unLikeNote = function(noteId){
+        const options ={
+            route:"unLikeNote",
+            headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_Auth_Token')}`},
+            payload:{noteId},
+            method:"PUT"
+        }
+        Axios(options).then(res=>{
+            refreshNotes()
+            if(!res.data.success){
+                toast.error(res.data.message)
+            }
+        })
+    }
+
     return (
         <div className="notesContainer" data-aos="fade-up" data-aos-duration="700">
             {activeTab == 'My Notes' && <p style={{ width: '100%', textAlign: 'center', color: 'rgb(184, 184, 184)' }} >Note : You cannot publish two notes at a time.</p>}
             {Boolean(activeTab == 'Notes' && notes.length) && notes.map(el => {
                 return (
-                    <div className="notesListItem" onDoubleClick={changeLike} >
+                    <div className="notesListItem" onDoubleClick={()=>el.notes.likes.includes(userData.value._id) ?unLikeNote(el.notes._id):likeNote(el.notes._id)} >
                         <img src={el.userData[0].avatar_url} alt="" className="notesAvatar" />
                         <div className="notesDetails">
                             <h4 className="username">{el.userData[0].username}</h4>
@@ -97,9 +123,9 @@ export default function Notes({ activeTab }) {
                         <span className='textReply'>Reply</span>
                         <div className="notesState">
                             <p className='time' >{new Date(el.notes.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
-                            {isLiked ?
-                                <MDBIcon onClick={changeLike} far icon="heart text-dark" className='likeBtn' /> :
-                                <MDBIcon onClick={changeLike} fas icon="heart text-danger" className='likeBtn' />}
+                            {!el.notes.likes.includes(userData.value._id) ?
+                                <MDBIcon onClick={()=>likeNote(el.notes._id)} far icon="heart text-dark" className='likeBtn' /> :
+                                <MDBIcon onClick={()=>unLikeNote(el.notes._id)} fas icon="heart text-danger" className='likeBtn' />}
                         </div>
                     </div>
                 )

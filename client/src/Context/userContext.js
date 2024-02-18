@@ -152,7 +152,7 @@ const notesData = createSlice({
     },
     setExpired:(state)=>{
       state.value = state.value.map(el=>el.notes.isExpired=true)
-    }
+    },
   }
 })
 

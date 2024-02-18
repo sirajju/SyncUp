@@ -21,6 +21,10 @@ const note = new mongoose.Schema({
         type: Array,
         default: []
     },
+    replys:{
+        type:Array,
+        default:[]
+    },
     expiresAt: {
         type: Number,
         default: new Date(Date.now() + 86400000).getTime()

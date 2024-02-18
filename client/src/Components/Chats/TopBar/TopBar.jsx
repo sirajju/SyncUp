@@ -68,6 +68,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   }
 
   useEffect(() => {
+    console.log(userData.value.notifications);
     if (userData.value && userData.value.notifications) {
       setNotiNum(userData.value.notifications.filter((el) => !el.isReaded).length);
     }
@@ -178,7 +179,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
       <div className="chatOptions">
         <div>
           {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}
-          <img src={notification} onClick={() => setGo('Notifications')} className='icon notificationsIcon' alt='Notification' />
+          <img src={notification} onClick={() => {setGo('Notifications');dispatch(setUserData({...userData.value,notifications:userData.value.notifications.map(el=>el={...el,isReaded:true})}))}} className='icon notificationsIcon' alt='Notification' />
         </div>
         <CreateNote isOpen={isOpen} setOpen={setOpen} />
         {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Google Sync' />}
