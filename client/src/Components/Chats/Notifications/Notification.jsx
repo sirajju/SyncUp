@@ -3,12 +3,13 @@ import { useSelector } from 'react-redux'
 import './Notification.css'
 import Axios from '../../../interceptors/axios'
 import message from '../../../assets/Images/message.png'
+import viewIcon from '../../../assets/Images/view.png'
 import close from '../../../assets/Images/close.png'
 import toast from 'react-hot-toast'
 import Confirmation from '../../Confirmation/Dailogue'
 import { useNavigate } from 'react-router-dom'
 
-function Notification({ setGo, setChat }) {
+function Notification({ setGo, setChat,setActiveTab }) {
     const userData = useSelector(state => state.user)
     const [notifications, setNotifications] = useState([])
     const [confirm, setConfirm] = useState(false)
@@ -124,6 +125,16 @@ function Notification({ setGo, setChat }) {
                                 })()}
 
                                 <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 0px 0 0 ', position: 'absolute' }}>{new Date(el.time).toLocaleTimeString()}</span>
+                            </div>
+                        </div>}
+                        {el.type == 'like' && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
+                            <img src={el.avatar_url} className='chatIcon' />
+                            <span className='text-center p-3' style={{ width: '100%' }}>{`${el.username} liked your note`}</span>
+                            <div className="followRqstDiv"  >
+                            <button onClick={() => {setGo('');setActiveTab('My Notes')}} className="btnAccept mb-1 text-light">
+                                                    <img style={{ 'width': '20px' }} src={viewIcon} alt="" />
+                                                </button>
+                                <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 20px 0 0 ', position: 'absolute' }}>{new Date(el.time).toLocaleTimeString('en-GB',{minute:'2-digit',hour:'2-digit',hour12:true})}</span>
                             </div>
                         </div>}
                     </>

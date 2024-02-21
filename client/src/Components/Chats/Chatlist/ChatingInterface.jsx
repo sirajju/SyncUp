@@ -41,7 +41,7 @@ import { MDBIcon } from 'mdb-react-ui-kit';
 import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
-import {saveAs} from 'file-saver'
+import { saveAs } from 'file-saver'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -178,8 +178,8 @@ const MessageRenderer = ({ reciever, setReciever }) => {
             }
         })
     }
-    const downloadImage = function (el){
-        saveAs(el.mediaConfig.url,`image_syncUp_${el.sentTime}`)
+    const downloadImage = function (el) {
+        saveAs(el.mediaConfig.url, `image_syncUp_${el.sentTime}`)
     }
     return (
         <div className="chatinInterface">
@@ -199,7 +199,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                                 {el.senderId === userData.value._id ? (
                                     <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
                                         <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
-                                            <img src={el.mediaConfig.url} alt="d" onClick={()=>downloadImage(el)}  className="mediaMessage" />
+                                            <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
                                             <p className='p-1 text-start' >{el.content}</p>
                                         </>)}</div>
                                         <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
@@ -207,7 +207,7 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                                 ) : (
                                     <div key={ind} className={`message leftMessage `}>
                                         <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
-                                            <img src={el.mediaConfig.url} alt="d" onClick={()=>downloadImage(el)} loading='lazy' className="mediaMessage" />
+                                            <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
                                             <p className='p-1' >{el.content}</p>
                                         </>)}</div>
 
@@ -254,7 +254,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(setConversations(res))
             }
         })
-        socket.on('conversationUnblocked', async (data) => {
+        socket.on('conversationBlocked', async (data) => {
             if (reciever) {
                 dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
                 setBlocked(false)
@@ -283,8 +283,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
             if (chatData && chatData[0]?.opponent[0]) {
                 const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
                 const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el => el.userId == userData.value._id).length
-                console.log(blocked || anotherBlock);
-                setBlocked(blocked || anotherBlock)
+                const conversationBanned = conversation.value.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
+                setBlocked(blocked || anotherBlock || conversationBanned)
                 setReciever(chatData[0].opponent[0])
             } else {
                 const options = {
@@ -296,15 +296,19 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 Axios(options).then(res => {
                     const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length).length
                     const anotherBlock = res.data.body.blockedContacts.filter(el => el.userId == userData.value._id).length
-                    console.log(blocked || anotherBlock);
+                    const conversationBanned = conversation.value.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
 
-                    setBlocked(blocked || anotherBlock)
+                    setBlocked(blocked || anotherBlock || conversationBanned)
                     setReciever(res.data.body)
                 })
             }
         }
         else if (chat.type == 'videoCall') {
-            socket.emit('onCall', chat.data)
+            if (chat.data.from == userData.value._id) {
+                socket.emit('onCall', chat.data)
+            } else {
+                socket.emit('onCall', {...chat.data,noLog:true})
+            }
         }
         document.addEventListener('keyup', (e) => {
             if (e.key == 'Escape') {

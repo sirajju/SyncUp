@@ -1,0 +1,13 @@
+.logVidCallIcon {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    width: 50px;
+    padding: 10px;
+    border-radius: 100%;
+    cursor: pointer;
+}
+.missedCall {
+    background-color: rgb(255, 200, 200);
+}
+.acceptedCall {
+    background-color: rgb(211, 251, 211);
+}

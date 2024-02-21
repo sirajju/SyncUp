@@ -36,7 +36,7 @@ function CurrentList({ setChat, setGo }) {
                                 <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : !el.last_message[0].isMedia ? el.last_message[0]?.content:<img style={{width:"20px"}} src={imageIcon}/>}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">
-                                <h6 className='lastMsgTime'>{new Date(el.last_message[0]?.sentTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})} </h6>
+                                <h6 className='lastMsgTime'>{new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() ? new Date(parseInt(el.last_message[0].sentTime)).toLocaleTimeString('en-US',{hour:'2-digit',minute:"2-digit",hour12:true}) : new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() - 1 ? "yesterday" :new Date(parseInt(el.last_message[0].sentTime)).toLocaleDateString()} </h6>
                                 <p className={`unreadMsgCount ${a ? 'visible' :'invisible'}`} ref={unrdRef} >{a}</p>
                             </div>
                         </div>
