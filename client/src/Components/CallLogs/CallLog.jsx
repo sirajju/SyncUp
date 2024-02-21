@@ -58,7 +58,7 @@ export default function ({ setGo, setChat }) {
         'clearLogs': clearCallLogs
     }
     return (
-        <div>
+        <>
             <div className="callLogOptions">
                 <button onClick={() => setGo('')} >
                     <MDBIcon fas icon="angle-left" />
@@ -76,7 +76,7 @@ export default function ({ setGo, setChat }) {
                     </Dropdown>
                 </button>
             </div>
-            <div className="text-center"  data-aos="fade-up" data-aos-duration="700">
+            <div className="text-center callLogParent"  data-aos="fade-up" data-aos-duration="700">
                 {logs.length ? logs.map(el => (
                     <div className={`callLogItem ${el.data.isAccepted ? 'acceptedCall' : (el.data.from == userData.value._id ? "outgoingCall" : "incomingCall")} `}>
                         <img src={el.opponentData.avatar_url} className='chatIcon' />
@@ -88,6 +88,6 @@ export default function ({ setGo, setChat }) {
                     </div>
                 )) : <h3>There is no logs available</h3>}
             </div>
-        </div>
+        </>
     )
 }

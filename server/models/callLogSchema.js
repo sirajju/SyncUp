@@ -1,43 +1,43 @@
 const mongoose = require('mongoose')
 
 const callLog = new mongoose.Schema({
-    conversationName:{
-        type:String,
+    conversationName: {
+        type: String,
     },
-    from:{
-        type:String,
-        required:true
+    from: {
+        type: String,
+        required: true
     },
-    to:{
-        type:String,
-        required:true
+    to: {
+        type: String,
+        required: true
     },
-    createdAt:{
-        type:Number,
-        default:Date.now()
+    createdAt: {
+        type: Number,
+        default: Date.now()
     },
-    isAccepted:{
-        type:Boolean,
-        default:false
+    isAccepted: {
+        type: Boolean,
+        default: false
     },
-    duration:{
-        type:Number,
-        default:0
+    duration: {
+        type: Number,
+        default: 0
     },
-    endTime:{
-        type:Number,
-        default:null
+    endTime: {
+        type: Number,
+        default: null
     },
-    isReaded:{
-        type:Boolean,
-        default:false
+    clearedParticipants: {
+        type: Array,
+        default: []
     },
-    isCleared:{
-        type:Boolean,
-        default:false
+    readedParticipants: {
+        type: Array,
+        default: []
     }
 })
 
-const CallLog = mongoose.model('CallLogs',callLog)
+const CallLog = mongoose.model('CallLogs', callLog)
 
 module.exports = CallLog
