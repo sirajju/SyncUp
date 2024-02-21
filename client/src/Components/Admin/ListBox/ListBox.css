@@ -17,7 +17,7 @@
 .listTop {
     background-color: red;
     height: 50px;
-    width: 75%;
+    width: 100%;
     background-color: white;
     display: flex;
     justify-content: space-between;

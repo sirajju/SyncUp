@@ -21,6 +21,8 @@ import Premium from './Components/Premium/Premium';
 import { hideLoading } from './Context/userContext';
 import _ from 'lodash';
 import { requestPermission } from './Context/firebaseConfig';
+import Reports from './Components/Admin/Reports/Reports';
+import AdminChats from './Components/Admin/Chats/Chats'
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
@@ -46,6 +48,8 @@ function App() {
           <Route path='/admin/users' element={<AdminRoute><Users /></AdminRoute>} />
           <Route path='/admin/ads' element={<AdminRoute><Ads /></AdminRoute>} />
           <Route path='/admin/ads/new' element={<AdminRoute><CreateAd /></AdminRoute>} />
+          <Route path='/admin/reports' element={<AdminRoute><Reports /></AdminRoute>} />
+          <Route path='/admin/chats' element={<AdminRoute><AdminChats /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
           
         </Routes>

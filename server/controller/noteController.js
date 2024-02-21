@@ -141,11 +141,12 @@ const likeNote = async (req, res) => {
                 }).save()
                 const noteData = await Note.findByIdAndUpdate({ _id: notesData._id }, { $push: { likes: userData._id.toString() } })
                 if (noteData) {
-                    const sharedUser = await User.findByIdAndUpdate({ _id: notesData.userId }, { $push: { notifications: { type: "like",userId:userData._id, username: userData.username, avatar_url: userData.avatar_url, noteId: notesData._id } } }, { new: true })
+                    const sharedUser = await User.findByIdAndUpdate({ _id: notesData.userId }, { $push: { notifications: { type: "like",userId:userData._id, username: userData.username, avatar_url: userData.avatar_url, noteId: notesData._id,time:Date.now() } } }, { new: true })
                     if (sharedUser) {
                         const socketData = await Connection.findOne({userId:sharedUser._id})
                         if(socketData){
                             req.io.to(socketData.socketId).emit('onUpdateNeeded')
+                            req.io.to(socketData.socketId).emit('refreshMyNotes')
                         }
                         res.json({ success: true, message: "Note Liked" })
                     }
@@ -173,6 +174,7 @@ const unLikeNote = async (req, res) => {
                     const socketData = await Connection.findOne({userId:sharedUserData._id})
                     if(socketData){
                         req.io.to(socketData.socketId).emit('onUpdateNeeded')
+                        req.io.to(socketData.socketId).emit('refreshMyNotes')
                     }
                     res.json({ success: true, message: "Note DisLiked" })
                 }

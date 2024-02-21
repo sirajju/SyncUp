@@ -1,13 +1,18 @@
 const express = require('express');
-const router = express.Router();
+const app = express.Router();
 const adminController = require('../controller/adminController')
 const isAdminAuth = require('../middlewares/isAdminAuth')
 
-router.get('/isAlive',isAdminAuth,adminController.isAlive)
-router.get('/changeBlock',isAdminAuth,adminController.changeBlock)
-router.get('/sortData',isAdminAuth,adminController.sortData)
+app.get('/isAlive',isAdminAuth,adminController.isAlive)
+app.get('/sortData',isAdminAuth,adminController.sortData)
+app.get('/getReports',isAdminAuth,adminController.getReports)
+app.get('/getChats',isAdminAuth,adminController.getChats)
 
-router.post('/login',adminController.checkAdmin)
-router.post('/createAd',isAdminAuth,adminController.createAd)
+app.post('/login',adminController.checkAdmin)
+app.post('/createAd',isAdminAuth,adminController.createAd)
 
-module.exports = router;
+app.put('/changeBlock',isAdminAuth,adminController.changeBlock)
+app.put('/changeConversationBan',isAdminAuth,adminController.changeConversationBan)
+
+
+module.exports = app;

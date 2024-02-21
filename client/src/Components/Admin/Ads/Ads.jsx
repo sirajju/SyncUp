@@ -25,14 +25,13 @@ function Ads() {
             axios(options).then(res => {
                 if (res.data.success) {
                     setAdsData(res.data.body)
+                    setProg(false)
                 } else {
+                    setProg(false)
                     localStorage.removeItem('SyncUp_AdminToken')
                     navigate('/admin')
                 }
             })
-            setTimeout(() => {
-                setProg(false)
-            }, 2000)
         }
     }, [])
     return (

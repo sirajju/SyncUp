@@ -13,7 +13,7 @@ function ListBox({ th, children, prog, active, sortList ,btnRedirect,btnText,sor
             <Sidebar active={active || 'Users'} />
             <div className="dashboard ">
                 <div className="dbDetails usersList" style={{ overflowY: "scroll" }}>
-                    <div className="listTop p-3" style={{ position: "fixed" }}>
+                    <div className="listTop p-3">
                         <div className="search">
                             <input type="text" className='inputSearch' placeholder='Enter name ' />
                             <button className='btnSearch'>Search</button>

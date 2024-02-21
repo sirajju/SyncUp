@@ -23,6 +23,7 @@ app.get('/makeMsgSeen',isAuth,messageController.makeMsgSeen);
 app.get('/verifyPremium',isAuth,paymentController.verifyPremium);
 app.get('/getNotes',isAuth,noteController.getNotes);
 app.get('/getMyNotes',isAuth,noteController.getMyNotes);
+app.get('/getCallLogs',isAuth,userController.getCallLogs);
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);

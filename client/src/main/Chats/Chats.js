@@ -21,6 +21,7 @@ import { io } from 'socket.io-client'
 import Loader from '../../Components/Chats/Loader/Loader'
 import Joyride from '../../Components/Joyride/Joyride'
 import Notes from '../Notes/Notes'
+import CallLog from '../../Components/CallLogs/CallLog'
 
 
 
@@ -249,13 +250,14 @@ function Chats() {
 
             <ChatBox rightComponent={go != 'MobileChat' && <ChatingInterface {...props} />}>
                 {go == `Profile` && <Profile setGo={setGo} />}
-                {go == `Notifications` && <Notification setChat={setChat} setGo={setGo} />}
+                {go == `Notifications` && <Notification setActiveTab={setActiveTab} setChat={setChat} setGo={setGo} />}
                 {go == 'MobileChat' && chat.type && <ChatingInterface {...props} />}
+                {go == 'CallLogs' && <CallLog setGo={setGo} />}
                 {!go &&
                     <>
 
                         <TopBar activeTab={activeTab} setActiveTab={setActiveTab} handleSearch={handleSearch} setGo={setGo} />
-                        <ChatTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+                        <ChatTabs setGo={setGo} activeTab={activeTab} setActiveTab={setActiveTab} />
                         {
                             ['Notes', 'My Notes'].includes(activeTab) ?
                                 <Notes activeTab={activeTab} /> :

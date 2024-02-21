@@ -71,8 +71,9 @@ const changeBlock = ((email, state, func) => {
     const token = localStorage.getItem('SyncUp_AdminToken')
     const options = {
         route: "admin/changeBlock",
-        params: { user: email, state },
-        headers: { Authorization: `Bearer ${token}` }
+        payload: { user: email, state },
+        headers: { Authorization: `Bearer ${token}` },
+        method:"PUT"
     }
     Axios(options, res => {
         if (res.data.success) {

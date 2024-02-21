@@ -34,7 +34,8 @@ export default function Notes({ activeTab }) {
             }
         })
     }
-    const refreshMyNotes = function () {
+    const refreshMyNotes = function (by) {
+        console.log(by);
         const options = {
             route: "getMyNotes",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
@@ -43,7 +44,6 @@ export default function Notes({ activeTab }) {
         Axios(options).then(res => {
             if (res.data.success) {
                 dispatch(setMyNotes(res.data.body))
-                setLocalNotes(res.data.body)
             } else {
                 toast.error(res.data.message)
             }
@@ -59,12 +59,18 @@ export default function Notes({ activeTab }) {
         }
         console.log('Rendering');
     }, [activeTab, myNotes, notesData])
-    socket.on('noteDeleted', () => {
-        refreshNotes()
-    })
-    socket.on('newNote', () => {
-        refreshNotes()
-    })
+    useEffect(()=>{
+        socket.on('noteDeleted', () => {
+            refreshNotes()
+        })
+        socket.on('newNote', () => {
+            refreshNotes()
+        })
+        socket.on('refreshMyNotes', () => {
+            refreshMyNotes('by socket')
+        })
+        console.log('Rendering socket useEffect');
+    },[socket])
     const deleteNote = function () {
         const options = {
             route: "deleteNote",
@@ -141,6 +147,8 @@ export default function Notes({ activeTab }) {
                         <div className="notesState">
                             <p className='time' >{new Date(el.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
                             <p style={{ fontSize: '10px' }}>{el.isExpired ? "Expired" : <img className='btnDelete' onClick={deleteNote} src={deleteIcon} />}</p>
+                            <p style={{ fontSize: '10px' }}>{el?.likes?.length} likes</p>
+                        
                         </div>
                     </div>
                 )

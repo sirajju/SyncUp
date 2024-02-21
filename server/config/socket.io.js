@@ -45,7 +45,9 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
-                createLog({ ...data })
+                if(!data.noLog){
+                    createLog({ ...data })
+                }
                 if (roomData) {
                     console.log('Joining room');
                     socket.join(roomData.roomId)
@@ -64,7 +66,7 @@ function intializeSocket(server) {
             })
             socket.on('userAcceptedACall', async (data) => {
                 const userData = await Connection.findOne({ userId: data.from })
-                await call_log.findOneAndUpdate({conversationName:data.conversationName},{$set:{isAccepted:true}})
+                await call_log.findOneAndUpdate({ conversationName: data.conversationName }, { $set: { isAccepted: true } })
                 if (userData) {
                     socket.to(userData.socketId).emit('callAccepted')
                 } else {
@@ -73,8 +75,8 @@ function intializeSocket(server) {
             })
             socket.on('onHangup', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
-                const callData = await call_log.findOne({conversationName:data?.conversationName})
-                if(callData){
+                const callData = await call_log.findOne({ conversationName: data?.conversationName })
+                if (callData) {
                     callData.duration = new Date().getSeconds() - new Date(callData.createdAt).getSeconds()
                     callData.endTime = Date.now()
                     callData.save()
@@ -192,6 +194,7 @@ function intializeSocket(server) {
                         to,
                         isAccepted,
                         duration,
+                        createdAt:Date.now(),
                         endTime: endTime || delete this.endTime
                     }).save()
                 }

@@ -1,10 +1,14 @@
 const User = require('../models/userSchema')
-const { compareHash } = require('../controller/userController')
+const { compareHash, encryptData } = require('../controller/userController')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto-js')
 const Ads = require('../models/adsSchema')
 const cloudinary = require('cloudinary')
 const Connection = require('../models/connectionModel')
+const Reports = require('../models/reportSchema')
+const Conversations = require('../models/conversationSchema')
+const { ObjectId } = require('mongodb')
+const _ = require('lodash')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -54,6 +58,7 @@ const isAlive = async (req, res) => {
                     dataToSend.business = await User.find({ isBusiness: true }).count()
                     dataToSend.premium = await User.find({ isPremium: true }).count()
                     dataToSend.blocked = await User.find({ isBlocked: true }).count()
+                    dataToSend.reports = await Reports.find().count()
                     break;
                 case "Users":
                     dataToSend = await User.find({ isAdmin: false })
@@ -64,9 +69,8 @@ const isAlive = async (req, res) => {
                 default:
                     throw new Error()
             }
-            console.log(dataToSend.length);
-            const encData = crypto.AES.encrypt(JSON.stringify(dataToSend), 'syncupservercryptokey')
-            res.json({ success: true, body: encData.toString() })
+            const encData = encryptData(dataToSend)
+            res.json({ success: true, body: encData })
         } else {
             res.json({ success: true })
         }
@@ -77,7 +81,7 @@ const isAlive = async (req, res) => {
 }
 const changeBlock = async (req, res) => {
     try {
-        const { user, state } = req.query
+        const { user, state } = req.body
         const userData = await User.findOneAndUpdate({ email: user }, { $set: { isBlocked: state == 'block' } })
         if (userData) {
             const connectData = await Connection.findOne({ userId: userData._id })
@@ -108,8 +112,8 @@ const sortData = async (req, res) => {
         }
         const sortedData = await User.aggregate([{ $sort: payload }])
         if (sortData) {
-            const encData = crypto.AES.encrypt(JSON.stringify(sortedData), 'syncupservercryptokey')
-            res.json({ success: true, body: encData.toString() })
+            const encData = encryptData(sortedData)
+            res.json({ success: true, body: encData })
         }
     } catch (error) {
         console.log(error);
@@ -140,10 +144,61 @@ const createAd = async (req, res) => {
         res.json({ success: false, message: "Something went wrong" })
     }
 }
+const getReports = async (req, res) => {
+    try {
+        const reports = await Reports.aggregate([{ $addFields: { 'userObjectId': { $toObjectId: "$userId" },'reportedUserObjectId':{$toObjectId:"$reportedBy"} } }, { $lookup: { from: "users", localField: 'userObjectId', foreignField: "_id", as: "userData" } }, { $unwind: "$userData" },{$lookup:{from:"users",localField:"reportedUserObjectId",foreignField:"_id",as:"reportedUser"}},{$unwind:"$reportedUser"}, { $project: { _id: 1, reason: 1, reportedUser: 1, reportedAtString: 1, isRejected: 1, 'userData.username': 1, 'userData.email': 1, 'userData.avatar_url': 1,'reportedUsername': '$reportedUser.username', 'reportedUserEmail': '$reportedUser.email', 'reportedUserAvatar_url': '$reportedUser.avatar_url',type:1} },{$project:{reportedUser:0}}])
+        if (reports) {
+            const encReports = encryptData(reports)
+            if (encReports) {
+                res.json({ success: false, body: encReports })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Err while getting reports" })
+    }
+}
+
+const getChats = async(req,res)=>{
+    try {
+        const conversation = await Conversations.aggregate([{$unwind:"$participents"},{$lookup:{from:"users",localField:"participents",foreignField:"_id",as:"participantsData"}},{$unwind:"$participantsData"},{$project:{'participantsData.username':1,'participantsData.email':1,type:1,startedAt:1,startedAtString:1,isLocked:1,isBanned:1,messages:{$size:"$messages"}}},{$group:{_id:"$_id",participantsData:{$push:"$participantsData"},startedAt:{$first:"$startedAt"},isBanned:{$first:"$isBanned"},startedAtString:{$first:"$startedAtString"},messages:{$first:"$messages"},type:{$first:"$type"}}},{$sort:{startedAt:1}}])
+        if(conversation){
+            const encData = encryptData(conversation)
+            res.json({success:true,body:encData})
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while getting chats"})
+    }
+}
+
+const changeConversationBan = async(req,res)=>{
+    try {
+        const {chatId} = req.body
+        const conversation = await Conversations.findById({_id:chatId})
+        if(chatId){
+            conversation.isBanned = !conversation.isBanned
+            if(await conversation.save()){
+                res.json({success:true,message:`Conversation ${!conversation.isBanned ? "Unbanned":"Banned"}`})
+            }
+            const connections = await Connection.find({userId:{$in:conversation.participents}})
+            connections.forEach(el=>{
+                req.io.to(el.socketId).emit(conversation.isBanned ?"conversationBlocked":"conversationUnblocked")
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while change block"})
+    }
+}
+
 module.exports = {
     checkAdmin,
     isAlive,
     changeBlock,
     sortData,
-    createAd
+    createAd,
+    getReports,
+    getChats,
+    changeConversationBan
 }

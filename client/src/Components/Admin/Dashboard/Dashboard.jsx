@@ -4,6 +4,7 @@ import usersIcon from '../../../assets/Images/users.png'
 import businessIcon from '../../../assets/Images/business.png'
 import blockedIcon from '../../../assets/Images/blocked.png'
 import premiumIcon from '../../../assets/Images/premium.png'
+import bannedIcon from '../../../assets/Images/user_banned.png'
 import Chart from './Chart'
 import SmallBoxes from './SmallBoxes'
 import Navbar from '../NavBar/Navbar'
@@ -50,7 +51,8 @@ function Dashboard() {
             <SmallBoxes count={data.users} text={"Users"} icon={usersIcon} />
             <SmallBoxes count={data.premium} text={"Premium"} icon={premiumIcon} />
             <SmallBoxes count={data.business} text={"Business"} icon={businessIcon} />
-            <SmallBoxes count={data.blocked} text={"Blocked"} icon={blockedIcon} />
+            <SmallBoxes count={data.reports} text={"Reports"} icon={blockedIcon} />
+            <SmallBoxes count={data.blocked} text={"Blocked"} icon={bannedIcon} /> 
           </div>
           <div className="graph">
             <div className="hel">
