@@ -27,3 +27,11 @@
     justify-content: flex-end;
     padding:5px;
 }
+.callLogIndicator {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    background-color: red;
+    border: 2px solid red;
+    border-radius: 100%;
+}

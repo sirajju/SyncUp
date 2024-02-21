@@ -28,6 +28,10 @@ const callLog = new mongoose.Schema({
         type:Number,
         default:null
     },
+    isReaded:{
+        type:Boolean,
+        default:false
+    },
     isCleared:{
         type:Boolean,
         default:false

@@ -396,7 +396,7 @@ const checkUser = async (req, res) => {
     try {
         const { user } = req.query
         if (user) {
-            const regex = { $regex: new RegExp(`^${user}`, 'i') }
+            const regex = { $regex: user, $options:'i' }
             const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } })
             if (userData.length) {
                 const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
@@ -734,6 +734,9 @@ const unBlockContact = async (req, res) => {
 const getCallLogs = async(req,res)=>{
     try {
         const userData = await User.findOne({email:req.userEmail})
+        if(req.query.setRead){
+            await Call_log.updateMany({to:userData._id.toString()},{$set:{isReaded:true}})
+        }
         const callData = await Call_log.aggregate([{$match:{$or:[{from:userData._id.toString()},{to:userData._id.toString()}],isCleared:false}},{$project:{data:"$$ROOT",opponentId:{$cond:{if:{$eq:['$from',userData._id.toString()]},then:{$toObjectId:"$to"},else:{$toObjectId:"$from"}}}}},{$lookup:{from:"users",localField:"opponentId",foreignField:"_id",as:"opponentData"}},{$unwind:"$opponentData"},{$project:{'opponentData.username':1,'opponentData._id':1,'opponentData.email':1,'opponentData.avatar_url':1,opponentId:1,data:1}},{$sort:{'data.createdAt':-1}}])
         const encData = encryptData(callData)
         if(encData){
