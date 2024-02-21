@@ -17,26 +17,17 @@ function VideoCall(props) {
   const [isLoaded, setLoaded] = useState(false)
   const [localStream, setLocalStream] = useState(null)
   const [remoteStream, setRemote] = useState(null)
-  const [ua, setUa] = useState(new UserAgent({
-    uri: 'apiKey:58fe00be7be7c9805c1c0b98b195669a'
-  }))
+  // const [ua, setUa] = useState(new UserAgent({
+  //   uri: 'apiKey:58fe00be7be7c9805c1c0b98b195669a'
+  // }))
   const callState = useSelector(state => state.call)
 
   const onStreamListChangedHandler = function (streamInfo) {
-    if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
-
+   if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
       if (conversationRef.current)
         conversationRef.current.subscribeToStream(streamInfo.streamId)
           .then((stream) => {
-            console.log('subscribeToStream success', stream);
-          }).catch((err) => {
-            console.error('subscribeToStream error', err);
-          });
-    } else {
-      if (conversationRef.current)
-        conversationRef.current.unsubscribeToStream(streamInfo.streamId)
-          .then((stream) => {
-            alert('removed')
+            console.log('subscribeToStream success', streamInfo);
           }).catch((err) => {
             console.error('subscribeToStream error', err);
           });
@@ -52,64 +43,11 @@ function VideoCall(props) {
   const onStreamRemovedHandler = function (stream) {
     stream.removeFromDiv('opVideo', 'remote-media-' + stream.streamId)
   }
-  useEffect(() => {
-    if (chat.isRecieved) {
-      setLoaded(true)
-    }
-    const id = chat.isRecieved ? chat.data.from : chat.data.to
-    if (id) {
-      const options = {
-        route: 'getUserInfo',
-        params: { userId: id },
-        headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-        crypto: true
-      }
-      Axios(options).then(res => {
-        if (res.data.success) {
-          setUserData(res.data.body)
-        } else {
-          toast.error(res.data.message)
-        }
-      })
-    }
-    socket.on('callEnded', (data) => {
-      if (conversationRef.current) {
-        conversationRef.current.leave().then(() => {
-          conversationRef.current.destroy()
-        })
-      }
-      toast.error('Call ended')
-    })
-    socket.on('callAccepted', () => {
-      props.setChat({ ...chat, isAccepted: true })
-      initializeVideo().then(() => {
-        setLoaded(true)
-      })
-    })
-    // socket.on('callEnded', (data) => {
-    //   const videos = document.querySelectorAll('video')
-    //   videos.forEach(video => {
-    //       const stream = video.srcObject
-    //       stream.getVideoTracks().forEach(track => track.stop());
-    //       stream.getAudioTracks().forEach(track => track.stop());
-    //       video.srcObject = null
-    //   })
-    // })
-    // socket.on('callDeclined', (data) => {
-    //   const videos = document.querySelectorAll('video')
-    //   videos.forEach(video => {
-    //       const stream = video.srcObject
-    //       stream.getVideoTracks().forEach(track => track.stop());
-    //       stream.getAudioTracks().forEach(track => track.stop());
-    //       video.srcObject = null
-    //   })
-    // })
-  }, [socket])
   const initializeVideo = async () => {
     const apikey = "58fe00be7be7c9805c1c0b98b195669a"
-    // const ua = new UserAgent({
-    //   uri: 'apiKey:' + apikey
-    // })
+    const ua = new UserAgent({
+      uri: 'apiKey:' + apikey
+    })
     // setUa(ua)
     //Connect the UserAgent and get a session
     ua.register().then((session) => {
@@ -152,6 +90,60 @@ function VideoCall(props) {
         });
     });
   }
+  useEffect(() => {
+    if (chat.isRecieved) {
+      setLoaded(true)
+    }
+    const id = chat.isRecieved ? chat.data.from : chat.data.to
+    if (id) {
+      const options = {
+        route: 'getUserInfo',
+        params: { userId: id },
+        headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+        crypto: true
+      }
+      Axios(options).then(res => {
+        if (res.data.success) {
+          setUserData(res.data.body)
+        } else {
+          toast.error(res.data.message)
+        }
+      })
+    }
+    socket.on('callEnded', (data) => {
+      // if (conversationRef.current) {
+      //   conversationRef.current.leave().then(() => {
+      //     conversationRef.current.destroy()
+      //   })
+      // }
+      toast.error('Call ended')
+    })
+    socket.on('callAccepted', () => {
+      setChat({ ...chat, isAccepted: true })
+      initializeVideo()
+      setLoaded(true)
+
+    })
+    // socket.on('callEnded', (data) => {
+    //   const videos = document.querySelectorAll('video')
+    //   videos.forEach(video => {
+    //       const stream = video.srcObject
+    //       stream.getVideoTracks().forEach(track => track.stop());
+    //       stream.getAudioTracks().forEach(track => track.stop());
+    //       video.srcObject = null
+    //   })
+    // })
+    // socket.on('callDeclined', (data) => {
+    //   const videos = document.querySelectorAll('video')
+    //   videos.forEach(video => {
+    //       const stream = video.srcObject
+    //       stream.getVideoTracks().forEach(track => track.stop());
+    //       stream.getAudioTracks().forEach(track => track.stop());
+    //       video.srcObject = null
+    //   })
+    // })
+  }, [socket])
+
   const acceptCall = function () {
     socket.emit('userAcceptedACall', chat.data)
     setChat({ ...chat, isAccepted: true })

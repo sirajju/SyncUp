@@ -24,6 +24,7 @@ export default function ({ setGo, setChat }) {
         Axios(options).then(res => {
             if (res.data.success) {
                 dispatch(setLocalLog(res.data.body))
+                console.log(res.data.body);
                 setLogs(res.data.body)
             } else {
                 toast.error(res.data.message)
@@ -78,7 +79,7 @@ export default function ({ setGo, setChat }) {
             </div>
             <div className="text-center callLogParent"  data-aos="fade-up" data-aos-duration="700">
                 {logs.length ? logs.map(el => (
-                    <div className={`callLogItem ${el.data.isAccepted ? 'acceptedCall' : (el.data.from == userData.value._id ? "outgoingCall" : "incomingCall")} `}>
+                    <div className={`callLogItem`}>
                         <img src={el.opponentData.avatar_url} className='chatIcon' />
                         <span className='text-center p-3' style={{ width: '100%' }}>{el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
                         <div className="followRqstDiv" style={{ display: 'flex', flexDirection: 'column' }}>

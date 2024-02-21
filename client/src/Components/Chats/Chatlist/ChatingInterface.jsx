@@ -42,6 +42,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
 import { saveAs } from 'file-saver'
+import {v4 as random} from 'uuid'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -101,7 +102,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${userData.value._id}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${random()}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -305,9 +306,9 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         else if (chat.type == 'videoCall') {
             if (chat.data.from == userData.value._id) {
-                socket.emit('onCall', chat.data)
+                socket.emit('onCall', {...chat.data,createLog:true})
             } else {
-                socket.emit('onCall', {...chat.data,noLog:true})
+                socket.emit('onCall', chat.data)
             }
         }
         document.addEventListener('keyup', (e) => {

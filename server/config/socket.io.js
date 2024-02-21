@@ -45,8 +45,12 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
-                if(!data.noLog){
-                    createLog({ ...data })
+                if(data.createLog){
+                    const existsLog = await call_log.find({conversationName:data.conversationName})
+                    console.log(existsLog);
+                    if(!existsLog.length){
+                        createLog({ ...data })
+                    }
                 }
                 if (roomData) {
                     console.log('Joining room');
@@ -61,16 +65,16 @@ function intializeSocket(server) {
                 }
                 if (to) {
                     console.log('Call emitting');
-                    socket.to(to.socketId).emit('callRecieved', { ...data, conversationName: `CONVERSATION_${data.from}` })
+                    socket.to(to.socketId).emit('callRecieved', { ...data })
                 }
             })
             socket.on('userAcceptedACall', async (data) => {
-                const userData = await Connection.findOne({ userId: data.from })
+                const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 await call_log.findOneAndUpdate({ conversationName: data.conversationName }, { $set: { isAccepted: true } })
-                if (userData) {
-                    socket.to(userData.socketId).emit('callAccepted')
+                if (roomData) {
+                    socket.to(roomData.roomId).emit('callAccepted')
                 } else {
-                    socket.emit('callError', { message: "Err while connecting" })
+                    socket.to(roomData.roomId).emit('callError', { message: "Err while connecting" })
                 }
             })
             socket.on('onHangup', async (data) => {
