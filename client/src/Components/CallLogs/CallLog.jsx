@@ -8,6 +8,10 @@ import { Dropdown } from 'antd';
 import deleteIcon from '../../assets/Images/delete.png'
 import { MDBIcon } from "mdb-react-ui-kit"
 import { resetLogs, setLogs as setLocalLog } from "../../Context/userContext"
+import { v4 } from "uuid"
+import missedIcon from '../../assets/Images/incoming_red.png'
+import outgoingIcon from '../../assets/Images/outgoing.png'
+import acceptedIcon from '../../assets/Images/call_accepted.png'
 
 export default function ({ setGo, setChat }) {
     const localLogs = useSelector(state => state.callLogs)
@@ -81,11 +85,11 @@ export default function ({ setGo, setChat }) {
                 {logs.length ? logs.map(el => (
                     <div className={`callLogItem`}>
                         <img src={el.opponentData.avatar_url} className='chatIcon' />
-                        <span className='text-center p-3' style={{ width: '100%' }}>{el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
+                        <span className='text-center p-3' style={{ width: '100%' }}> <img className="callStateIndicator" src={el.data.isAccepted ? acceptedIcon : (el.data.from==userData.value._id ? outgoingIcon :missedIcon)} alt="" /> {el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
                         <div className="followRqstDiv" style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 10px 10px 0 ', whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{new Date(el.data.createdAt).toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
                         </div>
-                        <img className="logVidCallIcon" onClick={() => setChat({ type: "videoCall", data: { from: userData.value._id, to: el.opponentData._id, conversationName: `CONVERSATION_${userData.value._id}` } })} src={videoCallIcon} alt="" />
+                        <img className="logVidCallIcon" onClick={() => setChat({ type: "videoCall", data: { from: userData.value._id, to: el.opponentData._id, conversationName: `CONVERSATION_${v4()}` } })} src={videoCallIcon} alt="" />
                     </div>
                 )) : <h3>There is no logs available</h3>}
             </div>
