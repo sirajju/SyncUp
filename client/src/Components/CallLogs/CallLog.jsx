@@ -6,7 +6,8 @@ import videoCallIcon from '../../assets/Images/videocall.png'
 import './CallLog.css'
 
 export default function ({ setGo, setChat }) {
-    const [logs, setLogs] = useState([])
+    const localLogs = useSelector(state=>state.callLogs)
+    const [logs, setLogs] = useState(localLogs.value)
     const userData = useSelector(state => state.user)
     useEffect(() => {
         const options = {
@@ -24,10 +25,10 @@ export default function ({ setGo, setChat }) {
         document.addEventListener('keyup', () => {
             setGo('')
         })
-    }, [])
+    }, [localLogs])
     return (
-        <div data-aos="fade-down" data-aos-duration="700" className="callLogParent">
-            {logs.map(el => (
+        <div data-aos="fade-down" data-aos-duration="700" className="callLogParent text-center">
+            {logs.length ? logs.map(el => (
                 <div className={`callLogItem ${el.data.isAccepted ? 'acceptedCall' : (el.data.from == userData.value._id ? "outgoingCall" : "incomingCall")} `}>
                     <img src={el.opponentData.avatar_url} className='chatIcon' />
                     <span className='text-center p-3' style={{ width: '100%' }}>{el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
@@ -36,8 +37,7 @@ export default function ({ setGo, setChat }) {
                     </div>
                     <img className="logVidCallIcon" src={videoCallIcon} alt="" />
                 </div>
-            ))}
-
+            )) : <h3>There is no logs available</h3>}
         </div>
     )
 }

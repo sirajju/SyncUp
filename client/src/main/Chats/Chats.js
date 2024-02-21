@@ -7,7 +7,7 @@ import Chatslst from '../../Components/Chats/Chatlist/Chatlist'
 import crypto from 'crypto-js'
 import Profile from '../../Components/Profile/Profile'
 import { useDispatch, useSelector } from 'react-redux'
-import { addNewMessage, deleteMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setMyNotes, setNotes, setOpponent, setUserData } from '../../Context/userContext'
+import { addNewMessage, deleteMessage, hideLoading, markDelivered, markSeen, resetConversation, setAds, setCallData, setConversations, setCurrentChat, setLogs, setMyNotes, setNotes, setOpponent, setUserData } from '../../Context/userContext'
 import Notification from '../../Components/Chats/Notifications/Notification'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -44,6 +44,23 @@ function Chats() {
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
 
+        // Fetch callLogs
+
+        const fetchLogs = async function () {
+            const options = {
+                route: "getCallLogs",
+                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                crypto: true
+            }
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    dispatch(setLogs(res.data.body))
+                } else {
+                    toast.error(res.data.message)
+                }
+            })
+        }
+
         // Fetch selfNotes
 
         const fetchMyNotes = async function () {
@@ -62,7 +79,7 @@ function Chats() {
         }
 
         // Fetching notesData
-        const fetchNotes = function () {
+        const fetchNotes = async function () {
             const options = {
                 route: "getNotes",
                 headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
@@ -79,7 +96,7 @@ function Chats() {
         }
 
         // Fetching ads from server
-        function getAds() {
+        async function getAds() {
             const token = localStorage.getItem('SyncUp_Auth_Token')
             if (token && !userData.value.isPremium) {
                 const options = {
@@ -91,6 +108,7 @@ function Chats() {
                     if (res.data.success) {
                         console.log(res.data.body);
                         dispatch(setAds(res.data.body))
+                        return true
                     } else {
                         toast.error(res.data.message)
                     }
@@ -107,28 +125,15 @@ function Chats() {
             }
             GetChatList('chat use effect').then(res => {
                 dispatch(setConversations(res))
-                console.log('getting users from chat');
-            })
-            if (!ads?.value?.length) {
-                getAds()
-            }else{
+            }).then(getAds)
+            .then(fetchNotes)
+            .then(fetchMyNotes)
+            .then(fetchLogs)
+            .then(function finish(){
                 setTimeout(() => {
                     setLoading(false)
                 }, 500)
-            }
-            if (!notes?.value?.length) {
-                fetchNotes()
-                fetchMyNotes().then(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 500)
-                })
-
-            }else{
-                setTimeout(() => {
-                    setLoading(false)
-                }, 500)
-            }
+            }).catch((err)=>toast.error(err.message))
         }
         a()
         // Making responsive on mobile screen

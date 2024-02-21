@@ -150,8 +150,8 @@ const notesData = createSlice({
     addNote: (state, action) => {
       state.value = [...state.value, action.payload]
     },
-    setExpired:(state)=>{
-      state.value = state.value.map(el=>el.notes.isExpired=true)
+    setExpired: (state) => {
+      state.value = state.value.map(el => el.notes.isExpired = true)
     },
   }
 })
@@ -166,17 +166,30 @@ const myNotes = createSlice({
     addMyNote: (state, action) => {
       state.value.push(action.payload)
     },
-    setArchived:(state)=>{
-      state.value = state.value.map(el => ({...el, isExpired: true}));
+    setArchived: (state) => {
+      state.value = state.value.map(el => ({ ...el, isExpired: true }));
     },
-    clearNotes:(state)=>{
+    clearNotes: (state) => {
       state.value = state.value.map(el => {
-        if(!el.isExpired){
+        if (!el.isExpired) {
           return el
-        }else {
+        } else {
           return
         }
-      }); 
+      });
+    }
+  }
+})
+
+const callLogs = createSlice({
+  name: "callLogs",
+  initialState: { value: [] },
+  reducers: {
+    setLogs: (state, action) => {
+      state.value = action.payload
+    },
+    resetLogs: (state) => {
+      state.value = []
     }
   }
 })
@@ -185,12 +198,13 @@ export const { setConversations, resetConversation } = totalConversations.action
 export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen, markEdited } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
 export const { setAds } = adsData.actions
-export const { setNotes, addNote,setExpired } = notesData.actions
-export const { setMyNotes, addMyNote,setArchived,clearNotes } = myNotes.actions
+export const { setNotes, addNote, setExpired } = notesData.actions
+export const { setMyNotes, addMyNote, setArchived, clearNotes } = myNotes.actions
 export const { setUserData } = userSlice.actions;
 export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;
 export const { setAuthConfig } = adminContext.actions
+export const { setLogs, resetLogs } = callLogs.actions
 const rootReducer = combineReducers({
   progress: progressContext.reducer,
   user: userSlice.reducer,
@@ -201,7 +215,8 @@ const rootReducer = combineReducers({
   chat: chatState.reducer,
   ads: adsData.reducer,
   notes: notesData.reducer,
-  myNotes: myNotes.reducer
+  myNotes: myNotes.reducer,
+  callLogs: callLogs.reducer
 });
 export const store = configureStore({
   reducer: rootReducer,
