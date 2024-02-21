@@ -5,16 +5,38 @@
     border-radius: 100%;
     cursor: pointer;
 }
-.missedCall {
-    background-color: rgb(255, 200, 200);
+.callLogParent {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
 }
-.acceptedCall {
-    background-color: rgb(211, 251, 211);
+.callLogItem {
+    width: 100%;
+    height: 80px;
+    background: #F8F8F8;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    margin-top: 10px;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+    font-weight: bold;
 }
+
+
 .incomingCall {
     background-color: rgb(255, 200, 200);
 
 }
 .outgoingCall {
     background-color: rgb(213, 213, 251);
+}
+
+.missedCall {
+    background-color: rgb(255, 200, 200);
+}
+
+.acceptedCall {
+    background-color: rgb(211, 251, 211);
 }
