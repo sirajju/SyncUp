@@ -40,3 +40,14 @@
 .acceptedCall {
     background-color: rgb(211, 251, 211);
 }
+.callLogOptions {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+.callLogOptions button {
+    background:transparent;
+    border: none;
+    cursor: pointer;
+}

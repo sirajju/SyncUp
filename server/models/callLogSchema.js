@@ -27,6 +27,10 @@ const callLog = new mongoose.Schema({
     endTime:{
         type:Number,
         default:null
+    },
+    isCleared:{
+        type:Boolean,
+        default:false
     }
 })
 

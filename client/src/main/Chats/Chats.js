@@ -257,7 +257,7 @@ function Chats() {
                 {go == `Profile` && <Profile setGo={setGo} />}
                 {go == `Notifications` && <Notification setActiveTab={setActiveTab} setChat={setChat} setGo={setGo} />}
                 {go == 'MobileChat' && chat.type && <ChatingInterface {...props} />}
-                {go == 'CallLogs' && <CallLog setGo={setGo} />}
+                {go == 'CallLogs' && <CallLog setChat={setChat} setGo={setGo} />}
                 {!go &&
                     <>
 

@@ -734,8 +734,7 @@ const unBlockContact = async (req, res) => {
 const getCallLogs = async(req,res)=>{
     try {
         const userData = await User.findOne({email:req.userEmail})
-        console.log(userData._id);
-        const callData = await Call_log.aggregate([{$match:{$or:[{from:userData._id.toString()},{to:userData._id.toString()}]}},{$project:{data:"$$ROOT",opponentId:{$cond:{if:{$eq:['$from',userData._id.toString()]},then:{$toObjectId:"$to"},else:{$toObjectId:"$from"}}}}},{$lookup:{from:"users",localField:"opponentId",foreignField:"_id",as:"opponentData"}},{$unwind:"$opponentData"},{$project:{'opponentData.username':1,'opponentData.email':1,'opponentData.avatar_url':1,opponentId:1,data:1}},{$sort:{'data.createdAt':-1}}])
+        const callData = await Call_log.aggregate([{$match:{$or:[{from:userData._id.toString()},{to:userData._id.toString()}],isCleared:false}},{$project:{data:"$$ROOT",opponentId:{$cond:{if:{$eq:['$from',userData._id.toString()]},then:{$toObjectId:"$to"},else:{$toObjectId:"$from"}}}}},{$lookup:{from:"users",localField:"opponentId",foreignField:"_id",as:"opponentData"}},{$unwind:"$opponentData"},{$project:{'opponentData.username':1,'opponentData._id':1,'opponentData.email':1,'opponentData.avatar_url':1,opponentId:1,data:1}},{$sort:{'data.createdAt':-1}}])
         const encData = encryptData(callData)
         if(encData){
             res.json({success:true,body:encData})
@@ -743,6 +742,18 @@ const getCallLogs = async(req,res)=>{
     } catch (error) {
         console.log(error);
         res.json({success:false,message:'Err while getting logs'})
+    }
+}
+
+const resetCalllogs = async(req,res)=>{
+    try {
+        const userData = await User.findOne({email:req.userEmail})
+        if(userData){
+            const callData = await Call_log.updateMany({$or:[{from:userData._id.toString()},{to:userData._id.toString()}]},{$set:{isCleared:true}})
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while resetting logs"})
     }
 }
 
@@ -777,5 +788,6 @@ module.exports = {
     reportContact,
     blockContact,
     unBlockContact,
-    getCallLogs
+    getCallLogs,
+    resetCalllogs
 }
