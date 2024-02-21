@@ -11,3 +11,10 @@
 .acceptedCall {
     background-color: rgb(211, 251, 211);
 }
+.incomingCall {
+    background-color: rgb(255, 200, 200);
+
+}
+.outgoingCall {
+    background-color: rgb(213, 213, 251);
+}

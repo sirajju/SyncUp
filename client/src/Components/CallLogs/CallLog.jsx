@@ -28,9 +28,9 @@ export default function ({setGo,setChat}) {
     return (
         <>
             {logs.map(el => (
-                <div data-aos="fade-down" data-aos-duration="700" className={`notificationItem ${el.data.isAccepted ? 'acceptedCall' :"missedCall"}`}>
+                <div data-aos="fade-down" data-aos-duration="700" className={`notificationItem ${el.data.isAccepted ? 'acceptedCall' :(el.data.from==userData.value._id ? "outgoingCall" :"incomingCall")} `}>
                     <img src={el.opponentData.avatar_url} className='chatIcon' />
-                    <span className='text-center p-3' style={{ width: '100%' }}>{el.data.from==userData.value._id ?`Outgoing videocall to ${el.opponentData.username}` : `Incoming videocall from ${el.opponentData.username}`}</span>
+                    <span className='text-center p-3' style={{ width: '100%' }}>{el.data.from==userData.value._id ?`Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
                     <div className="followRqstDiv" style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 50px 0 0 ', position: 'absolute' }}>{new Date(el.data.createdAt).toLocaleTimeString('en-US',{hour:"2-digit",minute:"2-digit",hour12:true})}</span>
                     </div>
