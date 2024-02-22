@@ -95,13 +95,16 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                 isDeleted: false,
                 isSent: true
             })
-            await newMessage.save()
             if (!conversationData) {
                 await new Conversation({
                     participents: [userData._id, recieverData._id],
                     type: 'personal',
                 }).save()
             }
+            else if(conversationData.isBanned){
+                return false
+            }
+            await newMessage.save()
             await Conversation.findOneAndUpdate({
                 $or: [
                     { participents: [userData._id, recieverData._id] },

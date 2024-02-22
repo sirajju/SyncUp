@@ -45,10 +45,10 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
-                if(data.createLog){
-                    const existsLog = await call_log.find({conversationName:data.conversationName})
+                if (data.createLog) {
+                    const existsLog = await call_log.find({ conversationName: data.conversationName })
                     console.log(existsLog);
-                    if(!existsLog.length){
+                    if (!existsLog.length) {
                         createLog({ ...data })
                     }
                 }
@@ -82,15 +82,15 @@ function intializeSocket(server) {
                 const callData = await call_log.findOne({ conversationName: data.conversationName })
                 console.log(`Ending conversation ${data.conversationName}`);
                 if (callData) {
-                    const ms =  Date.now() - new Date(callData.createdAt).getTime()
-                    const seconds = parseInt(ms/1000)
+                    const ms = Date.now() - new Date(callData.createdAt).getTime()
+                    const seconds = parseInt(ms / 1000)
                     let duration;
-                    if(seconds >= 60){
+                    if (seconds >= 60) {
                         duration = (seconds / 60).toFixed(1) + 'm'
-                        if(duration >= 60 ){
+                        if (duration >= 60) {
                             duration = (duration / 60).toFixed(1) + 'h'
                         }
-                    }else{
+                    } else {
                         duration = seconds + 's'
                     }
                     callData.duration = duration
@@ -110,15 +110,17 @@ function intializeSocket(server) {
             })
             socket.on('sendMsg', async (data) => {
                 const { newMessage } = await messageController.sendMessage(data)
-                const senderConnection = await Connection.findOne({ userId: newMessage.senderId })
-                const recieverConnection = await Connection.findOne({ userId: newMessage.recieverId })
-                if (senderConnection && recieverConnection) {
-                    if (senderConnection.socketId != socket.id) {
-                        await Connection.findOneAndUpdate({ socketId: senderConnection.socketId }, { $set: { socketId: socket.id } })
+                if (newMessage) {
+                    const senderConnection = await Connection.findOne({ userId: newMessage.senderId })
+                    const recieverConnection = await Connection.findOne({ userId: newMessage.recieverId })
+                    if (senderConnection && recieverConnection) {
+                        if (senderConnection.socketId != socket.id) {
+                            await Connection.findOneAndUpdate({ socketId: senderConnection.socketId }, { $set: { socketId: socket.id } })
+                        }
+                        const roomData = await Room.findOne({ senderId: { $in: [data.senderId, data.recieverId] }, recieverId: { $in: [data.senderId, data.recieverId] } })
+                        socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
+                        socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                     }
-                    const roomData = await Room.findOne({ senderId: { $in: [data.senderId, data.recieverId] }, recieverId: { $in: [data.senderId, data.recieverId] } })
-                    socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
-                    socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                 }
             })
             socket.on('sendMedia', async (data) => {
@@ -211,7 +213,7 @@ function intializeSocket(server) {
                         to,
                         isAccepted,
                         duration,
-                        createdAt:Date.now(),
+                        createdAt: Date.now(),
                         endTime: endTime || delete this.endTime
                     }).save()
                 }

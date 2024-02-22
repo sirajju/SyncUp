@@ -16,10 +16,7 @@ module.exports = async function (req, res, next) {
                 res.status(203).json({ message: "User suspended", success: false })
                 const connData = await Connection.findOne({userId:userData._id})
             } else {
-                await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: 'online' } })
-                setTimeout(async () => {
-                    await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: Date.now() } })
-                }, 20000);
+                const ls = await User.findOneAndUpdate({ email: userData.email }, { $set: { last_seen: Date.now() } })
                 if (req.path == '/isAlive') {
                     if (!userData.isEmailVerified) {
                         res.status(200).json({ success: false, err: "EMAILNOTVERERR", message: "Email is not verified yet!!" })
