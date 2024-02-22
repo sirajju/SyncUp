@@ -7,6 +7,7 @@ const cloudinary = require('cloudinary')
 const Connection = require('../models/connectionModel')
 const Reports = require('../models/reportSchema')
 const Conversations = require('../models/conversationSchema')
+const Notes = require('../models/noteSchema')
 const { ObjectId } = require('mongodb')
 const _ = require('lodash')
 
@@ -192,6 +193,20 @@ const changeConversationBan = async(req,res)=>{
     }
 }
 
+const getNotes = async(req,res)=>{
+    try {
+        const notesData = await Notes.aggregate([{$addFields:{userObjectId:{$toObjectId:"$userId"}}},{$lookup:{from:"users",localField:"userObjectId",foreignField:"_id",as:"userData"}},{$unwind:"$userData"},{$project:{'userData.username':1,'userData.email':1,'userData._id':1,'userData.avatar_url':1,'content':1,'createdAt':1,'likes':1,blockedUsers:1,isExpired:1,expireAtString:1,visibility:1,expiresAt:1}},{$sort:{createdAt:-1}}])
+        console.log(notesData);
+        if(notesData){
+            const encData = encryptData(notesData)
+            res.json({success:true,body:encData})
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while getting chats"})
+    }
+}
+
 module.exports = {
     checkAdmin,
     isAlive,
@@ -200,5 +215,6 @@ module.exports = {
     createAd,
     getReports,
     getChats,
-    changeConversationBan
+    changeConversationBan,
+    getNotes
 }

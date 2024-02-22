@@ -23,6 +23,7 @@ import _ from 'lodash';
 import { requestPermission } from './Context/firebaseConfig';
 import Reports from './Components/Admin/Reports/Reports';
 import AdminChats from './Components/Admin/Chats/Chats'
+import AdminNotes from './Components/Admin/Notes/Notes'
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
@@ -50,6 +51,7 @@ function App() {
           <Route path='/admin/ads/new' element={<AdminRoute><CreateAd /></AdminRoute>} />
           <Route path='/admin/reports' element={<AdminRoute><Reports /></AdminRoute>} />
           <Route path='/admin/chats' element={<AdminRoute><AdminChats /></AdminRoute>} />
+          <Route path='/admin/notes' element={<AdminRoute><AdminNotes /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
           
         </Routes>

@@ -7,6 +7,7 @@ app.get('/isAlive',isAdminAuth,adminController.isAlive)
 app.get('/sortData',isAdminAuth,adminController.sortData)
 app.get('/getReports',isAdminAuth,adminController.getReports)
 app.get('/getChats',isAdminAuth,adminController.getChats)
+app.get('/getNotes',isAdminAuth,adminController.getNotes)
 
 app.post('/login',adminController.checkAdmin)
 app.post('/createAd',isAdminAuth,adminController.createAd)

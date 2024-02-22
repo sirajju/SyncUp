@@ -29,6 +29,10 @@ const note = new mongoose.Schema({
         type: Number,
         default: new Date(Date.now() + 86400000).getTime()
     },
+    expireAtString:{
+        type:String,
+        default:new Date(Date.now() + 86400000).toLocaleDateString('en-GB',{day:'2-digit',month:"2-digit",year:"2-digit"})
+    },
     blockedUsers: {
         type: Array,
         default: []
@@ -44,6 +48,10 @@ const note = new mongoose.Schema({
     createdAt: {
         type: Number,
         default: Date.now()
+    },
+    createdAtString:{
+        type:String,
+        defualt:new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit",year:"2-digit"})
     }
 })
 
