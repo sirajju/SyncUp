@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import ListBox from "../ListBox/ListBox";
 import Axios from "../../../interceptors/axios";
 import iconView from '../../../assets/Images/view.png'
+import { MDBIcon } from "mdb-react-ui-kit";
+import ConfirmBox from '../../Confirmation/Dailogue'
 
 
 export default function () {
@@ -9,6 +11,8 @@ export default function () {
     const sortList = ['Username', 'Email', 'Started']
     const [chats, setChats] = useState([])
     const [prog, setProg] = useState(false)
+    const [isConfirmed,displayConfirm]=useState(false)
+    const [currentConversation,setCurrentConversation]=useState()
     useEffect(() => {
         getChats()
     }, [])
@@ -29,7 +33,7 @@ export default function () {
             route: "admin/changeConversationBan",
             payload: { chatId: id },
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_AdminToken')}` },
-            method:"PUT"
+            method: "PUT"
         }
         Axios(options).then(res => {
             if (res.data.success) {
@@ -37,8 +41,12 @@ export default function () {
             }
         })
     }
+    const resetMessages = function (id){
+
+    }
     return (
         <ListBox prog={prog} active='Chats' sortList={sortList} th={th}>
+            <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={resetMessages} title="Warning ⚠️ "  content="This action cannot be undone.Do you want to reset Messages of this conversation..?" />
             {chats && chats.map((el, ind) => (
                 <tr className="text-center">
                     <td>{ind + 1}</td>
@@ -66,11 +74,11 @@ export default function () {
                     <td>{el.isBanned ? "Yes" : "No"}</td>
                     <td>
                         <div style={{ display: "flex" }} >
-                            <button onClick={()=>changeBan(el._id)} style={{ width: "fit-content" }} className="btnSearch btnNew">
-                                {el.isBanned ? "UnBan" : "Ban"}
+                            <button title="Change ban state" onClick={() => changeBan(el._id)} style={{ width: "50px" }} className="btnSearch btnNew">
+                                {el.isBanned ? <MDBIcon far icon="circle" /> : <MDBIcon fas icon="ban" />}
                             </button>
-                            <button style={{ width: "50px" }} className="btnSearch">
-                                <img src={iconView} style={{ width: "15px" }} alt="" />
+                            <button style={{ width: "50px" }} onClick={()=>displayConfirm(true)} className="btnSearch">
+                                <MDBIcon far icon="trash-alt" />
                             </button>
                         </div>
                     </td>

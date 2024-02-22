@@ -48,7 +48,7 @@ function Users() {
             {!prog && data.map((el, index) => (
                 <tr className='text-center' key={index}>
                     <td>
-                        <img width={'25'} style={{ borderRadius: "10px" }} src={el.avatar_url} />
+                        <img width={'35'} style={{ borderRadius: "100%" }} src={el.avatar_url} />
                     </td>
                     <td>{el.username}</td>
                     <td>{el.email.slice(0, 2)}...{el.email.slice(el.email.length - 2, el.email.length)}</td>
