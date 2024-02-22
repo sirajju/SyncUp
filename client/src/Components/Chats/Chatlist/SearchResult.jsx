@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import follow from '../../../assets/Images/follow.png'
 import message from '../../../assets/Images/message.png'
 import pending from '../../../assets/Images/pending.png'
+import businessBadge from '../../../assets/Images/verified.png'
 
 function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,copyLink,setChat,setSearchData}) {
     const userData = useSelector(state=>state.user)
@@ -15,7 +16,7 @@ function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,cop
                     <div className="chatDetails">
                         <div className="userContent">
                             <h5 className='userName' style={{ textTransform: 'capitalize' }}>
-                                {userData.value._id == el._id ? `${el.username} (You)` : el.username} {el?.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>}
+                                {userData.value._id == el._id ? `${el.username} (You)` : el.username} {el?.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>} {el.isBusiness && <img src={businessBadge} className='businessBadge'></img>}
                             </h5>
                             <p className="lastMessage">
                                 {(() => {

@@ -10,13 +10,15 @@
     color: gray;
     font-weight: 400;
     margin-top: 5px;
+    font-size: 25px;
 }
 .activeTab {
     white-space: nowrap;
     text-overflow: ellipsis;
+    font-size: 34px;
 }
 .chatTabs .rightIcon{
-    width: 18px;
+    width: 20px;
 }
 .inActiveTab{
     cursor: pointer;

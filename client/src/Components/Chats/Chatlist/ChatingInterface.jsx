@@ -27,6 +27,7 @@ import Emoji from '../../Emojis/Emoji'
 import emojiRegex from 'emoji-regex';
 import VidConfig from '../../VideoCall/VidConfig';
 import msgSending from '../../../assets/Images/pending.png'
+import businessBadge from '../../../assets/Images/verified.png'
 import LinearProgress from '@mui/joy/LinearProgress';
 import lodash, { uniqueId } from 'lodash'
 import UserDetails from '../../UserDetails/UserDetails';
@@ -96,7 +97,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
                 <MDBIcon fas icon="arrow-right" onClick={closeChat} size='sm' style={{ color: "white" }} />
                 <img src={reciever.avatar_url} alt="" onClick={goToProfile} className="conversationAvatar" />
                 <div className="conversationUserDetails" onClick={goToProfile}>
-                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} </span>
+                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} {reciever.isBusiness && <img src={businessBadge} className='businessBadge' alt="" /> } </span>
                     {!isBlocked && <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>}
                 </div>
             </div>

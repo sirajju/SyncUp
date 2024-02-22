@@ -4,6 +4,7 @@ import { setCurrentChat } from '../../../Context/userContext'
 import GetMessages from '../../../main/Chats/getMessages'
 import { useSocket } from '../../../Context/socketContext'
 import imageIcon from '../../../assets/Images/image.png'
+import businessBadge from '../../../assets/Images/verified.png'
 
 function CurrentList({ setChat, setGo }) {
     const conversations = useSelector(state => state.conversations)
@@ -31,8 +32,8 @@ function CurrentList({ setChat, setGo }) {
                     <div key={key} className="chatlistItem cursor-pointer p-3" onClick={() => { setConversation(el.opponent[0]._id) }} >
                         <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                         <div className="chatDetails">
-                            <div className="userContent">
-                                <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>} </h5>
+                            <div>
+                                <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>}  {el.opponent[0].isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </h5>
                                 <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : !el.last_message[0].isMedia ? el.last_message[0]?.content:<img style={{width:"20px"}} src={imageIcon}/>}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">

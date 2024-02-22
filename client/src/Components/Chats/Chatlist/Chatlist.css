@@ -10,7 +10,7 @@
 }
 .chatlistItem{
     width: 100%;
-    height: 18%;
+    height: 110px;
     background: #F8F8F8;
     border-radius: 5px;
     padding: 15px;
@@ -19,8 +19,7 @@
     margin-top: 10px;
 }
 .chatIcon {
-    width: 10%;
-    min-width: 55px;
+    width: 80px;
     border-radius: 100%;
 }
 .chatDetails {
@@ -29,15 +28,16 @@
     display: flex;
     justify-content: space-between;
 }
-.chatDetails h5 {
+.chatDetails .userName {
     color: black;
+    font-size: 28px;
 }
 .chatDetails p {
-    font-size: 13px;
+    font-size: 15px;
 }
 .lastMsgTime {
     color: #010851;
-    font-size: 12px;
+    font-size: 14px;
 }
 .unreadMsgCount {
     background:#ED80FD ;
