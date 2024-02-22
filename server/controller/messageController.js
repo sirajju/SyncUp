@@ -57,6 +57,7 @@ const getConversation = async (req, res) => {
                     const messageData = await Message.find({
                         senderId: { $in: [userData._id, recieverData._id] },
                         recieverId: { $in: [userData._id, recieverData._id] },
+                        isCleared:false
                     }).sort({ sentTime: 1 });
                     const connectData = await Connection.findOne({ userId: recieverData._id })
                     if (connectData) {

@@ -14,6 +14,10 @@ const message = new mongoose.Schema({
     isEdited:{type:Boolean,default:false},
     editedContent:{type:String},
     type:{type:String},
+    clearedParticipants:{
+        type:Array,
+        default:[]
+    },
     sentTime:{
         type:Number,
         default:Date.now()

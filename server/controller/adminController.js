@@ -6,7 +6,8 @@ const Ads = require('../models/adsSchema')
 const cloudinary = require('cloudinary')
 const Connection = require('../models/connectionModel')
 const Reports = require('../models/reportSchema')
-const Conversations = require('../models/conversationSchema')
+const Conversation = require('../models/conversationSchema')
+const Messages = require('../models/messageSchema')
 const Notes = require('../models/noteSchema')
 const { ObjectId } = require('mongodb')
 const _ = require('lodash')
@@ -162,7 +163,7 @@ const getReports = async (req, res) => {
 
 const getChats = async(req,res)=>{
     try {
-        const conversation = await Conversations.aggregate([{$unwind:"$participents"},{$lookup:{from:"users",localField:"participents",foreignField:"_id",as:"participantsData"}},{$unwind:"$participantsData"},{$project:{'participantsData.username':1,'participantsData.email':1,type:1,startedAt:1,startedAtString:1,isLocked:1,isBanned:1,messages:{$size:"$messages"}}},{$group:{_id:"$_id",participantsData:{$push:"$participantsData"},startedAt:{$first:"$startedAt"},isBanned:{$first:"$isBanned"},startedAtString:{$first:"$startedAtString"},messages:{$first:"$messages"},type:{$first:"$type"}}},{$sort:{startedAt:1}}])
+        const conversation = await Conversation.aggregate([{$unwind:"$participents"},{$lookup:{from:"users",localField:"participents",foreignField:"_id",as:"participantsData"}},{$unwind:"$participantsData"},{$project:{'participantsData.username':1,'participantsData.email':1,type:1,startedAt:1,startedAtString:1,isLocked:1,isBanned:1,messages:{$size:"$messages"}}},{$group:{_id:"$_id",participantsData:{$push:"$participantsData"},startedAt:{$first:"$startedAt"},isBanned:{$first:"$isBanned"},startedAtString:{$first:"$startedAtString"},messages:{$first:"$messages"},type:{$first:"$type"}}},{$sort:{startedAt:1}}])
         if(conversation){
             const encData = encryptData(conversation)
             res.json({success:true,body:encData})
@@ -176,7 +177,7 @@ const getChats = async(req,res)=>{
 const changeConversationBan = async(req,res)=>{
     try {
         const {chatId} = req.body
-        const conversation = await Conversations.findById({_id:chatId})
+        const conversation = await Conversation.findById({_id:chatId})
         if(chatId){
             conversation.isBanned = !conversation.isBanned
             if(await conversation.save()){
@@ -207,6 +208,26 @@ const getNotes = async(req,res)=>{
     }
 }
 
+const resetMessages = async(req,res)=>{
+    try {
+        const {chatId} = req.query
+        if(chatId){
+            const conversation = await Conversation.findById({_id:chatId})
+            if(conversation){
+                const conversationUpdate = await Messages.updateMany({$or:[{senderId:{$in:conversation.participents}},{recieverId:{$in:conversation.participents}}]},{$set:{isCleared:true}})
+                if(conversationUpdate){
+                    conversation.messages = []
+                    await conversation.save()
+                    res.json({success:true,message:"Messages restted"})
+                }
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while resetting"})
+    }
+}
+
 module.exports = {
     checkAdmin,
     isAlive,
@@ -216,5 +237,6 @@ module.exports = {
     getReports,
     getChats,
     changeConversationBan,
-    getNotes
+    getNotes,
+    resetMessages
 }

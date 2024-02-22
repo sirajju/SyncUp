@@ -34,10 +34,10 @@ function CurrentList({ setChat, setGo }) {
                         <div className="chatDetails">
                             <div>
                                 <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>}  {el.opponent[0].isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </h5>
-                                <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : !el.last_message[0].isMedia ? el.last_message[0]?.content:<img style={{width:"20px"}} src={imageIcon}/>}</p>
+                                <p className="lastMessage">  {el.last_message[0]?.isDeleted ? "This messsage has been vanished" : !el.last_message[0]?.isMedia ? el.last_message[0]?.content:<img style={{width:"20px"}} src={imageIcon}/>}</p>
                             </div>
                             <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">
-                                <h6 className='lastMsgTime'>{new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() ? new Date(parseInt(el.last_message[0].sentTime)).toLocaleTimeString('en-US',{hour:'2-digit',minute:"2-digit",hour12:true}) : new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" :new Date(parseInt(el.last_message[0].sentTime)).toLocaleDateString()} </h6>
+                                {el.last_message[0] ? <h6 className='lastMsgTime'>{new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() ? new Date(parseInt(el.last_message[0].sentTime)).toLocaleTimeString('en-US',{hour:'2-digit',minute:"2-digit",hour12:true}) : new Date(parseInt(el.last_message[0].sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" :new Date(parseInt(el.last_message[0].sentTime)).toLocaleDateString()} </h6> : <h6 className='lastMsgTime' >None</h6>}
                                 <p className={`unreadMsgCount ${a ? 'visible' :'invisible'}`} ref={unrdRef} >{a}</p>
                             </div>
                         </div>

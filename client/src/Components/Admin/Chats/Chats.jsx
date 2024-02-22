@@ -4,6 +4,7 @@ import Axios from "../../../interceptors/axios";
 import iconView from '../../../assets/Images/view.png'
 import { MDBIcon } from "mdb-react-ui-kit";
 import ConfirmBox from '../../Confirmation/Dailogue'
+import toast from "react-hot-toast";
 
 
 export default function () {
@@ -41,8 +42,21 @@ export default function () {
             }
         })
     }
-    const resetMessages = function (id){
-
+    const resetMessages = function (){
+        if(currentConversation){
+            const options = {
+                route:"admin/resetMessages",
+                params:{chatId:currentConversation},
+                headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_AdminToken')}`},
+                method:"DELETE"
+            }
+            Axios(options).then(res=>{
+                if(res.data.success){
+                    toast.success(res.data.message)
+                }
+                displayConfirm(false)
+            })
+        }
     }
     return (
         <ListBox prog={prog} active='Chats' sortList={sortList} th={th}>
@@ -77,7 +91,7 @@ export default function () {
                             <button title="Change ban state" onClick={() => changeBan(el._id)} style={{ width: "50px" }} className="btnSearch btnNew">
                                 {el.isBanned ? <MDBIcon far icon="circle" /> : <MDBIcon fas icon="ban" />}
                             </button>
-                            <button style={{ width: "50px" }} onClick={()=>displayConfirm(true)} className="btnSearch">
+                            <button style={{ width: "50px" }} onClick={()=>{displayConfirm(true);setCurrentConversation(el._id)}} className="btnSearch">
                                 <MDBIcon far icon="trash-alt" />
                             </button>
                         </div>

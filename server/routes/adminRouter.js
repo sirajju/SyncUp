@@ -15,5 +15,7 @@ app.post('/createAd',isAdminAuth,adminController.createAd)
 app.put('/changeBlock',isAdminAuth,adminController.changeBlock)
 app.put('/changeConversationBan',isAdminAuth,adminController.changeConversationBan)
 
+app.delete('/resetMessages',isAdminAuth,adminController.resetMessages)
+
 
 module.exports = app;
