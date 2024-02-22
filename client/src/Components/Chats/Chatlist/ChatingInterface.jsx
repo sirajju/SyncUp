@@ -417,10 +417,13 @@ function ChatingInterface({ setGo, setChat, chat }) {
     }
     const hangUpCall = () => {
         socket.emit('onHangup', chat.data)
+        const id = chat.data.from == userData.value._id ? chat.data.to : chat.data.from
+        setChat({ type: 'chat', data: id })
     }
     const declineCall = () => {
         socket.emit('onDeclined', chat.data)
-        setChat({ type: 'chat', data: chat.data.from })
+        const id = chat.data.from == userData.value._id ? chat.data.to : chat.data.from
+        setChat({ type: 'chat', data: id })
     }
     const removeLastEmoji = () => {
         const regex = emojiRegex();

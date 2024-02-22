@@ -178,7 +178,7 @@ function VideoCall(props) {
             </div>
             :
             <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
-              <button onClick={props.declineCall}> <img src={imgDecline} alt="" /> </button>
+              <button onClick={props.hangUpCall}> <img src={imgDecline} alt="" /> </button>
             </div>}
           {/* </div> */}
           <div className="callUi">

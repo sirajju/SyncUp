@@ -11,6 +11,7 @@ import { resetLogs, setLogs as setLocalLog } from "../../Context/userContext"
 import { v4 } from "uuid"
 import missedIcon from '../../assets/Images/incoming_red.png'
 import outgoingIcon from '../../assets/Images/outgoing.png'
+import outgoingAccepted from '../../assets/Images/outgoing_accepted.png'
 import acceptedIcon from '../../assets/Images/call_accepted.png'
 
 export default function ({ setGo, setChat }) {
@@ -22,7 +23,7 @@ export default function ({ setGo, setChat }) {
         const options = {
             route: "getCallLogs",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            params:{setRead:true},
+            params: { setRead: true },
             crypto: true
         }
         Axios(options).then(res => {
@@ -34,6 +35,13 @@ export default function ({ setGo, setChat }) {
                 toast.error(res.data.message)
             }
         })
+        const eventListener = function(e){
+            if(e.key=='Escape'){
+                setGo('')
+            }
+        }
+        window.addEventListener('keyup',eventListener)
+        return ()=>window.removeEventListener('keyup',eventListener)
     }, [])
     const menuItems = [
         {
@@ -81,11 +89,17 @@ export default function ({ setGo, setChat }) {
                     </Dropdown>
                 </button>
             </div>
-            <div className="text-center callLogParent"  data-aos="fade-up" data-aos-duration="700">
+            <div className="text-center callLogParent" data-aos="fade-up" data-aos-duration="700">
                 {logs.length ? logs.map(el => (
                     <div className={`callLogItem`}>
                         <img src={el.opponentData.avatar_url} className='chatIcon' />
-                        <span className='text-center p-3' style={{ width: '100%' }}> <img className="callStateIndicator" src={el.data.isAccepted ? acceptedIcon : (el.data.from==userData.value._id ? outgoingIcon :missedIcon)} alt="" /> {el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}</span>
+                        <div className='text-center p-3' style={{ width: '100%',display:"flex",flexDirection:'column' }}>
+                            <div>
+                                <img className="callStateIndicator" src={el.data.isAccepted ? (el.data.from == userData.value._id ? outgoingAccepted :acceptedIcon) : (el.data.from == userData.value._id ? outgoingIcon : missedIcon)} alt="" />
+                                {el.data.from == userData.value._id ? `Outgoing videocall to ${el.opponentData.username}` : (el.data.isAccepted ? `Incoming videocall from ${el.opponentData.username}` : `Missed videocall from ${el.opponentData.username}`)}
+                            </div>
+                            {el.data.isAccepted && <span className="callDuration" > Duration : {el.data.duration} </span>}
+                        </div>
                         <div className="followRqstDiv" style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 10px 10px 0 ', whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{new Date(el.data.createdAt).toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
                         </div>

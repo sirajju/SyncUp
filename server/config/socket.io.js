@@ -79,11 +79,23 @@ function intializeSocket(server) {
             })
             socket.on('onHangup', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
-                const callData = await call_log.findOne({ conversationName: data?.conversationName })
+                const callData = await call_log.findOne({ conversationName: data.conversationName })
+                console.log(`Ending conversation ${data.conversationName}`);
                 if (callData) {
-                    callData.duration = new Date().getSeconds() - new Date(callData.createdAt).getSeconds()
+                    const ms =  Date.now() - new Date(callData.createdAt).getTime()
+                    const seconds = parseInt(ms/1000)
+                    let duration;
+                    if(seconds >= 60){
+                        duration = (seconds / 60).toFixed(1) + 'm'
+                        if(duration >= 60 ){
+                            duration = (duration / 60).toFixed(1) + 'h'
+                        }
+                    }else{
+                        duration = seconds + 's'
+                    }
+                    callData.duration = duration
                     callData.endTime = Date.now()
-                    callData.save()
+                    await callData.save()
                 }
                 if (roomData) {
                     socket.to(roomData.roomId).emit('callEnded', { userId: data })
@@ -91,8 +103,9 @@ function intializeSocket(server) {
             })
             socket.on('onDeclined', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
+                console.log(`Declined call ${data.conversationName}`);
                 if (roomData) {
-                    socket.to(roomData.roomId).emit('callDeclined', { userId: data.to })
+                    socket.to(roomData.roomId).emit('callDeclined', data)
                 }
             })
             socket.on('sendMsg', async (data) => {

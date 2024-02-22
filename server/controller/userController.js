@@ -735,8 +735,13 @@ const getCallLogs = async(req,res)=>{
     try {
         const userData = await User.findOne({email:req.userEmail})
         if(req.query.setRead){
-            await Call_log.updateMany({to:userData._id.toString(),readedParticipants:{$elemMatch:{$ne:userData._id}}},{$push:{readedParticipants:userData._id}})
+            console.log('setting read');
+            await Call_log.updateMany({to:userData._id.toString()},{$addToSet:{readedParticipants:userData._id}})
         }
+        
+        // Removing conversationName after the usage to maintain consistancy
+        await Call_log.updateMany({$or:[{from:userData._id.toString()},{to:userData._id.toString()}]},{$set:{conversationName:"expired"}})
+        
         const callData = await Call_log.aggregate([{$match:{$or:[{from:userData._id.toString()},{to:userData._id.toString()}],clearedParticipants:{$not:{$in:[userData._id]}}}},{$project:{data:"$$ROOT",opponentId:{$cond:{if:{$eq:['$from',userData._id.toString()]},then:{$toObjectId:"$to"},else:{$toObjectId:"$from"}}}}},{$lookup:{from:"users",localField:"opponentId",foreignField:"_id",as:"opponentData"}},{$unwind:"$opponentData"},{$project:{'opponentData.username':1,'opponentData._id':1,'opponentData.email':1,'opponentData.avatar_url':1,opponentId:1,data:1}},{$sort:{'data.createdAt':-1}}]);
          const encData = encryptData(callData)
         if(encData){

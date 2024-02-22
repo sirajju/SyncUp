@@ -11,7 +11,7 @@ function ChatTabs({ activeTab, setActiveTab,setGo }) {
     const [hasToRead,setunRead] = useState(false)
     useEffect(()=>{
         const lenUnRead = callLogs.value.filter(el=>{
-            if(el.data.to == userData.value._id.toString() && el.data.isReaded==false){
+            if(el.data.to == userData.value._id.toString() && !el.data.readedParticipants.includes(userData.value._id.toString())){
                 return el
             }
         }).length

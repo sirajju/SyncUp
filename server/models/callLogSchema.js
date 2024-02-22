@@ -21,7 +21,7 @@ const callLog = new mongoose.Schema({
         default: false
     },
     duration: {
-        type: Number,
+        type: String,
         default: 0
     },
     endTime: {

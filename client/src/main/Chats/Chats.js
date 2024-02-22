@@ -194,7 +194,8 @@ function Chats() {
         socket.on('msgDelivered', handleDelivered)
         socket.on('callDeclined', (data) => {
             toast.error('Call declined')
-            setChat({ type: 'chat', data: data.userId })
+            const id = data.from == userData.value._id ? data.to : data.from
+            setChat({ type: 'chat', data: id })
         })
 
         socket.on('messageRecieved', async (data) => {
