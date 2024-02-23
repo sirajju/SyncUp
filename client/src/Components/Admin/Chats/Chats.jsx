@@ -53,6 +53,7 @@ export default function () {
             Axios(options).then(res=>{
                 if(res.data.success){
                     toast.success(res.data.message)
+                    getChats()
                 }
                 displayConfirm(false)
             })
@@ -81,7 +82,7 @@ export default function () {
                         {el.startedAtString ? el.startedAtString : new Date(el.startedAt).toLocaleDateString('en', { day: '2-digit', month: '2-digit', year: "numeric" })}
                     </td>
                     <td>
-                        <button className="btnSearch">
+                        <button disabled={!Boolean(el.messages)}  className="btnSearch">
                             <img src={iconView} style={{ width: "15px" }} alt="" /> ({el.messages})
                         </button>
                     </td>
@@ -91,7 +92,7 @@ export default function () {
                             <button title="Change ban state" onClick={() => changeBan(el._id)} style={{ width: "50px" }} className="btnSearch btnNew">
                                 {el.isBanned ? <MDBIcon far icon="circle" /> : <MDBIcon fas icon="ban" />}
                             </button>
-                            <button style={{ width: "50px" }} onClick={()=>{displayConfirm(true);setCurrentConversation(el._id)}} className="btnSearch">
+                            <button disabled={!Boolean(el.messages)} style={{ width: "50px" }} onClick={()=>{displayConfirm(true);setCurrentConversation(el._id)}} className="btnSearch">
                                 <MDBIcon far icon="trash-alt" />
                             </button>
                         </div>

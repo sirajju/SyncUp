@@ -8,7 +8,7 @@ function NewPage({children}) {
     return (
         <>
             <Navbar open={open} setOpen={setOpen} />
-            <Sidebar active={'Advertisments'} />
+            <Sidebar active={'Broadcasts'} />
             <div className="newBox">
                 <div className="boxAdd">
                     {children}

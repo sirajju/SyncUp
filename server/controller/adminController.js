@@ -9,7 +9,7 @@ const Reports = require('../models/reportSchema')
 const Conversation = require('../models/conversationSchema')
 const Messages = require('../models/messageSchema')
 const Notes = require('../models/noteSchema')
-const { ObjectId } = require('mongodb')
+const Broadcasts = require('../models/broadcastSchema')
 const _ = require('lodash')
 
 cloudinary.config({
@@ -228,6 +228,35 @@ const resetMessages = async(req,res)=>{
     }
 }
 
+const archiveNote = async(req,res)=>{
+    try {
+        const {noteId} =  req.query
+        if(noteId){
+            const noteData = await Notes.findByIdAndUpdate({_id:noteId},{$set:{isExpired:true}})
+            if(noteData){
+                res.json({success:true,message:"Note archived"})
+            }
+        }
+    } catch (error) {
+        res.json({success:false,message:"Err while archiving note"})
+    }
+}
+
+
+const getBroadcasts = async(req,res)=>{
+    try {
+        const broadcastData = await Broadcasts.find()
+        if(broadcastData){
+            const encData=encryptData(broadcastData)
+            res.json({success:true,body:encData})
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while getting broadcast"})
+    }
+}
+
+
 module.exports = {
     checkAdmin,
     isAlive,
@@ -238,5 +267,7 @@ module.exports = {
     getChats,
     changeConversationBan,
     getNotes,
-    resetMessages
+    resetMessages,
+    archiveNote,
+    getBroadcasts
 }

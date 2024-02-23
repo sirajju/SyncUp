@@ -8,12 +8,15 @@ app.get('/sortData',isAdminAuth,adminController.sortData)
 app.get('/getReports',isAdminAuth,adminController.getReports)
 app.get('/getChats',isAdminAuth,adminController.getChats)
 app.get('/getNotes',isAdminAuth,adminController.getNotes)
+app.get('/getBroadcasts',isAdminAuth,adminController.getBroadcasts)
+
 
 app.post('/login',adminController.checkAdmin)
 app.post('/createAd',isAdminAuth,adminController.createAd)
 
 app.put('/changeBlock',isAdminAuth,adminController.changeBlock)
 app.put('/changeConversationBan',isAdminAuth,adminController.changeConversationBan)
+app.put('/archiveNote',isAdminAuth,adminController.archiveNote)
 
 app.delete('/resetMessages',isAdminAuth,adminController.resetMessages)
 

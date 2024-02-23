@@ -15,32 +15,45 @@ function Users() {
     const [data, setData] = useState([]);
     const [sync, setSync] = useState(0)
     const [prog, setProg] = useState(false)
+    const getUsers = function(){
+        const options = {
+            route: 'admin/isAlive',
+            params: { getData: true, ref: "Users" },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_AdminToken')}` },
+            crypto: true
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                setData(res.data.body);
+            } else {
+                toast.error(res.data.message);
+                localStorage.removeItem('SyncUp_AdminToken');
+            }
+            setProg(false)
+        })
+    }
     useEffect(() => {
         // dispatch(showLoading());
         setProg(true)
-        const token = localStorage.getItem('SyncUp_AdminToken');
-        if (token) {
-            const options = {
-                route: 'admin/isAlive',
-                params: { getData: true, ref: "Users" },
-                headers: { Authorization: `Bearer ${token}` },
-                crypto: true
-            }
-            Axios(options).then(res => {
-                if (res.data.success) {
-                    setData(res.data.body);
-                } else {
-                    toast.error(res.data.message);
-                    localStorage.removeItem('SyncUp_AdminToken');
-                }
-            })
+        getUsers()
+    }, []);
+    const changeBlock = ((email, state) => {
+        const token = localStorage.getItem('SyncUp_AdminToken')
+        const options = {
+            route: "admin/changeBlock",
+            payload: { user: email, state },
+            headers: { Authorization: `Bearer ${token}` },
+            method:"PUT"
         }
-        setTimeout(() => {
-            // dispatch(hideLoading());
-            setProg(false)
-        }, 500);
-    }, [sync]);
-
+        Axios(options).then(res=>{
+            if (res.data.success) {
+                toast.success(res.data.message)
+                getUsers()
+            } else {
+                toast.error(res.data.message)
+            }
+        })
+    })
     const th = ['Username', 'Email', 'Premium', 'Verified', 'Points', 'Business', 'Block/Unblock', 'Actions']
     let sortList = ['Name', 'Blocked', 'Premium', 'Business', 'Chatpoints']
     return (
@@ -56,7 +69,7 @@ function Users() {
                     <td>{el.isEmailVerified ? 'Yes' : 'No'}</td>
                     <td>{el.chatpoints}</td>
                     <td>{el.isBusiness ? 'Yes' : 'No'}</td>
-                    <td>{<button onClick={() => changeBlock(el.email, el.isBlocked ? 'unblock' : "block", setSync)} className={el.isBlocked ? "btnSearch bg-success" : "btnSearch bg-danger"} style={{ width: "70px" }}>{el.isBlocked ? "Unblock" : "Block"}</button>}</td>
+                    <td>{<button onClick={() => changeBlock(el.email, el.isBlocked ? 'unblock' : "block")} className={el.isBlocked ? "btnSearch bg-success" : "btnSearch bg-danger"} style={{ width: "70px" }}>{el.isBlocked ? "Unblock" : "Block"}</button>}</td>
                     <td style={{ display: "flex" }}>
                         <button className="btnSearch btnNew" style={{ width: "50px" }}><img style={{ width: "20px" }} src={editIcon}></img></button>
                         <button className="btnSearch" style={{ width: "50px" }}><img style={{ width: "20px" }} src={viewIcon}></img></button>
@@ -67,22 +80,6 @@ function Users() {
     );
 }
 
-const changeBlock = ((email, state, func) => {
-    const token = localStorage.getItem('SyncUp_AdminToken')
-    const options = {
-        route: "admin/changeBlock",
-        payload: { user: email, state },
-        headers: { Authorization: `Bearer ${token}` },
-        method:"PUT"
-    }
-    Axios(options, res => {
-        if (res.data.success) {
-            toast.success(res.data.message)
-        } else {
-            toast.error(res.data.message)
-        }
-    })
-    func(Math.floor(Math.random() * 100))
-})
+
 
 export default Users;

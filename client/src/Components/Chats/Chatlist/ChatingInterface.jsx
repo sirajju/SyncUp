@@ -15,6 +15,7 @@ import msgSeen from '../../../assets/Images/msg_seen.png';
 import msgSent from '../../../assets/Images/msg_send.png';
 import msgDelivered from '../../../assets/Images/msg_delivered.png';
 import chat_svg from '../../../assets/svgIcons/chat.png';
+import flower from '../../../assets/Images/flower_white.png';
 import './ChatingInterface.css';
 import VideoCall from '../../VideoCall/VideoCall';
 import GetChatList from '../../../main/Chats/getChatList';
@@ -43,7 +44,8 @@ import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
 import { saveAs } from 'file-saver'
-import {v4 as random} from 'uuid'
+import { v4 as random } from 'uuid'
+import Confetti from 'react-dom-confetti'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -97,7 +99,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
                 <MDBIcon fas icon="arrow-right" onClick={closeChat} size='sm' style={{ color: "white" }} />
                 <img src={reciever.avatar_url} alt="" onClick={goToProfile} className="conversationAvatar" />
                 <div className="conversationUserDetails" onClick={goToProfile}>
-                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} {reciever.isBusiness && <img src={businessBadge} className='businessBadge' alt="" /> } </span>
+                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} {reciever.isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </span>
                     {!isBlocked && <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>}
                 </div>
             </div>
@@ -111,7 +113,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
 
 };
 
-const MessageRenderer = ({ reciever, setReciever }) => {
+const MessageRenderer = ({ reciever, setReciever, setConfettiActive, isConfettiActive }) => {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const doodleRef = useRef()
@@ -120,11 +122,13 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const dispatch = useDispatch()
     const [messageId, setMessageId] = useState(null)
     const [isConfirmed, displayConfirm] = useState(false)
+    const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
     const [editedMessage, setEdited] = useState('')
     const [showEdit, openEdit] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
     const { show } = useContextMenu({ id: 'MENU_ID' });
     useEffect(() => {
+        setConfettiActive(false)
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         if (!currentChat.value?.length) {
             console.log('running on local chat');
@@ -183,6 +187,25 @@ const MessageRenderer = ({ reciever, setReciever }) => {
     const downloadImage = function (el) {
         saveAs(el.mediaConfig.url, `image_syncUp_${el.sentTime}`)
     }
+    const openGreeting = function (e) {
+        setConfettiActive(true)
+        document.querySelectorAll('.partyPopper').forEach(el => { el && el.classList.remove('partyPopper') })
+        document.querySelectorAll('.invisiblePoperContent').forEach(el => { el && el.classList.remove('invisiblePoperContent') })
+        const img = document.querySelector('.popperImg').display = 'none'
+    }
+    const confettyConfig = {
+        angle: "360",
+        spread: "26",
+        startVelocity: "53",
+        elementCount: "200",
+        dragFriction: "0.10",
+        duration: "3840",
+        stagger: "3",
+        width: "10px",
+        height: "10px",
+        perspective: "450px",
+        colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
+    };
     return (
         <div className="chatinInterface">
             <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
@@ -194,26 +217,30 @@ const MessageRenderer = ({ reciever, setReciever }) => {
                 </ConfirmBox>
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
+
                 {messages?.length ? (
                     messages.map((el, ind) => {
                         return (
                             <>
                                 {el.senderId === userData.value._id ? (
                                     <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
-                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
+                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                             <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
                                             <p className='p-1 text-start' >{el.content}</p>
                                         </>)}</div>
-                                        <span>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
+                                        {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
+                                        <span className={`messageStatusIndicator`}>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
                                     </div>
                                 ) : (
-                                    <div key={ind} className={`message leftMessage `}>
-                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? el.content : <>
+                                    <div key={ind} className={`message leftMessage`}>
+                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                             <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
-                                            <p className='p-1' >{el.content}</p>
+                                            <p className='p-1' >{el.content}
+                                                {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
+                                            </p>
                                         </>)}</div>
 
-                                        <span> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
+                                        <span className={`messageStatusIndicator`}> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
                                     </div>
                                 )}
                             </>
@@ -241,6 +268,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const [isSending, setSending] = useState(false)
     const [openEmoji, setOpenEmoji] = useState(false)
     const [file, setMedia] = useState(false)
+    const [isConfettiActive, setConfettiActive] = useState(false)
     const fileInputRef = useRef()
     const inputRef = useRef();
     const [caption, setCaption] = useState(null)
@@ -307,7 +335,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         else if (chat.type == 'videoCall') {
             if (chat.data.from == userData.value._id) {
-                socket.emit('onCall', {...chat.data,createLog:true})
+                socket.emit('onCall', { ...chat.data, createLog: true })
             } else {
                 socket.emit('onCall', chat.data)
             }
@@ -453,8 +481,11 @@ function ChatingInterface({ setGo, setChat, chat }) {
         sendMedia,
         setReciever,
         isBlocked,
-        fileInputRef
+        fileInputRef,
+        setConfettiActive,
+        isConfettiActive
     }
+
     return (
         <>
             {(!chat.type && userData.value.isPremium) && (
@@ -467,6 +498,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 <div className="conversationContainer">
                     <ConversationTopBar {...props} />
                     <MessageRenderer {...props} />
+                    <Confetti active={isConfettiActive} onConfettiComplete={() => setConfettiActive(false)} />
                     <ConversationBottom {...props} removeLastEmoji={removeLastEmoji} />
                     {file?.data && <MediaSender isSending={isSending} setCaption={setCaption} sendMedia={sendMedia} fileInputRef={fileInputRef} setMedia={setMedia} file={file} />}
                 </div>

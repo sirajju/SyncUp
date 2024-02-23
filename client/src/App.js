@@ -24,6 +24,8 @@ import { requestPermission } from './Context/firebaseConfig';
 import Reports from './Components/Admin/Reports/Reports';
 import AdminChats from './Components/Admin/Chats/Chats'
 import AdminNotes from './Components/Admin/Notes/Notes'
+import AdminBroadcasts from './Components/Admin/Broadcast/Broadcast'
+import CreateBroadcast from './Components/Admin/Broadcast/newBroadcast'
 
 function App() {
   const isLoading = useSelector(state => state.progress.value)
@@ -52,6 +54,8 @@ function App() {
           <Route path='/admin/reports' element={<AdminRoute><Reports /></AdminRoute>} />
           <Route path='/admin/chats' element={<AdminRoute><AdminChats /></AdminRoute>} />
           <Route path='/admin/notes' element={<AdminRoute><AdminNotes /></AdminRoute>} />
+          <Route path='/admin/broadcasts' element={<AdminRoute><AdminBroadcasts /></AdminRoute>} />
+          <Route path='/admin/broadcasts/new' element={<AdminRoute><CreateBroadcast /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
           
         </Routes>
