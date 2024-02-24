@@ -45,7 +45,7 @@ import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
 import { saveAs } from 'file-saver'
 import { v4 as random } from 'uuid'
-import Confetti from 'react-dom-confetti'
+import Confetti from 'react-confetti'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
@@ -113,7 +113,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
 
 };
 
-const MessageRenderer = ({ reciever, setReciever, setConfettiActive, isConfettiActive }) => {
+const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, isConfettiActive,chat }) => {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const doodleRef = useRef()
@@ -128,11 +128,15 @@ const MessageRenderer = ({ reciever, setReciever, setConfettiActive, isConfettiA
     const currentChat = useSelector(state => state.currentChat)
     const { show } = useContextMenu({ id: 'MENU_ID' });
     useEffect(() => {
-        setConfettiActive(false)
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
+        const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
+        console.log(data);
+        if (data[0].isConfettiEnabled) {
+            alert('helo')
+            setConfettiActive(true)
+        }
         if (!currentChat.value?.length) {
             console.log('running on local chat');
-            const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
             if (data[0]?.messages?.length) {
                 setMessages(data[0].messages)
             } else {
@@ -193,21 +197,27 @@ const MessageRenderer = ({ reciever, setReciever, setConfettiActive, isConfettiA
         document.querySelectorAll('.invisiblePoperContent').forEach(el => { el && el.classList.remove('invisiblePoperContent') })
         const img = document.querySelector('.popperImg').display = 'none'
     }
-    const confettyConfig = {
-        angle: "360",
-        spread: "26",
-        startVelocity: "53",
-        elementCount: "200",
-        dragFriction: "0.10",
-        duration: "3840",
-        stagger: "3",
-        width: "10px",
-        height: "10px",
-        perspective: "450px",
-        colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
-    };
+    const changeConfettiState = () => {
+        console.log(chat.data,reciever._id);
+        setConfettiActive(false)
+        const options = {
+            route: "disabledConfetti",
+            params: { userId:chat.data },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            method:"PATCH"
+        }
+        Axios(options).then(async res=>{
+            if(!res.data.success){
+                toast.error(res.data.message)
+            }
+            const conv = await GetChatList()
+            dispatch(setConversations(conv))
+        })
+    }
     return (
         <div className="chatinInterface">
+
+            {isConfettiActive && <Confetti recycle={false} active={isConfettiActive} onConfettiComplete={() => changeConfettiState()} />}
             <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
                 {/*Confirm message for deleted message*/}
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
@@ -250,7 +260,7 @@ const MessageRenderer = ({ reciever, setReciever, setConfettiActive, isConfettiA
                     <div className="newConversation">
                         <div>
                             <img src={chat_svg} alt="" />
-                            <h6> Begin a conversation by sending "Hi" </h6>
+                            <h6> {isBlocked ? "You cannot message to this user" : 'Begin a conversation by sending "Hi"'} </h6>
                         </div>
                     </div>
                 )}
@@ -498,7 +508,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 <div className="conversationContainer">
                     <ConversationTopBar {...props} />
                     <MessageRenderer {...props} />
-                    <Confetti active={isConfettiActive} onConfettiComplete={() => setConfettiActive(false)} />
                     <ConversationBottom {...props} removeLastEmoji={removeLastEmoji} />
                     {file?.data && <MediaSender isSending={isSending} setCaption={setCaption} sendMedia={sendMedia} fileInputRef={fileInputRef} setMedia={setMedia} file={file} />}
                 </div>
