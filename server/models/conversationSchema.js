@@ -19,6 +19,10 @@ const conversationSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isConfettiEnabled:{
+        type:Boolean,
+        default:false
+    },
     password: {
         type: String
     },

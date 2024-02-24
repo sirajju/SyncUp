@@ -10,6 +10,7 @@ const Room = require('../models/roomModel')
 const Note = require('../models/noteSchema')
 const { encryptData } = require('./userController')
 const { ObjectId } = require('mongodb')
+const { toArray } = require('lodash')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -123,7 +124,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
 const getCurrentConversations = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
-        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, isBanned:1,opponent: 1, startedAt: 1, updatedAt: 1, messages: 1, last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
+        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, isBanned:1,opponent: 1, startedAt: 1, updatedAt: 1, isConfettiEnabled :1,messages: 1, last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
         if (conversationData) {
             await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } })
             const dlvrData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $project: { participents: 1 } }])
@@ -246,6 +247,26 @@ const editMessage = async (req, res) => {
     }
 }
 
+const disabledConfetti = async(req,res)=>{
+    try {
+        const {userId}=req.query
+        if(userId){
+            const userData = await User.findById({_id:userId})
+            const currentUser = await User.findOne({email:req.userEmail})
+            const conversaitonUpdate = await Conversation.findOneAndUpdate({participents:{$all:[userData._id,currentUser._id]}},{$set:{isConfettiEnabled:false}})
+            if(conversaitonUpdate){
+                res.json({success:true})
+            }else{
+                res.json({success:false,message:"Err while updating"})
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:"Err while updating"})
+
+    }
+}
+
 module.exports = {
     getUserInfo,
     getConversation,
@@ -255,4 +276,5 @@ module.exports = {
     sendMediaMessage,
     deleteMessage,
     editMessage,
+    disabledConfetti
 }

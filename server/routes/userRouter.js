@@ -50,6 +50,7 @@ app.patch('/changePass',userController.changePasword)
 app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
 app.patch('/acceptReq',isAuth,userController.acceptReq)
 app.patch('/changeUsername',isAuth,userController.changeUsername)
+app.patch('/disabledConfetti',isAuth,messageController.disabledConfetti)
 
 app.delete('/cancellRequest',isAuth,userController.cancellRequest)
 app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);

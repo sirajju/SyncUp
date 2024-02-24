@@ -14,10 +14,7 @@ const message = new mongoose.Schema({
     isEdited:{type:Boolean,default:false},
     editedContent:{type:String},
     type:{type:String},
-    isConfettiEnabled:{
-        type:Boolean,
-        default:false
-    },
+    
     clearedParticipants:{
         type:Array,
         default:[]
