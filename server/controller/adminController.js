@@ -148,7 +148,7 @@ const createAd = async (req, res) => {
 }
 const getReports = async (req, res) => {
     try {
-        const reports = await Reports.aggregate([{ $addFields: { 'userObjectId': { $toObjectId: "$userId" },'reportedUserObjectId':{$toObjectId:"$reportedBy"} } }, { $lookup: { from: "users", localField: 'userObjectId', foreignField: "_id", as: "userData" } }, { $unwind: "$userData" },{$lookup:{from:"users",localField:"reportedUserObjectId",foreignField:"_id",as:"reportedUser"}},{$unwind:"$reportedUser"}, { $project: { _id: 1, reason: 1, reportedUser: 1, reportedAtString: 1, isRejected: 1, 'userData.username': 1, 'userData.email': 1, 'userData.avatar_url': 1,'reportedUsername': '$reportedUser.username', 'reportedUserEmail': '$reportedUser.email', 'reportedUserAvatar_url': '$reportedUser.avatar_url',type:1} },{$project:{reportedUser:0}}])
+        const reports = await Reports.aggregate([{ $addFields: { 'userObjectId': { $toObjectId: "$userId" }, 'reportedUserObjectId': { $toObjectId: "$reportedBy" } } }, { $lookup: { from: "users", localField: 'userObjectId', foreignField: "_id", as: "userData" } }, { $unwind: "$userData" }, { $lookup: { from: "users", localField: "reportedUserObjectId", foreignField: "_id", as: "reportedUser" } }, { $unwind: "$reportedUser" }, { $project: { _id: 1, reason: 1, reportedUser: 1, reportedAtString: 1, isRejected: 1, 'userData.username': 1, 'userData.email': 1, 'userData.avatar_url': 1, 'reportedUsername': '$reportedUser.username', 'reportedUserEmail': '$reportedUser.email', 'reportedUserAvatar_url': '$reportedUser.avatar_url', type: 1 } }, { $project: { reportedUser: 0 } }])
         if (reports) {
             const encReports = encryptData(reports)
             if (encReports) {
@@ -161,101 +161,198 @@ const getReports = async (req, res) => {
     }
 }
 
-const getChats = async(req,res)=>{
+const getChats = async (req, res) => {
     try {
-        const conversation = await Conversation.aggregate([{$unwind:"$participents"},{$lookup:{from:"users",localField:"participents",foreignField:"_id",as:"participantsData"}},{$unwind:"$participantsData"},{$project:{'participantsData.username':1,'participantsData.email':1,type:1,startedAt:1,startedAtString:1,isLocked:1,isBanned:1,messages:{$size:"$messages"}}},{$group:{_id:"$_id",participantsData:{$push:"$participantsData"},startedAt:{$first:"$startedAt"},isBanned:{$first:"$isBanned"},startedAtString:{$first:"$startedAtString"},messages:{$first:"$messages"},type:{$first:"$type"}}},{$sort:{startedAt:1}}])
-        if(conversation){
+        const conversation = await Conversation.aggregate([{ $unwind: "$participents" }, { $lookup: { from: "users", localField: "participents", foreignField: "_id", as: "participantsData" } }, { $unwind: "$participantsData" }, { $project: { 'participantsData.username': 1, 'participantsData.email': 1, type: 1, startedAt: 1, startedAtString: 1, isLocked: 1, isBanned: 1, messages: { $size: "$messages" } } }, { $group: { _id: "$_id", participantsData: { $push: "$participantsData" }, startedAt: { $first: "$startedAt" }, isBanned: { $first: "$isBanned" }, startedAtString: { $first: "$startedAtString" }, messages: { $first: "$messages" }, type: { $first: "$type" } } }, { $sort: { startedAt: 1 } }])
+        if (conversation) {
             const encData = encryptData(conversation)
-            res.json({success:true,body:encData})
+            res.json({ success: true, body: encData })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while getting chats"})
+        res.json({ success: false, message: "Err while getting chats" })
     }
 }
 
-const changeConversationBan = async(req,res)=>{
+const changeConversationBan = async (req, res) => {
     try {
-        const {chatId} = req.body
-        const conversation = await Conversation.findById({_id:chatId})
-        if(chatId){
+        const { chatId } = req.body
+        const conversation = await Conversation.findById({ _id: chatId })
+        if (chatId) {
             conversation.isBanned = !conversation.isBanned
-            if(await conversation.save()){
-                res.json({success:true,message:`Conversation ${!conversation.isBanned ? "Unbanned":"Banned"}`})
+            if (await conversation.save()) {
+                res.json({ success: true, message: `Conversation ${!conversation.isBanned ? "Unbanned" : "Banned"}` })
             }
-            const connections = await Connection.find({userId:{$in:conversation.participents}})
-            connections.forEach(el=>{
-                req.io.to(el.socketId).emit(conversation.isBanned ?"conversationBlocked":"conversationUnblocked")
+            const connections = await Connection.find({ userId: { $in: conversation.participents } })
+            connections.forEach(el => {
+                req.io.to(el.socketId).emit(conversation.isBanned ? "conversationBlocked" : "conversationUnblocked")
             })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while change block"})
+        res.json({ success: false, message: "Err while change block" })
     }
 }
 
-const getNotes = async(req,res)=>{
+const getNotes = async (req, res) => {
     try {
-        const notesData = await Notes.aggregate([{$addFields:{userObjectId:{$toObjectId:"$userId"}}},{$lookup:{from:"users",localField:"userObjectId",foreignField:"_id",as:"userData"}},{$unwind:"$userData"},{$project:{'userData.username':1,'userData.email':1,'userData._id':1,'userData.avatar_url':1,'content':1,'createdAt':1,'likes':1,blockedUsers:1,isExpired:1,expireAtString:1,visibility:1,expiresAt:1}},{$sort:{createdAt:-1}}])
+        const notesData = await Notes.aggregate([{ $addFields: { userObjectId: { $toObjectId: "$userId" } } }, { $lookup: { from: "users", localField: "userObjectId", foreignField: "_id", as: "userData" } }, { $unwind: "$userData" }, { $project: { 'userData.username': 1, 'userData.email': 1, 'userData._id': 1, 'userData.avatar_url': 1, 'content': 1, 'createdAt': 1, 'likes': 1, blockedUsers: 1, isExpired: 1, expireAtString: 1, visibility: 1, expiresAt: 1 } }, { $sort: { createdAt: -1 } }])
         console.log(notesData);
-        if(notesData){
+        if (notesData) {
             const encData = encryptData(notesData)
-            res.json({success:true,body:encData})
+            res.json({ success: true, body: encData })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while getting chats"})
+        res.json({ success: false, message: "Err while getting chats" })
     }
 }
 
-const resetMessages = async(req,res)=>{
+const resetMessages = async (req, res) => {
     try {
-        const {chatId} = req.query
-        if(chatId){
-            const conversation = await Conversation.findById({_id:chatId})
-            if(conversation){
-                const conversationUpdate = await Messages.updateMany({$or:[{senderId:{$in:conversation.participents}},{recieverId:{$in:conversation.participents}}]},{$set:{isCleared:true}})
-                if(conversationUpdate){
+        const { chatId } = req.query
+        if (chatId) {
+            const conversation = await Conversation.findById({ _id: chatId })
+            if (conversation) {
+                const conversationUpdate = await Messages.updateMany({ $or: [{ senderId: { $in: conversation.participents } }, { recieverId: { $in: conversation.participents } }] }, { $set: { isCleared: true } })
+                if (conversationUpdate) {
                     conversation.messages = []
                     await conversation.save()
-                    res.json({success:true,message:"Messages restted"})
+                    res.json({ success: true, message: "Messages restted" })
                 }
             }
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while resetting"})
+        res.json({ success: false, message: "Err while resetting" })
     }
 }
 
-const archiveNote = async(req,res)=>{
+const archiveNote = async (req, res) => {
     try {
-        const {noteId} =  req.query
-        if(noteId){
-            const noteData = await Notes.findByIdAndUpdate({_id:noteId},{$set:{isExpired:true}})
-            if(noteData){
-                res.json({success:true,message:"Note archived"})
+        const { noteId } = req.query
+        if (noteId) {
+            const noteData = await Notes.findByIdAndUpdate({ _id: noteId }, { $set: { isExpired: true } })
+            if (noteData) {
+                res.json({ success: true, message: "Note archived" })
             }
         }
     } catch (error) {
-        res.json({success:false,message:"Err while archiving note"})
+        res.json({ success: false, message: "Err while archiving note" })
     }
 }
 
+const createBroadcast = async (req, res) => {
+    try {
+        const { data } = req.body
+        if (data) {
+            const adminData = await User.findOne({ username: "syncup", isAdmin: true })
+            if (data.contentType == 'banned' && data.persons) {
+                let content = 'You will be banned because of violation on user guidlines.To unban your account contact us with valid reason.'
+                const personsData = await User.find({ $or: [{ username: { $in: data.persons } }, { email: { $in: data.persons } }] })
+                if (personsData.length) {
+                    personsData.forEach(async el => {
+                        const newMessage = new Messages({
+                            content: null,
+                            senderId: adminData._id,
+                            recieverId: null,
+                            isMedia: data.media ? true : false,
+                            mediaConfig: data.media ? {
+                                url: data.media
+                            } : {},
+                        })
+                        const newConversation = new Conversation({
+                            participents: [adminData._id],
+                            messages: [],
+                            type: "bannedAnnouncment",
+                            isConfettiEnabled: data.isParyEnabled,
+                            isBanned: true
+                        })
+                        const ExistsData = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
+                        newMessage.recieverId = el._id
+                        newMessage.content = content
+                        const savedMsg = await newMessage.save()
+                        if (!ExistsData) {
+                            newConversation.participents.push(el._id)
+                            if (savedMsg) {
+                                newConversation.messages.push(savedMsg._id)
+                                await newConversation.save()
+                            }
+                        } else {
+                            ExistsData.messages.push(savedMsg._id)
+                            ExistsData.isConfettiEnabled = data.isParyEnabled
+                            await ExistsData.save()
+                        }
+                    })
+                }
+            }
+            else if (['broadcast', 'excluded', 'personal'].includes(data.type)) {
+                let users;
+                console.log(data);
+                switch (data.type) {
+                    case "broadcast":
+                        users = await User.find()
+                        break;
+                    case "excluded":
+                        users = await User.find({ $or: [{ username: { $nin: data.exclude } }, { email: { $nin: data.exclude } }] })
+                        break;
+                    case "personal":
+                        users = await User.find({ $or: [{ username: { $in: data.persons } }, { email: { $in: data.persons } }] })
+                        break;
+                    default:
+                        throw new Error('Something went wrong')
+                }
+                users.forEach(async el => {
+                    const ExistsConvo = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
+                    const newMessage = new Messages({
+                        content: data.caption,
+                        senderId: adminData._id,
+                        recieverId: el._id,
+                        isMedia: data.media ? true : false,
+                        mediaConfig: data.media ? {
+                            url: data.media
+                        } : {},
+                    })
+                    const savedMsg = await newMessage.save()
+                    if (!ExistsConvo) {
+                        const newConversation = new Conversation({
+                            participents: [adminData._id, el._id],
+                            messages: [],
+                            type: "bannedAnnouncment",
+                            isConfettiEnabled: data.isParyEnabled,
+                            isBanned: true
+                        })
+                        if (savedMsg) {
+                            newConversation.messages.push(savedMsg._id)
+                            await newConversation.save()
+                        }
+                    } else {
+                        ExistsConvo.messages.push(savedMsg._id)
+                        ExistsConvo.isConfettiEnabled = data.isParyEnabled
+                        await ExistsConvo.save()
+                    }
+                })
+            }
+        }
+        res.json({ success: true, message: "Hello world" })
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false })
+    }
+}
 
-const getBroadcasts = async(req,res)=>{
+const getBroadcasts = async (req, res) => {
     try {
         const broadcastData = await Broadcasts.find()
-        if(broadcastData){
-            const encData=encryptData(broadcastData)
-            res.json({success:true,body:encData})
+        if (broadcastData) {
+            const encData = encryptData(broadcastData)
+            res.json({ success: true, body: encData })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while getting broadcast"})
+        res.json({ success: false, message: "Err while getting broadcast" })
     }
 }
-
 
 module.exports = {
     checkAdmin,
@@ -269,5 +366,6 @@ module.exports = {
     getNotes,
     resetMessages,
     archiveNote,
+    createBroadcast,
     getBroadcasts
 }

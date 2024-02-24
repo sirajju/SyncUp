@@ -13,6 +13,7 @@ app.get('/getBroadcasts',isAdminAuth,adminController.getBroadcasts)
 
 app.post('/login',adminController.checkAdmin)
 app.post('/createAd',isAdminAuth,adminController.createAd)
+app.post('/publishBroadcast',isAdminAuth,adminController.createBroadcast)
 
 app.put('/changeBlock',isAdminAuth,adminController.changeBlock)
 app.put('/changeConversationBan',isAdminAuth,adminController.changeConversationBan)
