@@ -113,7 +113,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
 
 };
 
-const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, isConfettiActive,chat }) => {
+const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, isConfettiActive, chat }) => {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const doodleRef = useRef()
@@ -130,11 +130,6 @@ const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, 
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
-        console.log(data);
-        if (data[0].isConfettiEnabled) {
-            alert('helo')
-            setConfettiActive(true)
-        }
         if (!currentChat.value?.length) {
             console.log('running on local chat');
             if (data[0]?.messages?.length) {
@@ -193,25 +188,24 @@ const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, 
     }
     const openGreeting = function (e) {
         setConfettiActive(true)
-        document.querySelectorAll('.partyPopper').forEach(el => { el && el.classList.remove('partyPopper') })
-        document.querySelectorAll('.invisiblePoperContent').forEach(el => { el && el.classList.remove('invisiblePoperContent') })
-        const img = document.querySelector('.popperImg').display = 'none'
     }
     const changeConfettiState = () => {
-        console.log(chat.data,reciever._id);
         setConfettiActive(false)
         const options = {
             route: "disabledConfetti",
             params: { userId:chat.data },
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            method:"PATCH"
+            method: "PATCH"
         }
-        Axios(options).then(async res=>{
-            if(!res.data.success){
+        Axios(options).then(async res => {
+            if (!res.data.success) {
                 toast.error(res.data.message)
             }
-            const conv = await GetChatList()
-            dispatch(setConversations(conv))
+            const ms = await GetMessages(chat.data)
+            const cv = await GetChatList()
+            setMessages(ms)
+            dispatch(setConversations(cv))
+            dispatch(setCurrentChat(ms))
         })
     }
     return (
@@ -230,10 +224,11 @@ const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, 
 
                 {messages?.length ? (
                     messages.map((el, ind) => {
+                        if (el.isConfettiEnabled && el.senderId != userData.value._id) { openGreeting() }
                         return (
                             <>
                                 {el.senderId === userData.value._id ? (
-                                    <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                    <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
                                         <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                             <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
                                             <p className='p-1 text-start' >{el.content}</p>
@@ -242,7 +237,7 @@ const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, 
                                         <span className={`messageStatusIndicator`}>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
                                     </div>
                                 ) : (
-                                    <div key={ind} className={`message leftMessage`}>
+                                    <div key={ind} className={`message leftMessage text-center`}>
                                         <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                             <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
                                             <p className='p-1' >{el.content}

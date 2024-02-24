@@ -251,10 +251,10 @@ const disabledConfetti = async(req,res)=>{
     try {
         const {userId}=req.query
         if(userId){
-            const userData = await User.findById({_id:userId})
-            const currentUser = await User.findOne({email:req.userEmail})
-            const conversaitonUpdate = await Conversation.findOneAndUpdate({participents:{$all:[userData._id,currentUser._id]}},{$set:{isConfettiEnabled:false}})
-            if(conversaitonUpdate){
+            const recieverData = await User.findById({_id:userId})
+            const userData = await User.findOne({email:req.userEmail})
+            const messageUpdate = await Message.updateMany({senderId:recieverData._id,recieverId:userData._id},{$set:{isConfettiEnabled:false}})
+            if(messageUpdate){
                 res.json({success:true})
             }else{
                 res.json({success:false,message:"Err while updating"})

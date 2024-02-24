@@ -19,6 +19,10 @@ const message = new mongoose.Schema({
         type:Array,
         default:[]
     },
+    isConfettiEnabled:{
+        type:Boolean,
+        default:false
+    },
     sentTime:{
         type:Number,
         default:Date.now()

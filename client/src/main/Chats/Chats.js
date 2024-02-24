@@ -217,8 +217,6 @@ function Chats() {
             toast.error(`User ${data.userName} is offline`)
             setChat({ type: null })
         })
-
-
     }, [socket])
     const handleSearch = useCallback(async (e) => {
         if (e.target.value.trim()) {

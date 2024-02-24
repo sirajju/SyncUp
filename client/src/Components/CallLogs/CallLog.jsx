@@ -92,7 +92,7 @@ export default function ({ setGo, setChat }) {
             <div className="text-center callLogParent" data-aos="fade-up" data-aos-duration="700">
                 {logs.length ? logs.map(el => (
                     <div className={`callLogItem`}>
-                        <img src={el.opponentData.avatar_url} className='chatIcon' />
+                        <img src={el.opponentData.avatar_url} className='chatIcon' style={{maxWidth:"60px"}} />
                         <div className='text-center p-3' style={{ width: '100%',display:"flex",flexDirection:'column' }}>
                             <div>
                                 <img className="callStateIndicator" src={el.data.isAccepted ? (el.data.from == userData.value._id ? outgoingAccepted :acceptedIcon) : (el.data.from == userData.value._id ? outgoingIcon : missedIcon)} alt="" />

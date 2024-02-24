@@ -218,7 +218,13 @@ const resetMessages = async (req, res) => {
                 if (conversationUpdate) {
                     conversation.messages = []
                     await conversation.save()
-                    res.json({ success: true, message: "Messages restted" })
+                    const connection = await Connection.find({ userId: { $in: conversation.participents } })
+                    if (connection.length) {
+                        connection.forEach(el => {
+                            req.io.to(el.socketId).emit('messageResetted')
+                        })
+                    }
+                    res.json({ success: true, message: "Messages resetted" })
                 }
             }
         }
@@ -248,15 +254,17 @@ const createBroadcast = async (req, res) => {
         if (data) {
             const adminData = await User.findOne({ username: "syncup", isAdmin: true })
             if (data.contentType == 'banned' && data.persons) {
-                let content = 'You will be banned because of violation on user guidlines.To unban your account contact us with valid reason.'
+                let content = 'Your account will be banned because of violation on user guidlines.To unban your account contact us with valid reason.'
                 const personsData = await User.find({ $or: [{ username: { $in: data.persons } }, { email: { $in: data.persons } }] })
                 if (personsData.length) {
                     personsData.forEach(async el => {
+                        const connectionData = await Connection.findOne({ userId: el._id })
                         const newMessage = new Messages({
                             content: null,
                             senderId: adminData._id,
                             recieverId: null,
                             isMedia: data.media ? true : false,
+                            isConfettiEnabled: data.isPartyEnabled,
                             mediaConfig: data.media ? {
                                 url: data.media
                             } : {},
@@ -265,7 +273,6 @@ const createBroadcast = async (req, res) => {
                             participents: [adminData._id],
                             messages: [],
                             type: "bannedAnnouncment",
-                            isConfettiEnabled: data.isParyEnabled,
                             isBanned: true
                         })
                         const ExistsData = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
@@ -280,10 +287,13 @@ const createBroadcast = async (req, res) => {
                             }
                         } else {
                             ExistsData.messages.push(savedMsg._id)
-                            ExistsData.isConfettiEnabled = data.isParyEnabled
                             await ExistsData.save()
                         }
+                        if (connectionData) {
+                            req.io.to(connectionData.socketId).emit('messageRecieved', { newMessage: savedMsg })
+                        }
                     })
+                    res.json({ success: true, message: `${data.type} message send` })
                 }
             }
             else if (['broadcast', 'excluded', 'personal'].includes(data.type)) {
@@ -304,11 +314,13 @@ const createBroadcast = async (req, res) => {
                 }
                 users.forEach(async el => {
                     const ExistsConvo = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
+                    const connectionData = await Connection.findOne({ userId: el._id })
                     const newMessage = new Messages({
                         content: data.caption,
                         senderId: adminData._id,
                         recieverId: el._id,
                         isMedia: data.media ? true : false,
+                        isConfettiEnabled: data.isPartyEnabled,
                         mediaConfig: data.media ? {
                             url: data.media
                         } : {},
@@ -319,7 +331,6 @@ const createBroadcast = async (req, res) => {
                             participents: [adminData._id, el._id],
                             messages: [],
                             type: "bannedAnnouncment",
-                            isConfettiEnabled: data.isParyEnabled,
                             isBanned: true
                         })
                         if (savedMsg) {
@@ -328,16 +339,19 @@ const createBroadcast = async (req, res) => {
                         }
                     } else {
                         ExistsConvo.messages.push(savedMsg._id)
-                        ExistsConvo.isConfettiEnabled = data.isParyEnabled
                         await ExistsConvo.save()
                     }
+                    if (connectionData) {
+                        req.io.to(connectionData.socketId).emit('messageRecieved', { newMessage: savedMsg })
+                    }
                 })
+                res.json({ success: true, message: `${data.type} message send` })
             }
         }
-        res.json({ success: true, message: "Hello world" })
+
     } catch (error) {
         console.log(error);
-        res.json({ success: false })
+        res.json({ success: false, message: error.message })
     }
 }
 
