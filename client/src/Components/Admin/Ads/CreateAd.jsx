@@ -54,7 +54,7 @@ function CreateAd() {
         }
     }
     return (
-        <NewPage>
+        <NewPage active={'Advertisments'} >
             <div className="createAdContainer">
                 <h3 className='m-4'>Create Ad</h3>
                 <img src="" id='adImg' onClick={() => myRef.current.click()} className="adImageInput" />

@@ -12,8 +12,8 @@ function Sidebar({active}) {
     })
   }
   const navigate = useNavigate()
-  const btnArray = ['Dashboard','Broadcasts', 'Users','Chats','Notes' ,'Advertisments', 'Reports','Business', 'Groups','Verification']
-  const redirectLinks = [' ','broadcasts','users','chats','notes','ads','reports','business','groups','verification']
+  const btnArray = ['Dashboard','Announcement', 'Users','Chats','Notes' ,'Advertisments', 'Reports','Business', 'Groups','Verification']
+  const redirectLinks = [' ','announcement','users','chats','notes','ads','reports','business','groups','verification']
   const redirectUrl = (i)=>{
     navigate('/admin/'+redirectLinks[i])
   }

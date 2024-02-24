@@ -24,7 +24,7 @@ export default function () {
         })
     }, [])
     return (
-        <ListBox btnRedirect={'new'} btnText={'Send new'} prog={prog} active='Broadcasts' sortList={sortList} th={th}>
+        <ListBox btnRedirect={'new'} btnText={'Send new'} prog={prog} active='Announcement' sortList={sortList} th={th}>
            <tr>  
             
            </tr>
