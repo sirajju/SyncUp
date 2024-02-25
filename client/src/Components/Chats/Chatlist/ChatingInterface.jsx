@@ -518,7 +518,7 @@ const ConversationBottom = function ({ isBlocked, message, removeLastEmoji, send
         <div className="conversationBottom">
             {isBlocked ? <div className='blockedDiv'> <p style={{ color: 'grey', fontSize: '13px' }}>This conversation has been ended</p> </div> : <>
                 <img src={emoji} alt='not' onClick={() => setOpenEmoji(true)} />
-                <input onKeyDown={(e) => (e.key == 'Backspace' && message.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
+                <input onKeyDown={(e) => (e.key == 'Backspace' && message?.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
                 <img src={add} id='imageAdd' onClick={() => fileInputRef.current.click()} alt="" />
                 <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
                 <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" /></>}

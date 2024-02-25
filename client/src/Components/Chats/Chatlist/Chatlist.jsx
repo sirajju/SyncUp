@@ -15,7 +15,7 @@ import EmptyChat from './EmptyChat'
 import SearchResult from './SearchResult'
 
 
-const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo,setSearchData }) {
+const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, setSearchData }) {
     const conversation = useSelector(state => state.conversations)
     const userData = useSelector(state => state.user)
     const [status, setStatus] = useState({})
@@ -95,12 +95,9 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo,setS
     return (
         <div className="chatlistContainer" data-aos="fade-up" data-aos-duration="700" >
             {contactsModal && <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} />}
-            {Boolean(conversation.value.length) && <CurrentList setGo={setGo} setChat={setChat} />}
-            {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
-                <EmptyChat openContactsModal={openContactsModal} />
-            }
+
             {Boolean(searchResult.length) &&
-                <SearchResult setSearchData={setSearchData} addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact}/>
+                <SearchResult setSearchData={setSearchData} addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact} />
             }
             {(searchResult.notfound && !conversation.value.length) &&
                 searchResult.data.map(el => {
@@ -119,9 +116,13 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat,setGo,setS
                         </div>
                     )
                 })}
-            {!userData.value.isPremium&&<div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
+            {!userData.value.isPremium && <div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
                 <Ads />
             </div>}
+            {Boolean(conversation.value.length) && <CurrentList setGo={setGo} setChat={setChat} />}
+            {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
+                <EmptyChat openContactsModal={openContactsModal} />
+            }
         </div>
     )
 })
