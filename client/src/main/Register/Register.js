@@ -69,7 +69,7 @@ function Register() {
                         e.target.classList.add('invalid')
                     } else {
                         setErr(null)
-                        setUserData({ ...userData, username: e.target.value })
+                        setUserData({ ...userData, username: e.target.value.toLowerCase() })
                         e.target.classList.remove('invalid')
                     }
                 })
