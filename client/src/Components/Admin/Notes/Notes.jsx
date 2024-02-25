@@ -12,10 +12,25 @@ import Axios from '../../../interceptors/axios';
 import { MDBIcon } from 'mdb-react-ui-kit'
 
 function Users() {
-    const dispatch = useDispatch();
-    const [data, setData] = useState([]);
-    const [sync, setSync] = useState(0)
     const [prog, setProg] = useState(false)
+
+    const th = ['Email', 'Content', 'Likes', 'Created', 'Expired', 'Time', 'Visibility', 'Actions']
+    let sortList = ['Likes', 'Expired', 'Latest']
+
+    const props = {
+        prog,
+        setProg
+    }
+    return (
+        <ListBox th={th} active={'Notes'} sortList={sortList} prog={prog}>
+            <NotesTableData {...props} />
+        </ListBox>
+    );
+}
+
+export const NotesTableData = function ({ prog, setProg, mainData }) {
+    const [data, setData] = useState(mainData || []);
+
     const getNotes = function () {
         const options = {
             route: '/admin/getNotes',
@@ -30,15 +45,6 @@ function Users() {
             }
         })
     }
-    useEffect(() => {
-        // dispatch(showLoading());
-        setProg(true)
-        getNotes()
-    }, [sync]);
-
-    const th = ['Email', 'Content', 'Likes', 'Created', 'Expired', 'Time', 'Visibility', 'Actions']
-    let sortList = ['Likes', 'Expired', 'Latest']
-
     const deleteNote = function (noteId) {
         const options = {
             route: "admin/archiveNote",
@@ -53,19 +59,26 @@ function Users() {
             }
         })
     }
-
+    useEffect(() => {
+        if (!mainData) {
+            setProg(true)
+            getNotes()
+        }
+    }, [])
     return (
-        <ListBox th={th} active={'Notes'} sortList={sortList} prog={prog}>
+        <>
             {!prog && data.map((el, index) => (
                 <tr className='text-center' key={index}>
                     <td>
                         <img width={'45'} style={{ borderRadius: "100%" }} src={el.userData.avatar_url} />
                     </td>
                     <td>{el.userData.email}</td>
-                    <td>{el.content}</td>
+                    <td style={{ maxWidth: "150px" }}>
+                        <div style={{ maxHeight: "60px", overflowY: "auto", overflowX: "hidden" }}>{el.content || 'none'}</div>
+                    </td>
                     <td>
-                    <button style={{width:"70px"}} disabled={!Boolean(el.likes?.length)}  className="btnSearch">
-                           View ({el.likes?.length})
+                        <button style={{ width: "70px" }} disabled={!Boolean(el.likes?.length)} className="btnSearch">
+                            View ({el.likes?.length})
                         </button>
                     </td>
                     <td>{el.createdAtString ? el.createdAtString : new Date(el.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: "2-digit" })}</td>
@@ -78,9 +91,7 @@ function Users() {
                     </td>
                 </tr>
             ))}
-        </ListBox>
-    );
+        </>
+    )
 }
-
-
 export default Users;

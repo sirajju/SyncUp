@@ -3,8 +3,9 @@ import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../NavBar/Navbar';
 import './ListBox.css'
 import { useNavigate } from 'react-router-dom';
+import { MDBIcon } from 'mdb-react-ui-kit';
 
-function ListBox({ th, children, prog, active, sortList ,btnRedirect,btnText,sortData}) {
+function ListBox({ th, children,backButton,backButtonFunction, prog, active, sortList ,btnRedirect,btnText,sortData}) {
     const navigate=useNavigate()
     const [open, setOpen] = useState(true);
     return (
@@ -15,6 +16,7 @@ function ListBox({ th, children, prog, active, sortList ,btnRedirect,btnText,sor
                 <div className="dbDetails usersList" style={{ overflowY: "scroll" }}>
                     <div className="listTop p-3">
                         <div className="search">
+                            {backButton&&<button onClick={()=>backButtonFunction(false)} className='btnSearch viewBackButton' ><MDBIcon fas icon="chevron-left" /></button>}
                             <input type="text" className='inputSearch' placeholder='Enter name ' />
                             <button className='btnSearch'>Search</button>
                         </div>

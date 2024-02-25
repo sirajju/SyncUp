@@ -47,6 +47,7 @@ export default function () {
             }
             Axios(options).then(res => {
                 if (res.data.success) {
+                    navigate('/admin/announcement')
                     toast.success(res.data.message)
                 }
                 setSending(false)
@@ -90,7 +91,7 @@ export default function () {
                     />
                 </Space>
                 <div className="inputAd">
-                    {data.contentType == 'custom' && <Input id='ad_name' onChange={(e) => setData({ ...data, caption: e.target.value })} type="text" placeholder='Enter caption or content' />}
+                    {data.contentType == 'custom' && <Input id='ad_name' onChange={(e) => setData({ ...data, caption: e.target.value })} type="text" placeholder='Hi {username}...' />}
                     <Space className="m-2" wrap>
                         <Select
                             disabled={Boolean(!data.contentType)}

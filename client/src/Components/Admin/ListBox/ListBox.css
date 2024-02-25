@@ -42,6 +42,10 @@ button:not([disabled]):active  {
 button:disabled {
     opacity: 0.5;
 }
+.viewBackButton {
+    width: 30px !important;
+    margin: 10px;
+}
 @keyframes animate {
     0%{
         transform: rotate(0deg);

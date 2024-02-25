@@ -5,15 +5,17 @@ import iconView from '../../../assets/Images/view.png'
 import { MDBIcon } from "mdb-react-ui-kit";
 import ConfirmBox from '../../Confirmation/Dailogue'
 import toast from "react-hot-toast";
+import View from "../View/View";
 
 
 export default function () {
     const th = ['Type', 'Participants', 'Persons', 'StartedAt', 'Messages', 'Banned', 'Actions']
     const sortList = ['Username', 'Email', 'Started']
     const [chats, setChats] = useState([])
+    const [viewData, setViewData] = useState({ type: null, data: null})
     const [prog, setProg] = useState(false)
-    const [isConfirmed,displayConfirm]=useState(false)
-    const [currentConversation,setCurrentConversation]=useState()
+    const [isConfirmed, displayConfirm] = useState(false)
+    const [currentConversation, setCurrentConversation] = useState()
     useEffect(() => {
         getChats()
     }, [])
@@ -42,16 +44,16 @@ export default function () {
             }
         })
     }
-    const resetMessages = function (){
-        if(currentConversation){
+    const resetMessages = function () {
+        if (currentConversation) {
             const options = {
-                route:"admin/resetMessages",
-                params:{chatId:currentConversation},
-                headers:{Authorization:`Bearer ${localStorage.getItem('SyncUp_AdminToken')}`},
-                method:"DELETE"
+                route: "admin/resetMessages",
+                params: { chatId: currentConversation },
+                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_AdminToken')}` },
+                method: "DELETE"
             }
-            Axios(options).then(res=>{
-                if(res.data.success){
+            Axios(options).then(res => {
+                if (res.data.success) {
                     toast.success(res.data.message)
                     getChats()
                 }
@@ -59,46 +61,61 @@ export default function () {
             })
         }
     }
+    const openViews = function (chatId) {
+        const options = {
+            route: "admin/getConversationUsersData",
+            params: { chatId },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_AdminToken')}` },
+            crypto: true
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                setViewData({ type: 'users', data: res.data.body })
+            }
+        })
+    }
     return (
-        <ListBox prog={prog} active='Chats' sortList={sortList} th={th}>
-            <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={resetMessages} title="Warning ⚠️ "  content="This action cannot be undone.Do you want to reset Messages of this conversation..?" />
-            {chats && chats.map((el, ind) => (
-                <tr className="text-center">
-                    <td>{ind + 1}</td>
-                    <td>{el.type}</td>
-                    <td>
-                        <button className="btnSearch">
-                            View <img src={iconView} style={{ width: "15px" }} alt="" />
-                        </button>
-                    </td>
-                    <td>
-                        <div>
-                            {el.participantsData[0].email}
-                            <br />
-                            {el.participantsData[1].email}
-                        </div>
-                    </td>
-                    <td>
-                        {el.startedAtString ? el.startedAtString : new Date(el.startedAt).toLocaleDateString('en', { day: '2-digit', month: '2-digit', year: "numeric" })}
-                    </td>
-                    <td>
-                        <button disabled={!Boolean(el.messages)}  className="btnSearch">
-                            <img src={iconView} style={{ width: "15px" }} alt="" /> ({el.messages})
-                        </button>
-                    </td>
-                    <td>{el.isBanned ? "Yes" : "No"}</td>
-                    <td>
-                        <div style={{ display: "flex" }} >
-                            <button title="Change ban state" onClick={() => changeBan(el._id)} style={{ width: "50px" }} className="btnSearch btnNew">
-                                {el.isBanned ? <MDBIcon far icon="circle" /> : <MDBIcon fas icon="ban" />}
+        <>
+            {!viewData.type ? <ListBox prog={prog} active='Chats' sortList={sortList} th={th}>
+                <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={resetMessages} title="Warning ⚠️ " content="This action cannot be undone.Do you want to reset Messages of this conversation..?" />
+                {chats && chats.map((el, ind) => (
+                    <tr className="text-center">
+                        <td>{ind + 1}</td>
+                        <td>{el.type}</td>
+                        <td>
+                            <button onClick={() => openViews(el._id)} className="btnSearch">
+                                View <img src={iconView} style={{ width: "15px" }} alt="" />
                             </button>
-                            <button disabled={!Boolean(el.messages)} style={{ width: "50px" }} onClick={()=>{displayConfirm(true);setCurrentConversation(el._id)}} className="btnSearch">
-                                <MDBIcon far icon="trash-alt" />
+                        </td>
+                        <td>
+                            <div>
+                                {el.participantsData[0].email}
+                                <br />
+                                {el.participantsData[1].email}
+                            </div>
+                        </td>
+                        <td>
+                            {el.startedAtString ? el.startedAtString : new Date(el.startedAt).toLocaleDateString('en', { day: '2-digit', month: '2-digit', year: "numeric" })}
+                        </td>
+                        <td>
+                            <button disabled={!Boolean(el.messages)} className="btnSearch">
+                                <img src={iconView} style={{ width: "15px" }} alt="" /> ({el.messages})
                             </button>
-                        </div>
-                    </td>
-                </tr>
-            ))}
-        </ListBox>
+                        </td>
+                        <td>{el.isBanned ? "Yes" : "No"}</td>
+                        <td>
+                            <div style={{ display: "flex" }} >
+                                <button title="Change ban state" onClick={() => changeBan(el._id)} style={{ width: "50px" }} className="btnSearch btnNew">
+                                    {el.isBanned ? <MDBIcon far icon="circle" /> : <MDBIcon fas icon="ban" />}
+                                </button>
+                                <button disabled={!Boolean(el.messages)} style={{ width: "50px" }} onClick={() => { displayConfirm(true); setCurrentConversation(el._id) }} className="btnSearch">
+                                    <MDBIcon far icon="trash-alt" />
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
+            </ListBox> : <View {...viewData} setViewData={setViewData} activeTab={'Chats'} />}
+        </>
     )
 }
