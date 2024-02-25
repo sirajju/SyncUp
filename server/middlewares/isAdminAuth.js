@@ -12,7 +12,7 @@ module.exports = async (req, res,next) => {
                     res.json({ success: false, message: `Admin suspended from accessing controllpannel` })
                 }
                 else {
-                    req.adminEmali=email,
+                    req.adminEmail=email,
                     req.userName=username
                     next()
                 }

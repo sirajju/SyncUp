@@ -9,6 +9,8 @@ app.get('/getReports',isAdminAuth,adminController.getReports)
 app.get('/getChats',isAdminAuth,adminController.getChats)
 app.get('/getNotes',isAdminAuth,adminController.getNotes)
 app.get('/getBroadcasts',isAdminAuth,adminController.getBroadcasts)
+app.get('/getConversationUsersData',isAdminAuth,adminController.getConversationUsersData)
+app.get('/getNotesByUserId',isAdminAuth,adminController.getNotesByUserId)
 
 
 app.post('/login',adminController.checkAdmin)

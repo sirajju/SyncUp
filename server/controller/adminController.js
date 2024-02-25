@@ -1,3 +1,4 @@
+
 const User = require('../models/userSchema')
 const { compareHash, encryptData } = require('../controller/userController')
 const jwt = require('jsonwebtoken')
@@ -11,6 +12,8 @@ const Messages = require('../models/messageSchema')
 const Notes = require('../models/noteSchema')
 const Broadcasts = require('../models/broadcastSchema')
 const _ = require('lodash')
+const Broadcast = require('../models/broadcastSchema')
+const Note = require('../models/noteSchema')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -84,16 +87,20 @@ const isAlive = async (req, res) => {
 const changeBlock = async (req, res) => {
     try {
         const { user, state } = req.body
-        const userData = await User.findOneAndUpdate({ email: user }, { $set: { isBlocked: state == 'block' } })
-        if (userData) {
-            const connectData = await Connection.findOne({ userId: userData._id })
-            if (connectData) {
-                req.io.to(connectData.socketId).emit('onUpdateNeeded')
-                await Connection.findOneAndDelete({ userId: userData._id })
+        if (user != req.adminEmail) {
+            const userData = await User.findOneAndUpdate({ email: user }, { $set: { isBlocked: state == 'block' } })
+            if (userData) {
+                const connectData = await Connection.findOne({ userId: userData._id })
+                if (connectData) {
+                    req.io.to(connectData.socketId).emit('onUpdateNeeded')
+                    await Connection.findOneAndDelete({ userId: userData._id })
+                }
+                res.json({ success: true, message: `User ${state}ed` })
+            } else {
+                throw new Error()
             }
-            res.json({ success: true, message: `User ${state}ed` })
         } else {
-            throw new Error()
+            res.json({ success: false, message: "You cannot ban yourself" })
         }
     } catch (error) {
         console.log(error);
@@ -253,6 +260,19 @@ const createBroadcast = async (req, res) => {
         const { data } = req.body
         if (data) {
             const adminData = await User.findOne({ username: "syncup", isAdmin: true })
+            await new Broadcast({
+                type: data.type,
+                contentType: data.contentType,
+                persons: data.persons || [],
+                excludedUser: data.exclude || [],
+                isMedia: data.media ? true : false,
+                mediaConfig: data.media ? {
+                    url: data.media
+                } : {},
+                content: data.caption || '(bannedAnnouncment)',
+                adminEmail: req.userEmail,
+                isConfettiEnabled: data.isPartyEnabled
+            }).save()
             if (data.contentType == 'banned' && data.persons) {
                 let content = 'Your account will be banned because of violation on user guidlines.To unban your account contact us with valid reason.'
                 const personsData = await User.find({ $or: [{ username: { $in: data.persons } }, { email: { $in: data.persons } }] })
@@ -264,7 +284,9 @@ const createBroadcast = async (req, res) => {
                             senderId: adminData._id,
                             recieverId: null,
                             isMedia: data.media ? true : false,
+                            type: data.contentType,
                             isConfettiEnabled: data.isPartyEnabled,
+
                             mediaConfig: data.media ? {
                                 url: data.media
                             } : {},
@@ -272,7 +294,7 @@ const createBroadcast = async (req, res) => {
                         const newConversation = new Conversation({
                             participents: [adminData._id],
                             messages: [],
-                            type: "bannedAnnouncment",
+                            type: data.contentType,
                             isBanned: true
                         })
                         const ExistsData = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
@@ -298,7 +320,6 @@ const createBroadcast = async (req, res) => {
             }
             else if (['broadcast', 'excluded', 'personal'].includes(data.type)) {
                 let users;
-                console.log(data);
                 switch (data.type) {
                     case "broadcast":
                         users = await User.find()
@@ -312,25 +333,31 @@ const createBroadcast = async (req, res) => {
                     default:
                         throw new Error('Something went wrong')
                 }
+
                 users.forEach(async el => {
+                    let content = data.caption
+                    if (content.includes('{username}')) {
+                        content = content.replace(/{username}/g, el.username)
+                    }
                     const ExistsConvo = await Conversation.findOne({ participents: { $all: [adminData._id, el._id] } })
                     const connectionData = await Connection.findOne({ userId: el._id })
                     const newMessage = new Messages({
-                        content: data.caption,
+                        content,
                         senderId: adminData._id,
                         recieverId: el._id,
                         isMedia: data.media ? true : false,
+                        type: data.contentType,
                         isConfettiEnabled: data.isPartyEnabled,
                         mediaConfig: data.media ? {
                             url: data.media
                         } : {},
                     })
+
                     const savedMsg = await newMessage.save()
                     if (!ExistsConvo) {
                         const newConversation = new Conversation({
                             participents: [adminData._id, el._id],
                             messages: [],
-                            type: "bannedAnnouncment",
                             isBanned: true
                         })
                         if (savedMsg) {
@@ -357,14 +384,52 @@ const createBroadcast = async (req, res) => {
 
 const getBroadcasts = async (req, res) => {
     try {
-        const broadcastData = await Broadcasts.find()
+        const broadcastData = await Broadcast.find()
         if (broadcastData) {
             const encData = encryptData(broadcastData)
-            res.json({ success: true, body: encData })
+            if (encData) {
+                res.json({ success: true, body: encData })
+            }
         }
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: "Err while getting broadcast" })
+    }
+}
+
+const getConversationUsersData = async (req, res) => {
+    try {
+        const { chatId } = req.query
+        if (chatId) {
+            const conversationData = await Conversation.findById({ _id: chatId })
+            if (conversationData) {
+                const usersData = await User.find({ _id: { $in: conversationData.participents } })
+                if (usersData) {
+                    const encData = encryptData(usersData)
+                    res.json({ success: true, body: encData })
+                }
+            }
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+        console.log(error);
+    }
+}
+
+const getNotesByUserId = async (req, res) => {
+    try {
+        const {userId}=req.query
+        if (userId) {
+            const userData = await User.findById({ _id:userId })
+            const notesData = await Note.find({ email: userData.email })
+            if (notesData) {
+                const encData = encryptData(notesData.reverse())
+                res.json({ success: true, body: encData })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Err while getting notes" })
     }
 }
 
@@ -381,5 +446,7 @@ module.exports = {
     resetMessages,
     archiveNote,
     createBroadcast,
-    getBroadcasts
+    getBroadcasts,
+    getConversationUsersData,
+    getNotesByUserId
 }

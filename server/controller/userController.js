@@ -11,6 +11,8 @@ const webPush = require('web-push')
 const Premium = require('../models/premiumModel')
 const Report = require('../models/reportSchema')
 const Call_log = require('../models/callLogSchema')
+const Conversation = require('../models/conversationSchema')
+const Messages = require('../models/messageSchema')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -260,6 +262,7 @@ const sendMail = async (message, reciever, subject) => {
 const verifyOtp = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
+        const adminData = await User.findOne({username:"syncup",isAdmin:true})
         if (userData.auth.otp.value == req.query.otp) {
             let expire = userData.auth.otp.expireAt
             if ((expire - Date.now()) >= 0) {
@@ -271,6 +274,20 @@ const verifyOtp = async (req, res) => {
                         req.io.to(conData.socketId).emit('onUpdateNeeded')
                     }
                 }
+                const newMessage = new Messages({
+                    content:`Hi ${userData.username}, Welcome to syncup.You are at the right place if you are looking for a good platform to communicate.Don't forget to report any bugs at @syncupBot.....Happy Syncing.!!!`,
+                    senderId: adminData._id,
+                    recieverId: userData._id,
+                    isMedia: false,
+                    type: 'Welcome message',
+                    isConfettiEnabled: true,
+                })
+                const savedMsg = await newMessage.save()
+                await new Conversation({
+                    participents: [adminData._id, userData._id],
+                    messages: [savedMsg._id],
+                    isBanned: true
+                }).save()
                 await User.findOneAndUpdate({ email: req.userEmail }, { $set: { isEmailVerified: true } })
                 res.json({ success: true, message: "Yay you are all done!!" })
             } else {
@@ -396,7 +413,7 @@ const checkUser = async (req, res) => {
     try {
         const { user } = req.query
         if (user) {
-            const regex = { $regex: user, $options:'i' }
+            const regex = { $regex: user, $options: 'i' }
             const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } })
             if (userData.length) {
                 const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
@@ -689,15 +706,15 @@ const blockContact = async (req, res) => {
             if (!alreadyBlocked) {
                 const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { blockedContacts: { userId: user._id, blockedAt: Date.now() } } })
                 if (userData) {
-                    const connectData = await Connection.findOne({userId:user._id})
-                    if(connectData){
-                        req.io.to(connectData.socketId).emit('conversationBlocked',{userId:userData._id})
+                    const connectData = await Connection.findOne({ userId: user._id })
+                    if (connectData) {
+                        req.io.to(connectData.socketId).emit('conversationBlocked', { userId: userData._id })
                     }
                     res.json({ success: true, message: 'User blocked' })
                 } else {
                     res.json({ success: false, message: 'Err while blocking' })
                 }
-            }else{
+            } else {
                 res.json({ success: false, message: 'User already blocked' })
             }
         }
@@ -712,17 +729,17 @@ const unBlockContact = async (req, res) => {
             const user = await User.findById({ _id: userId })
             const alreadyBlocked = await User.findOne({ email: req.userEmail, blockedContacts: { $elemMatch: { userId: user._id } } })
             if (alreadyBlocked) {
-                const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { blockedContacts: { userId: user._id} } })
+                const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $pull: { blockedContacts: { userId: user._id } } })
                 if (userData) {
-                    const connectData = await Connection.findOne({userId:user._id})
-                    if(connectData){
-                        req.io.to(connectData.socketId).emit('conversationUnblocked',{userId:userData._id})
+                    const connectData = await Connection.findOne({ userId: user._id })
+                    if (connectData) {
+                        req.io.to(connectData.socketId).emit('conversationUnblocked', { userId: userData._id })
                     }
                     res.json({ success: true, message: 'User Unblocked' })
                 } else {
                     res.json({ success: false, message: 'Err while blocking' })
                 }
-            }else{
+            } else {
                 res.json({ success: false, message: 'User already Unblocked' })
             }
         }
@@ -731,37 +748,37 @@ const unBlockContact = async (req, res) => {
     }
 }
 
-const getCallLogs = async(req,res)=>{
+const getCallLogs = async (req, res) => {
     try {
-        const userData = await User.findOne({email:req.userEmail})
-        if(req.query.setRead){
+        const userData = await User.findOne({ email: req.userEmail })
+        if (req.query.setRead) {
             console.log('setting read');
-            await Call_log.updateMany({to:userData._id.toString()},{$addToSet:{readedParticipants:userData._id}})
+            await Call_log.updateMany({ to: userData._id.toString() }, { $addToSet: { readedParticipants: userData._id } })
         }
-        
+
         // Removing conversationName after the usage to maintain consistancy
-        await Call_log.updateMany({$or:[{from:userData._id.toString()},{to:userData._id.toString()}]},{$set:{conversationName:"expired"}})
-        
-        const callData = await Call_log.aggregate([{$match:{$or:[{from:userData._id.toString()},{to:userData._id.toString()}],clearedParticipants:{$not:{$in:[userData._id]}}}},{$project:{data:"$$ROOT",opponentId:{$cond:{if:{$eq:['$from',userData._id.toString()]},then:{$toObjectId:"$to"},else:{$toObjectId:"$from"}}}}},{$lookup:{from:"users",localField:"opponentId",foreignField:"_id",as:"opponentData"}},{$unwind:"$opponentData"},{$project:{'opponentData.username':1,'opponentData._id':1,'opponentData.email':1,'opponentData.avatar_url':1,opponentId:1,data:1}},{$sort:{'data.createdAt':-1}}]);
-         const encData = encryptData(callData)
-        if(encData){
-            res.json({success:true,body:encData})
+        await Call_log.updateMany({ $or: [{ from: userData._id.toString() }, { to: userData._id.toString() }] }, { $set: { conversationName: "expired" } })
+
+        const callData = await Call_log.aggregate([{ $match: { $or: [{ from: userData._id.toString() }, { to: userData._id.toString() }], clearedParticipants: { $not: { $in: [userData._id] } } } }, { $project: { data: "$$ROOT", opponentId: { $cond: { if: { $eq: ['$from', userData._id.toString()] }, then: { $toObjectId: "$to" }, else: { $toObjectId: "$from" } } } } }, { $lookup: { from: "users", localField: "opponentId", foreignField: "_id", as: "opponentData" } }, { $unwind: "$opponentData" }, { $project: { 'opponentData.username': 1, 'opponentData._id': 1, 'opponentData.email': 1, 'opponentData.avatar_url': 1, opponentId: 1, data: 1 } }, { $sort: { 'data.createdAt': -1 } }]);
+        const encData = encryptData(callData)
+        if (encData) {
+            res.json({ success: true, body: encData })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:'Err while getting logs'})
+        res.json({ success: false, message: 'Err while getting logs' })
     }
 }
 
-const resetCalllogs = async(req,res)=>{
+const resetCalllogs = async (req, res) => {
     try {
-        const userData = await User.findOne({email:req.userEmail})
-        if(userData){
-            const callData = await Call_log.updateMany({$or:[{from:userData._id.toString()},{to:userData._id.toString()}]},{$push:{clearedParticipants:userData._id}})
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            const callData = await Call_log.updateMany({ $or: [{ from: userData._id.toString() }, { to: userData._id.toString() }] }, { $push: { clearedParticipants: userData._id } })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while resetting logs"})
+        res.json({ success: false, message: "Err while resetting logs" })
     }
 }
 

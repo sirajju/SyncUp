@@ -1,41 +1,54 @@
 const mongoose = require('mongoose')
 
 const broadCast = new mongoose.Schema({
-    type:{
-        type:String,
-        required:true
+    type: {
+        type: String,
+        required: true
     },
-    userId:{
-        type:String,
+    contentType: {
+        type: String,
+
     },
-    adminId:{
-        type:String,
+    excludedUser:{
+        type:Array,
+        default:[]
     },
-    content:{
-        type:String,
+    persons:{
+        type:Array,
+        default:[]
     },
-    isMedia:{
-        type:Boolean,
-        default:false
+    isConfettiEnabled: {
+        type: Boolean,
+        default: false
     },
-    isCleared:{
-        type:Boolean,
-        default:false
+    adminEmail: {
+        type: String,
     },
-    mediaConfig:{
-        type:Object,
-        default:{}
+    content: {
+        type: String,
     },
-    createdAt:{
-        type:Number,
-        default:Date.now()
+    isMedia: {
+        type: Boolean,
+        default: false
     },
-    createdAtString:{
-        type:String,
-        default:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'2-digit'})
+    isCleared: {
+        type: Boolean,
+        default: false
+    },
+    mediaConfig: {
+        type: Object,
+        default: {}
+    },
+    createdAt: {
+        type: Number,
+        default: Date.now()
+    },
+    createdAtString: {
+        type: String,
+        default: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
     }
 })
 
-const Broadcast = mongoose.model('Broadcast',broadCast)
+const Broadcast = mongoose.model('Broadcast', broadCast)
 
 module.exports = Broadcast
