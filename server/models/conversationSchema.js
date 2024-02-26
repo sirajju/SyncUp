@@ -19,7 +19,14 @@ const conversationSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    
+    clearedParticipants:{
+        type:Array,
+        default:[]
+    },
+    deletedParticipants:{
+        type:Array,
+        default:[]
+    },
     password: {
         type: String
     },

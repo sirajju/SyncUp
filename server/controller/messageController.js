@@ -36,7 +36,7 @@ const getUserInfo = async (req, res) => {
             res.json({ success: false })
         }
     } catch (error) {
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
         console.log(error.message);
     }
 }
@@ -58,7 +58,8 @@ const getConversation = async (req, res) => {
                     const messageData = await Message.find({
                         senderId: { $in: [userData._id, recieverData._id] },
                         recieverId: { $in: [userData._id, recieverData._id] },
-                        isCleared:false
+                        isCleared:false,
+                        clearedParticipants:{$nin:[userData._id.toString()]}
                     }).sort({ sentTime: 1 });
                     const connectData = await Connection.findOne({ userId: recieverData._id })
                     if (connectData) {
@@ -78,7 +79,7 @@ const getConversation = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message })
+        res.status(500).json({ message: error.message })
     }
 }
 const sendMessage = async ({ recieverId, content, userEmail }) => {
@@ -123,25 +124,57 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
 }
 const getCurrentConversations = async (req, res) => {
     try {
-        const userData = await User.findOne({ email: req.userEmail })
-        const conversationData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } }, { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } }, { $project: { _id: 1, isBanned:1,opponent: 1, startedAt: 1, updatedAt: 1, isConfettiEnabled :1,messages: 1, last_message: { $slice: ['$messages', -1] } } }, { $sort: { updatedAt: -1 } }])
-        if (conversationData) {
-            await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } })
-            const dlvrData = await Conversation.aggregate([{ $match: { participents: { $in: [userData._id] } } }, { $unwind: '$participents' }, { $match: { 'participents': { $ne: userData._id } } }, { $project: { participents: 1 } }])
-            dlvrData.forEach(async (el) => {
-                const connectData = await Connection.findOne({ userId: el.participents })
-                if (connectData) {
-                    req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id })
+        const userData = await User.findOne({ email: req.userEmail }).lean();
+    
+        const conversationData = await Conversation.aggregate([
+            { $match: { participents: { $in: [userData._id] } } },
+            { $unwind: '$participents' },
+            { $match: { 'participents': { $ne: userData._id } } },
+            { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } },
+            { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } },
+            { $project: { _id: 1, isBanned: 1, opponent: 1, startedAt: 1, updatedAt: 1, isConfettiEnabled: 1, messages: 1, last_message: { $slice: ['$messages', -1] } } },
+            { $unwind: '$last_message' },
+            { $sort: { 'last_message.sentTime': -1 } }
+        ]);
+    
+        const filteredData = conversationData?.map(el => {
+            return { ...el, messages: el.messages.filter(ms => {
+                if (ms?.clearedParticipants?.length) {
+                    return !ms.clearedParticipants.includes(userData._id.toString());
                 }
-            })
-            const encData = encryptData(conversationData)
-            res.json({ success: true, body: encData })
+                return true;
+            })};
+        });
+    
+        if (filteredData && filteredData.length > 0) {
+            const updatePromises = filteredData.map(async (el) => {
+                await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } });
+                return Conversation.aggregate([
+                    { $match: { participents: { $in: [userData._id] } } },
+                    { $unwind: '$participents' },
+                    { $match: { 'participents': { $ne: userData._id } } },
+                    { $project: { participents: 1 } }
+                ]);
+            });
+    
+            const dlvrData = await Promise.all(updatePromises);
+            await Promise.all(dlvrData.map(async (dlvr) => {
+                dlvr.forEach(async (el) => {
+                    const connectData = await Connection.findOne({ userId: el.participents });
+                    if (connectData) {
+                        req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id });
+                    }
+                });
+            }));
+    
+            const encData = encryptData(filteredData);
+            return res.json({ success: true, body: encData });
         } else {
-            res.json({ success: false })
+            return res.json({ success: false });
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message })
+        res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 }
 const makeMsgSeen = async (req, res) => {
@@ -157,7 +190,7 @@ const makeMsgSeen = async (req, res) => {
             res.json({ message: "Something went wrong" })
         }
     } catch (error) {
-        res.json({ message: error.message })
+        res.status(500).json({ message: error.message })
     }
 }
 const sendMediaMessage = async (data) => {
@@ -218,7 +251,7 @@ const deleteMessage = async (req, res) => {
             }
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
 
     }
 }
@@ -243,7 +276,7 @@ const editMessage = async (req, res) => {
             res.json({ success: false, message: "No message" })
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -262,8 +295,29 @@ const disabledConfetti = async(req,res)=>{
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:"Err while updating"})
+        res.status(500).json({success:false,message:"Err while updating"})
 
+    }
+}
+
+const clearMessages = async(req,res)=>{
+    try {
+        const {chatId} = req.query
+        const userData = await User.findOne({email:req.userEmail})
+        if(chatId){
+            const conversationUpdate = await Conversation.findById({_id:chatId})
+            if(conversationUpdate){
+                const updateMessages = await Message.updateMany({senderId :{$in:conversationUpdate.participents.map(el=>el.toString())},recieverId:{$in:conversationUpdate.participents.map(el=>el.toString())}},{$addToSet:{clearedParticipants:userData._id.toString()}})
+                console.log(updateMessages);
+                if(updateMessages){
+                    return res.json({success:true,message:"Conversation messages cleared..!"})
+                }
+            }
+        }
+        return res.json({success:false,message:"Err while resetting messages"})
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({success:false,message:error.message})
     }
 }
 
@@ -276,5 +330,6 @@ module.exports = {
     sendMediaMessage,
     deleteMessage,
     editMessage,
-    disabledConfetti
+    disabledConfetti,
+    clearMessages
 }

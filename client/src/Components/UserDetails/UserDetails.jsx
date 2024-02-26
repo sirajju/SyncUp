@@ -36,9 +36,9 @@ function UserDetails({ chat, reciever ,setChat}) {
 
             }
         }
-        const data = allConversation.value.filter(el => el.opponent[0]._id == reciever._id)
+        const data = allConversation.value.filter(el => el.opponent[0]._id == chat.data)
         setConversation(data || false)
-    }, [me])
+    }, [chat])
     const reportContact = function () {
         const options = {
             route: 'reportContact',

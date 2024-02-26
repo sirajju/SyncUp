@@ -814,5 +814,6 @@ module.exports = {
     blockContact,
     unBlockContact,
     getCallLogs,
-    resetCalllogs
+    resetCalllogs,
+
 }

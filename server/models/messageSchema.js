@@ -27,6 +27,14 @@ const message = new mongoose.Schema({
         type:Number,
         default:Date.now()
     },
+    sentTimeString:{
+        type:String,
+        default:new Date().toLocaleDateString('en-GB',{hour:"2-digit",minute:"2-digit",hour12:true})
+    },
+    sentDateString:{
+        type:String,
+        default:new Date().toLocaleDateString('en-GB',{day:"2-digit",month:"2-digit",year:"numeric"})
+    },
     readedTime:{
         type:Number,
     },
