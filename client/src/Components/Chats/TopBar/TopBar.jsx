@@ -19,12 +19,14 @@ import toast from 'react-hot-toast';
 import { Dropdown } from 'antd';
 import CreateNote from '../../../main/Notes/CreateNote/CreateNote';
 import { useNavigate } from 'react-router-dom';
+import PremiumDailogue from '../../Premium/PremiumDailogue'
 
 function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   let userData = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isOpen, setOpen] = useState(false);
+  const [isPremiumModalOpen,setPremiumModalOpen]=useState(false)
   const [notiNum, setNotiNum] = useState(0);
   const myNotes = useSelector(state => state.myNotes)
   const login = useGoogleLogin({
@@ -111,7 +113,9 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     createNote: () => setOpen(!isOpen),
     myNotes: () => setActiveTab('My Notes'),
     premium: () => navigate('/plans'),
-    clearNotes:clearUserNotes
+    clearNotes:clearUserNotes,
+    scheduleMsg:()=>!userData.value.isPremium && setPremiumModalOpen(true)
+
   };
   const canCreateNote = function () {
     if (myNotes?.value?.length) {
@@ -171,7 +175,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   const menuItems = {
     'Notes': notesItems,
     'Chats': chatsItems,
-    'My Notes': myNotesItems
+    'My Notes': myNotesItems,
   }
   return (
     <div className="topBarContainer">
@@ -182,6 +186,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
           <img src={notification} onClick={() => {setGo('Notifications');dispatch(setUserData({...userData.value,notifications:userData.value.notifications.map(el=>el={...el,isReaded:true})}))}} className='icon notificationsIcon' alt='Notification' />
         </div>
         <CreateNote isOpen={isOpen} setOpen={setOpen} />
+        <PremiumDailogue isModalOpen={isPremiumModalOpen} setIsModalOpen={setPremiumModalOpen} />
         {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Google Sync' />}
         <Dropdown
           arrow

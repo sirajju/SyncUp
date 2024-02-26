@@ -1,13 +1,19 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Box from '../Home/BoxStyle/box'
+import { useDispatch } from 'react-redux'
+import { hideLoading } from '../../Context/userContext'
 
 function AlreadyOpen() {
+    const dispatch = useDispatch()
     const boxStyle = {
         background: 'white',
         width: '40%',
         height: '60vh',
         color:'black'
     }
+    useEffect(()=>{
+        dispatch(hideLoading())   
+    },[])
     return (
         <div className="otpContainer">
             <Box style={boxStyle}>

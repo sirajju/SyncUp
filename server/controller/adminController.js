@@ -290,6 +290,7 @@ const createBroadcast = async (req, res) => {
                             mediaConfig: data.media ? {
                                 url: data.media
                             } : {},
+                            sentTime:Date.now()
                         })
                         const newConversation = new Conversation({
                             participents: [adminData._id],
@@ -351,6 +352,7 @@ const createBroadcast = async (req, res) => {
                         mediaConfig: data.media ? {
                             url: data.media
                         } : {},
+                        sentTime:Date.now()
                     })
 
                     const savedMsg = await newMessage.save()

@@ -57,3 +57,6 @@
     margin: 5px;
     /* border: 1px solid rgb(234, 234, 234); */
 }
+.premiumToggle {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+}

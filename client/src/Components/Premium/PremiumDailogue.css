@@ -1,0 +1,15 @@
+.premiumModal {
+    /* padding: 50px; */
+    text-align: center;
+}
+/* PremiumDailogue.css */
+.premiumModal .ant-modal-header {
+    text-align: center;
+}
+.premiumModal .ant-modal-body {
+    text-align: center;
+    /* margin: 20px; */
+}
+.premiumModal .ant-modal-footer {
+    text-align: center;
+}

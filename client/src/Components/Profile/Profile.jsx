@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { setUserData } from '../../Context/userContext';
 import Axios from '../../interceptors/axios';
 import { Switch } from 'antd'
+import PremiumDailogue from '../Premium/PremiumDailogue'
 
 function Profile({ setGo,chat }) {
     const userData = useSelector((state) => state.user);
@@ -19,6 +20,7 @@ function Profile({ setGo,chat }) {
     const [username, setUsername] = useState(userData.value.username);
     const [afkMessage, setAfkMessage] = useState(userData.value.afk.message)
     const [isUsernameValid, setIsUsernameValid] = useState(true);
+    const [isPremiumModalOpen,openPremiumModal]=useState(false)
     const navigate = useNavigate()
     const toggleAfk = function () {
         const options = {
@@ -124,6 +126,7 @@ function Profile({ setGo,chat }) {
                 />
                 <Modal />
             </div>
+            <PremiumDailogue setIsModalOpen={openPremiumModal} isModalOpen={isPremiumModalOpen} />
             <div className="profileConfig">
                 <div class="input-group mb-3">
                     <input
@@ -147,17 +150,19 @@ function Profile({ setGo,chat }) {
                         </span>
                     </div>
                 </div>
-                <div onClick={userData.value.isPremium ? () => toast('Currently we only have this type    ') : () => navigate('/plans')} className={`profilePremiumBadge ${!userData.value.isPremium && 'cursor-pointer'}`}>
+                <div onClick={userData.value.isPremium ? () => toast('Currently we only have this type    ') : () => openPremiumModal(true)} className={`profilePremiumBadge ${!userData.value.isPremium && 'cursor-pointer'}`}>
                     <span>Select your premium badge : </span>
                     <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer' }} >Premium</span>
                 </div>
-                <div className='afkDiv' >
+                <div className='afkDiv' onClick={()=>!userData.value.isPremium && openPremiumModal(true)} >
                     <span>Turn on or off away from keyboard : </span>
                     <Switch
                         checkedChildren={'ON'}
                         unCheckedChildren={'OFF'}
                         defaultChecked={userData.value.afk.isOn}
-                        onChange={toggleAfk}
+                        onClick={toggleAfk}
+                        className='premiumToggle'
+                        disabled={!userData.value.isPremium}
                     />
 
                 </div>

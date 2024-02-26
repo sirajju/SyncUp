@@ -290,7 +290,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         Axios(options).then(res => {
             if (res.data.success) {
-                toast.success('Unwanted activity detected AFK turned off')
+                toast.success('Activity detected AFK turned off')
                 dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
             } else {
                 toast.error(res.data.message)
