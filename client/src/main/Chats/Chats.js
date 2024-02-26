@@ -252,7 +252,7 @@ function Chats() {
             {isLoading && <Loader />}
 
             <ChatBox rightComponent={go != 'MobileChat' && <ChatingInterface {...props} />}>
-                {go == `Profile` && <Profile setGo={setGo} />}
+                {go == `Profile` && <Profile chat={chat} setGo={setGo} />}
                 {go == `Notifications` && <Notification setActiveTab={setActiveTab} setChat={setChat} setGo={setGo} />}
                 {go == 'MobileChat' && chat.type && <ChatingInterface {...props} />}
                 {go == 'CallLogs' && <CallLog setChat={setChat} setGo={setGo} />}

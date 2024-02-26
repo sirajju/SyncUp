@@ -12,7 +12,7 @@ import {
 import './Dailogue.css'
 
 const App = React.memo(
-    function ({ value, func, title, content, posFunc,children}) {
+    function ({ value, func, title, content, posFunc,children,params}) {
         const toggleOpen = () => func(!value);
         return (
             <>
@@ -33,7 +33,7 @@ const App = React.memo(
                                 <MDBBtn style={{ background: '#5961F9', color: 'white' }} onClick={toggleOpen}>
                                     No
                                 </MDBBtn>
-                                <MDBBtn onClick={posFunc} style={{ background: '#ED80FD' }} >Yes</MDBBtn>
+                                <MDBBtn onClick={(e)=>posFunc(params || e)} style={{ background: '#ED80FD' }} >Yes</MDBBtn>
                             </MDBModalFooter>
                         </MDBModalContent>
                     </MDBModalDialog>

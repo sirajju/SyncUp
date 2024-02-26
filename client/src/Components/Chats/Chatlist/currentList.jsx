@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setCurrentChat, setConversations as setGlobalConversation } from '../../../Context/userContext'
+import { setCurrentChat, setConversations as setGlobalConversation, setUserData } from '../../../Context/userContext'
 import { useSocket } from '../../../Context/socketContext'
 import imageIcon from '../../../assets/Images/image.png'
 import businessBadge from '../../../assets/Images/verified.png'
@@ -51,7 +51,8 @@ function CurrentList({ setChat, setGo }) {
             }
         })
     }
-    const deleteConversation = function () {
+    const deleteConversation = function (el) {
+        console.log(selectedConv,dailogueData.params,el);
         setConfirmed(false)
         
     }
@@ -65,21 +66,19 @@ function CurrentList({ setChat, setGo }) {
         }
         Axios(options).then(async res => {
             if (res.data.success) {
-                setChat({})
-                dispatch(setCurrentChat([]))
-                dispatch(setGlobalConversation(await GetChatlist()))
+                dispatch(setUserData({ ...userData.value, blockedContacts: [...userData.value.blockedContacts, { userId: el.opponent[0]._id, blockedAt: Date.now() }] }))
                 toast.success(res.data.message)
             }
         })
     }
     const itemFunction = {
         viewContact: (el) => { setChat({ type: "UserProfile", data: el.opponent[0]._id }) },
-        // clearMessage: (el) => { setSelectedConv(el); setDailogueData({content:"Do you want to clear messages of the current Conversation.?",params:el,posFunc:clearMessage,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
-        // deleteConversation: (el) => { setSelectedConv(el); setDailogueData({content:"Do you want to delete this current Conversation.?",params:el,posFunc:deleteConversation,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
-        // blockUser: (el) => { setSelectedConv(el); setDailogueData({content:`Do you want to block ${el.opponent[0].username}..?`,params:el,posFunc:blockUser,children:"Note : You will not able send or recieve messages "});setConfirmed(true); },
-        clearMessage,
-        deleteConversation,
-        blockUser
+        clearMessage: (el) => { setDailogueData({content:"Do you want to clear messages of the current Conversation.?",params:el,posFunc:clearMessage,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
+        deleteConversation: (el) => { setDailogueData({content:"Do you want to delete this current Conversation.?",params:el,posFunc:deleteConversation,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
+        blockUser: (el) => { setDailogueData({content:`Do you want to block ${el.opponent[0].username}..?`,params:el,posFunc:blockUser,children:"Note : You will not able send or recieve messages "});setConfirmed(true); },
+        // clearMessage,
+        // deleteConversation,
+        // blockUser
     }
     const myNotesItems = [
         // {
@@ -107,7 +106,7 @@ function CurrentList({ setChat, setGo }) {
     ];
     return (
         <>
-            <Confirmation title="Think again.." posFunc={dailogueData.posFunc} content={dailogueData.content} value={isConfirmed} func={setConfirmed}>
+            <Confirmation title="Think again.." params={dailogueData.params} posFunc={dailogueData.posFunc} content={dailogueData.content} value={isConfirmed} func={setConfirmed}>
                 <p className='text-danger m-3 mb-1' style={{ fontSize: "13px" }} >{dailogueData.children}</p>
             </Confirmation>
             {conversations.value.length && conversations.value.map((el, key) => {

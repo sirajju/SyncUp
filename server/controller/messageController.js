@@ -58,8 +58,8 @@ const getConversation = async (req, res) => {
                     const messageData = await Message.find({
                         senderId: { $in: [userData._id, recieverData._id] },
                         recieverId: { $in: [userData._id, recieverData._id] },
-                        isCleared:false,
-                        clearedParticipants:{$nin:[userData._id.toString()]}
+                        isCleared: false,
+                        clearedParticipants: { $nin: [userData._id.toString()] }
                     }).sort({ sentTime: 1 });
                     const connectData = await Connection.findOne({ userId: recieverData._id })
                     if (connectData) {
@@ -92,11 +92,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                 senderId: userData._id,
                 recieverId,
                 content,
-                sentTime: Date.now(),
-                isDelivered: false,
-                isReaded: false,
-                isDeleted: false,
-                isSent: true
+                sentTime:Date.now()
             })
             if (!conversationData) {
                 await new Conversation({
@@ -104,7 +100,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                     type: 'personal',
                 }).save()
             }
-            else if(conversationData.isBanned){
+            else if (conversationData.isBanned) {
                 return false
             }
             await newMessage.save()
@@ -114,6 +110,22 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                     { participents: [recieverData._id, userData._id] }
                 ]
             }, { $push: { messages: newMessage._id } })
+            if (recieverData.afk.isOn) {
+                let content = recieverData.afk.message.replace(/({username})|({self})/g, function (m) {
+                    let obj = {
+                        '{username}': userData.username,
+                        '{self}': recieverData.username,
+                    }
+                    return obj[m]
+                })
+                const afkMessage = await new Message({
+                    senderId: recieverData._id,
+                    recieverId: userData._id,
+                    content,
+                    sentTime:Date.now()
+                }).save()
+                await Conversation.findByIdAndUpdate({ _id: conversationData._id }, { $push: { messages: afkMessage._id } })
+            }
             return { newMessage }
         }
         return false
@@ -125,7 +137,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
 const getCurrentConversations = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail }).lean();
-    
+
         const conversationData = await Conversation.aggregate([
             { $match: { participents: { $in: [userData._id] } } },
             { $unwind: '$participents' },
@@ -136,16 +148,18 @@ const getCurrentConversations = async (req, res) => {
             { $unwind: '$last_message' },
             { $sort: { 'last_message.sentTime': -1 } }
         ]);
-    
+
         const filteredData = conversationData?.map(el => {
-            return { ...el, messages: el.messages.filter(ms => {
-                if (ms?.clearedParticipants?.length) {
-                    return !ms.clearedParticipants.includes(userData._id.toString());
-                }
-                return true;
-            })};
+            return {
+                ...el, messages: el.messages.filter(ms => {
+                    if (ms?.clearedParticipants?.length) {
+                        return !ms.clearedParticipants.includes(userData._id.toString());
+                    }
+                    return true;
+                })
+            };
         });
-    
+
         if (filteredData && filteredData.length > 0) {
             const updatePromises = filteredData.map(async (el) => {
                 await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } });
@@ -156,7 +170,7 @@ const getCurrentConversations = async (req, res) => {
                     { $project: { participents: 1 } }
                 ]);
             });
-    
+
             const dlvrData = await Promise.all(updatePromises);
             await Promise.all(dlvrData.map(async (dlvr) => {
                 dlvr.forEach(async (el) => {
@@ -166,7 +180,7 @@ const getCurrentConversations = async (req, res) => {
                     }
                 });
             }));
-    
+
             const encData = encryptData(filteredData);
             return res.json({ success: true, body: encData });
         } else {
@@ -280,44 +294,44 @@ const editMessage = async (req, res) => {
     }
 }
 
-const disabledConfetti = async(req,res)=>{
+const disabledConfetti = async (req, res) => {
     try {
-        const {userId}=req.query
-        if(userId){
-            const recieverData = await User.findById({_id:userId})
-            const userData = await User.findOne({email:req.userEmail})
-            const messageUpdate = await Message.updateMany({senderId:recieverData._id,recieverId:userData._id},{$set:{isConfettiEnabled:false}})
-            if(messageUpdate){
-                res.json({success:true})
-            }else{
-                res.json({success:false,message:"Err while updating"})
+        const { userId } = req.query
+        if (userId) {
+            const recieverData = await User.findById({ _id: userId })
+            const userData = await User.findOne({ email: req.userEmail })
+            const messageUpdate = await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isConfettiEnabled: false } })
+            if (messageUpdate) {
+                res.json({ success: true })
+            } else {
+                res.json({ success: false, message: "Err while updating" })
             }
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({success:false,message:"Err while updating"})
+        res.status(500).json({ success: false, message: "Err while updating" })
 
     }
 }
 
-const clearMessages = async(req,res)=>{
+const clearMessages = async (req, res) => {
     try {
-        const {chatId} = req.query
-        const userData = await User.findOne({email:req.userEmail})
-        if(chatId){
-            const conversationUpdate = await Conversation.findById({_id:chatId})
-            if(conversationUpdate){
-                const updateMessages = await Message.updateMany({senderId :{$in:conversationUpdate.participents.map(el=>el.toString())},recieverId:{$in:conversationUpdate.participents.map(el=>el.toString())}},{$addToSet:{clearedParticipants:userData._id.toString()}})
+        const { chatId } = req.query
+        const userData = await User.findOne({ email: req.userEmail })
+        if (chatId) {
+            const conversationUpdate = await Conversation.findById({ _id: chatId })
+            if (conversationUpdate) {
+                const updateMessages = await Message.updateMany({ senderId: { $in: conversationUpdate.participents.map(el => el.toString()) }, recieverId: { $in: conversationUpdate.participents.map(el => el.toString()) } }, { $addToSet: { clearedParticipants: userData._id.toString() } })
                 console.log(updateMessages);
-                if(updateMessages){
-                    return res.json({success:true,message:"Conversation messages cleared..!"})
+                if (updateMessages) {
+                    return res.json({ success: true, message: "Conversation messages cleared..!" })
                 }
             }
         }
-        return res.json({success:false,message:"Err while resetting messages"})
+        return res.json({ success: false, message: "Err while resetting messages" })
     } catch (error) {
         console.log(error);
-        res.status(500).json({success:false,message:error.message})
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 

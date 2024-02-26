@@ -71,6 +71,16 @@ const user = mongoose.Schema({
         type:Array,
         default:[]
     },
+    afk:{
+        isOn:{
+            type:Boolean,
+            default:false
+        },
+        message:{
+            type:String,
+            default:"Hi {username},user {self} is currently offline."
+        }
+    },
     blockedContacts:{type:Array,default:[]},
     invitedBy :{
         type:String,

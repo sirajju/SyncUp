@@ -54,15 +54,6 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const socket = useSocket()
     const [isTyping, setTyping] = useState(false)
     const conversation = useSelector(state => state.conversations)
-    useEffect(()=>{
-        socket.on('typing', () => {
-            console.log('typing');
-            setTyping(true)
-        })
-        socket.on('typingEnd', () => {
-            setTyping(false)
-        })
-    },[socket])
     useEffect(() => {
         console.log('conversation userDetails top bar');
         setLoading(true)
@@ -79,7 +70,13 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
         Axios(options).then(res => {
             dispatch(setCurrentChat((res.data.body)))
         })
-        
+        socket.on('typing', () => {
+            console.log('typing');
+            setTyping(true)
+        })
+        socket.on('typingEnd', () => {
+            setTyping(false)
+        })
     }, [reciever, socket])
     const goToProfile = function (e) {
         setChat({ type: "UserProfile", data: reciever._id })
@@ -284,7 +281,22 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(markEdited({ msgId: data.msgId, content: data.content }))
             }
         })
-    },[socket])
+    }, [socket])
+    const toggleAfk = function () {
+        const options = {
+            route: "toggleAfk",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            method: "PATCH"
+        }
+        Axios(options).then(res => {
+            if (res.data.success) {
+                toast.success('Unwanted activity detected AFK turned off')
+                dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
+            } else {
+                toast.error(res.data.message)
+            }
+        })
+    }
     useEffect(() => {
         if (chat.type == 'chat') {
             setMessage('')
@@ -338,8 +350,13 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 inputRef?.current?.focus()
             }
         })
-    }, [chat]);
 
+    }, [chat,userData]);
+    useEffect(()=>{
+        if(userData.value.afk.isOn &&chat.type){
+            toggleAfk()
+        }
+    },[chat])
     const sendMessage = async () => {
         if (isSending) {
             return toast('Umm..trafic makes slow')
@@ -366,12 +383,15 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 } else {
                     toast('No message')
                 }
+                if (reciever?.afk?.isOn) {
+                    const ms = await GetMessages(reciever._id)
+                    dispatch(setCurrentChat(ms))
+                }
                 setSending(false)
             }
         }
     };
     const handleInputChange = (e) => {
-        socket.emit('typingStarted',{from:userData.value._id,to:reciever._id})
         if (e.target.value.startsWith(':emoji')) {
             setOpenEmoji(true)
             setMessage('')
@@ -470,7 +490,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
             }
             const ms = await GetMessages(chat.data)
             const cv = await GetChatList()
-            // setMessages(ms)
             dispatch(setConversations(cv))
             dispatch(setCurrentChat(ms))
         })

@@ -46,12 +46,14 @@ app.put('/editMessage',isAuth,messageController.editMessage)
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
 app.put('/likeNote',isAuth,noteController.likeNote)
 app.put('/unLikeNote',isAuth,noteController.unLikeNote)
+app.put('/changeAfkMessage',isAuth,userController.changeAfkMessage)
 
 app.patch('/changePass',userController.changePasword)
 app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
 app.patch('/acceptReq',isAuth,userController.acceptReq)
 app.patch('/changeUsername',isAuth,userController.changeUsername)
 app.patch('/disabledConfetti',isAuth,messageController.disabledConfetti)
+app.patch('/toggleAfk',isAuth,userController.toggleAfk)
 
 app.delete('/cancellRequest',isAuth,userController.cancellRequest)
 app.delete('/paymentCancelled',isAuth,paymentController.paymentCancelled);

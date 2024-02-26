@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: 'Account is already exists', success: false })
+        res.status(500).json({ message: 'Account is already exists', success: false })
     }
 }
 const OauthRegister = async (req, res) => {
@@ -82,7 +82,7 @@ const OauthRegister = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const makeHashed = async function (pass) {
@@ -134,7 +134,7 @@ const loginUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const oAuthLoginUser = async (req, res) => {
@@ -181,7 +181,7 @@ const oAuthLoginUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const generateRandom = (length, numOnly) => {
@@ -262,7 +262,7 @@ const sendMail = async (message, reciever, subject) => {
 const verifyOtp = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
-        const adminData = await User.findOne({username:"syncup",isAdmin:true})
+        const adminData = await User.findOne({ username: "syncup", isAdmin: true })
         if (userData.auth.otp.value == req.query.otp) {
             let expire = userData.auth.otp.expireAt
             if ((expire - Date.now()) >= 0) {
@@ -275,7 +275,7 @@ const verifyOtp = async (req, res) => {
                     }
                 }
                 const newMessage = new Messages({
-                    content:`Hi ${userData.username}, Welcome to syncup.You are at the right place if you are looking for a good platform to communicate.Don't forget to report any bugs at @syncupBot.....Happy Syncing.!!!`,
+                    content: `Hi ${userData.username}, Welcome to syncup.You are at the right place if you are looking for a good platform to communicate.Don't forget to report any bugs at @syncupBot.....Happy Syncing.!!!`,
                     senderId: adminData._id,
                     recieverId: userData._id,
                     isMedia: false,
@@ -492,7 +492,7 @@ const changeDp = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const cancellRequest = async (req, res) => {
@@ -540,7 +540,7 @@ const getNoti = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const acceptReq = async (req, res) => {
@@ -599,7 +599,7 @@ const changeUsername = async (req, res) => {
         return res.json({ message: "User is not authenticated" })
     } catch (error) {
         console.log(error);
-        res.json({ message: "Somthing went wrong" })
+        res.status(500).json({ message: "Somthing went wrong" })
     }
 }
 const convertPointsToPremium = async (req, res) => {
@@ -630,7 +630,7 @@ const convertPointsToPremium = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ message: error.message })
+        res.status(500).json({ message: error.message })
     }
 }
 const saveContacts = async (req, res) => {
@@ -700,15 +700,15 @@ const reportContact = async (req, res) => {
 const blockContact = async (req, res) => {
     try {
         const { userId } = req.body
-        if (userId) {
-            const user = await User.findById({ _id: userId })
+        const user = await User.findById({ _id: userId })
+        if (user) {
             const alreadyBlocked = await User.findOne({ email: req.userEmail, blockedContacts: { $elemMatch: { userId: user._id } } })
             if (!alreadyBlocked) {
                 const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $push: { blockedContacts: { userId: user._id, blockedAt: Date.now() } } })
                 if (userData) {
                     const connectData = await Connection.findOne({ userId: user._id })
                     if (connectData) {
-                        req.io.to(connectData.socketId).emit('conversationBlocked', { userId: userData._id })
+                        req.io.to(connectData.socketId).emit('conversationBlocked', { userId: user._id })
                     }
                     res.json({ success: true, message: 'User blocked' })
                 } else {
@@ -717,12 +717,12 @@ const blockContact = async (req, res) => {
             } else {
                 res.json({ success: false, message: 'User already blocked' })
             }
-        }else{
+        } else {
             res.json({ success: false, message: 'Err while blocking' })
         }
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const unBlockContact = async (req, res) => {
@@ -736,7 +736,7 @@ const unBlockContact = async (req, res) => {
                 if (userData) {
                     const connectData = await Connection.findOne({ userId: user._id })
                     if (connectData) {
-                        req.io.to(connectData.socketId).emit('conversationUnblocked', { userId: userData._id })
+                        req.io.to(connectData.socketId).emit('conversationUnblocked', { userId: user._id })
                     }
                     res.json({ success: true, message: 'User Unblocked' })
                 } else {
@@ -769,7 +769,7 @@ const getCallLogs = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: 'Err while getting logs' })
+        res.status(500).json({ success: false, message: 'Err while getting logs' })
     }
 }
 
@@ -781,7 +781,38 @@ const resetCalllogs = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: "Err while resetting logs" })
+        res.status(500).json({ success: false, message: "Err while resetting logs" })
+    }
+}
+
+const toggleAfk = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail });
+        if (userData) {
+            userData.afk.isOn = !userData.afk.isOn;
+            const savedUser = await userData.save();
+            if (savedUser) {    
+                res.json({ success: true, message: `Afk ${savedUser.afk.isOn ? "On" :"Off"}` });
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Error while toggling afk" });
+    }
+}
+
+const changeAfkMessage = async (req, res) => {
+    try {
+        const { message } = req.body
+        if (message) {
+            const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { 'afk.message': message } })
+            if (userData) {
+                res.json({ success: true, message: "Afk message updated" })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Err while changing message" })
     }
 }
 
@@ -818,5 +849,7 @@ module.exports = {
     unBlockContact,
     getCallLogs,
     resetCalllogs,
+    toggleAfk,
+    changeAfkMessage
 
 }

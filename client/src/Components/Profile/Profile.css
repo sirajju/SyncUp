@@ -42,4 +42,18 @@
     border-radius: 5px;
     padding: 10px;
     color: white;
+    height: 40px;
+}
+.afkDiv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background-color: white;
+    height: 40px;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 13px;
+    margin: 5px;
+    /* border: 1px solid rgb(234, 234, 234); */
 }
