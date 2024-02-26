@@ -79,7 +79,7 @@ function Notification({ setGo, setChat,setActiveTab }) {
                             </div>
                         </div>}
                         {el.type == "request" && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
-                            <img src={el.avatar_url} className='chatIcon' />
+                            <img src={el.avatar_url} style={{width:"60px"}} className='chatIcon' />
                             <span className='text-center p-3' style={{ width: '100%' }}>{el.type == 'request' && !userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length ? `Freind request recieved from ${el.username}` : `You accepted friend request from ${el.username}`}</span>
                             <div className="followRqstDiv"  >
 
@@ -108,7 +108,7 @@ function Notification({ setGo, setChat,setActiveTab }) {
                             </div>
                         </div>}
                         {el.type == 'acceptRQ' && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
-                            <img src={el.avatar_url} className='chatIcon' />
+                            <img src={el.avatar_url} style={{width:"60px"}} className='chatIcon' />
                             <span className='text-center p-3' style={{ width: '100%' }}>{el.message}</span>
                             <div className="followRqstDiv"  >
 
@@ -128,7 +128,7 @@ function Notification({ setGo, setChat,setActiveTab }) {
                             </div>
                         </div>}
                         {el.type == 'like' && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
-                            <img src={el.avatar_url} className='chatIcon' />
+                            <img src={el.avatar_url} style={{width:"60px"}} className='chatIcon' />
                             <span className='text-center p-3' style={{ width: '100%' }}>{`${el.username} liked your note`}</span>
                             <div className="followRqstDiv"  >
                             <button onClick={() => {setGo('');setActiveTab('My Notes')}} className="btnAccept mb-1 text-light">
