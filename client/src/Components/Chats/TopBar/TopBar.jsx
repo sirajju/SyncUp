@@ -16,18 +16,20 @@ import axios from 'axios';
 import Axios from '../../../interceptors/axios';
 import { clearNotes, setArchived, setMyNotes, setUserData } from '../../../Context/userContext';
 import toast from 'react-hot-toast';
-import { Dropdown } from 'antd';
+import { Dropdown, Switch } from 'antd';
 import CreateNote from '../../../main/Notes/CreateNote/CreateNote';
 import { useNavigate } from 'react-router-dom';
 import PremiumDailogue from '../../Premium/PremiumDailogue'
+import { MDBIcon } from 'mdb-react-ui-kit';
 
 function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   let userData = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isOpen, setOpen] = useState(false);
-  const [isPremiumModalOpen,setPremiumModalOpen]=useState(false)
+  const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [notiNum, setNotiNum] = useState(0);
+  const [afkSwitchState,setAfkSwitchState]=useState(userData.value.afk.isOn)
   const myNotes = useSelector(state => state.myNotes)
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => saveContact(codeResponse),
@@ -70,10 +72,10 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   }
 
   useEffect(() => {
-    console.log(userData.value.notifications);
     if (userData.value && userData.value.notifications) {
       setNotiNum(userData.value.notifications.filter((el) => !el.isReaded).length);
     }
+    setAfkSwitchState(false)
   }, [userData]);
 
   const copyLink = async () => {
@@ -100,21 +102,35 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     }
     Axios(options).then(res => {
       if (res.data.success) {
-        dispatch(setMyNotes(myNotes.value.filter(el=>el.isExpired==false)))
+        dispatch(setMyNotes(myNotes.value.filter(el => el.isExpired == false)))
         toast.success(res.data.message)
       } else {
         toast.error(res.data.message)
       }
     })
   }
-  
+  const toggleAfk = function () {
+    const options = {
+        route: "toggleAfk",
+        headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+        method: "PATCH"
+    }
+    Axios(options).then(res => {
+        if (res.data.success) {
+            dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
+        } else {
+            toast.error(res.data.message)
+        }
+    })
+}
   const itemFunction = {
     reffer: copyLink,
     createNote: () => setOpen(!isOpen),
     myNotes: () => setActiveTab('My Notes'),
     premium: () => navigate('/plans'),
-    clearNotes:clearUserNotes,
-    scheduleMsg:()=>!userData.value.isPremium && setPremiumModalOpen(true)
+    clearNotes: clearUserNotes,
+    scheduleMsg: () => !userData.value.isPremium && setPremiumModalOpen(true),
+    afk:()=>userData.value.isPremium ? setGo('Profile') : setPremiumModalOpen(true)
 
   };
   const canCreateNote = function () {
@@ -150,7 +166,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
       label: 'Clear expired notes',
       key: 'clearNotes',
       icon: <img className='menuIcon' src={deleteIcon} alt='Clear notes' />,
-      disabled:!myNotes.value?.filter(el=>el?.isExpired==true).length
+      disabled: !myNotes.value?.filter(el => el?.isExpired == true).length
     },
   ];
 
@@ -159,6 +175,12 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
       label: <span className='premiumRequired'>Schedule message</span>,
       key: 'scheduleMsg',
       icon: <img className='menuIcon' src={scheduleIcon} alt='Schedule Message' />,
+    },
+    {
+      label:
+        <span className='premiumRequired' style={{display:"flex",justifyContent:"space-between",alignItems:"center"}} >AFK {!userData.value.afk.isOn ? <span style={{color:'red',fontSize:"10px"}} >Not active</span>: <span style={{color:'green',fontSize:"10px"}} >Active</span> } </span>,
+      key: 'afk',
+      icon: <MDBIcon far icon="keyboard" />,
     },
     {
       label: <span className='premiumRequired'>Premium</span>,
@@ -183,7 +205,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
       <div className="chatOptions">
         <div>
           {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}
-          <img src={notification} onClick={() => {setGo('Notifications');dispatch(setUserData({...userData.value,notifications:userData.value.notifications.map(el=>el={...el,isReaded:true})}))}} className='icon notificationsIcon' alt='Notification' />
+          <img src={notification} onClick={() => { setGo('Notifications'); dispatch(setUserData({ ...userData.value, notifications: userData.value.notifications.map(el => el = { ...el, isReaded: true }) })) }} className='icon notificationsIcon' alt='Notification' />
         </div>
         <CreateNote isOpen={isOpen} setOpen={setOpen} />
         <PremiumDailogue isModalOpen={isPremiumModalOpen} setIsModalOpen={setPremiumModalOpen} />
