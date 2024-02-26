@@ -717,8 +717,11 @@ const blockContact = async (req, res) => {
             } else {
                 res.json({ success: false, message: 'User already blocked' })
             }
+        }else{
+            res.json({ success: false, message: 'Err while blocking' })
         }
     } catch (error) {
+        console.log(error);
         res.json({ success: false, message: error.message })
     }
 }

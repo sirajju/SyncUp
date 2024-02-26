@@ -384,7 +384,7 @@ const createBroadcast = async (req, res) => {
 
 const getBroadcasts = async (req, res) => {
     try {
-        const broadcastData = await Broadcast.find()
+        const broadcastData = await (await Broadcast.aggregate([{$sort:{createdAt:1}}])).reverse()
         if (broadcastData) {
             const encData = encryptData(broadcastData)
             if (encData) {

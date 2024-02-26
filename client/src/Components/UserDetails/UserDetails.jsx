@@ -18,18 +18,21 @@ function UserDetails({ chat, reciever ,setChat}) {
     const [conversation, setConversation] = useState(null)
     const dispatch = useDispatch()
     const [reason, setReason] = useState('')
+    const getUser = function(){
+        const options = {
+            route: "getUserInfo",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            params: { userId: chat.data },
+            crypto: true,
+        }
+        Axios(options).then(res => {
+            setUser(res.data.body)
+        })
+    }
     useEffect(() => {
         if (reciever) {
             setUser(reciever)
-            const options = {
-                route: "getUserInfo",
-                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                params: { userId: chat.data },
-                crypto: true,
-            }
-            Axios(options).then(res => {
-                setUser(res.data.body)
-            })
+            getUser()
             if (me) {
                 const res = me.value.blockedContacts?.filter(el => el.userId == reciever._id)?.length
                 setBlocked(res)

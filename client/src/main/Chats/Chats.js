@@ -45,7 +45,6 @@ function Chats() {
     useEffect(() => {
 
         // Fetch callLogs
-
         const fetchLogs = async function () {
             const options = {
                 route: "getCallLogs",
@@ -62,7 +61,6 @@ function Chats() {
         }
 
         // Fetch selfNotes
-
         const fetchMyNotes = async function () {
             const options = {
                 route: "getMyNotes",
@@ -126,14 +124,14 @@ function Chats() {
             GetChatList('chat use effect').then(res => {
                 dispatch(setConversations(res))
             }).then(getAds)
-            .then(fetchNotes)
-            .then(fetchMyNotes)
-            .then(fetchLogs)
-            .then(function finish(){
-                setTimeout(() => {
-                    setLoading(false)
-                }, 500)
-            }).catch((err)=>toast.error(err.message))
+                .then(fetchNotes)
+                .then(fetchMyNotes)
+                .then(fetchLogs)
+                .then(function finish() {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 500)
+                }).catch((err) => toast.error(err.message))
         }
         a()
         // Making responsive on mobile screen
@@ -144,7 +142,8 @@ function Chats() {
                 setGo('')
             }
         })
-
+    }, [])
+    useEffect(() => {
         // Setting socket id on connected
         socket.on('connect', () => {
             if (userData.value._id) {

@@ -119,7 +119,7 @@ function intializeSocket(server) {
                         }
                         const roomData = await Room.findOne({ senderId: { $in: [data.senderId, data.recieverId] }, recieverId: { $in: [data.senderId, data.recieverId] } })
                         socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
-                        socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
+                        // socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                     }
                 }
             })
@@ -135,7 +135,7 @@ function intializeSocket(server) {
                         }
                         const roomData = await Room.findOne({ senderId: { $in: [data.senderId, data.recieverId] }, recieverId: { $in: [data.senderId, data.recieverId] } })
                         socket.to(recieverConnection.socketId).emit('messageRecieved', { newMessage })
-                        socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
+                        // socket.to(roomData.roomId).emit('messageRecieved', { newMessage })
                     }
                 }
             })

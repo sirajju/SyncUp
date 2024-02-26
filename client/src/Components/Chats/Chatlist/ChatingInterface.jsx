@@ -54,6 +54,15 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const socket = useSocket()
     const [isTyping, setTyping] = useState(false)
     const conversation = useSelector(state => state.conversations)
+    useEffect(()=>{
+        socket.on('typing', () => {
+            console.log('typing');
+            setTyping(true)
+        })
+        socket.on('typingEnd', () => {
+            setTyping(false)
+        })
+    },[socket])
     useEffect(() => {
         console.log('conversation userDetails top bar');
         setLoading(true)
@@ -70,13 +79,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
         Axios(options).then(res => {
             dispatch(setCurrentChat((res.data.body)))
         })
-        socket.on('typing', () => {
-            console.log('typing');
-            setTyping(true)
-        })
-        socket.on('typingEnd', () => {
-            setTyping(false)
-        })
+        
     }, [reciever, socket])
     const goToProfile = function (e) {
         setChat({ type: "UserProfile", data: reciever._id })
@@ -113,7 +116,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
 
 };
 
-const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, isConfettiActive, chat }) => {
+const MessageRenderer = ({ isBlocked, reciever, openGreeting, setReciever, setConfettiActive, isConfettiActive, chat }) => {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const doodleRef = useRef()
@@ -186,32 +189,10 @@ const MessageRenderer = ({ isBlocked, reciever, setReciever, setConfettiActive, 
     const downloadImage = function (el) {
         saveAs(el.mediaConfig.url, `image_syncUp_${el.sentTime}`)
     }
-    const openGreeting = function (e) {
-        setConfettiActive(true)
-    }
-    const changeConfettiState = () => {
-        setConfettiActive(false)
-        const options = {
-            route: "disabledConfetti",
-            params: { userId:chat.data },
-            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            method: "PATCH"
-        }
-        Axios(options).then(async res => {
-            if (!res.data.success) {
-                toast.error(res.data.message)
-            }
-            const ms = await GetMessages(chat.data)
-            const cv = await GetChatList()
-            setMessages(ms)
-            dispatch(setConversations(cv))
-            dispatch(setCurrentChat(ms))
-        })
-    }
+
     return (
         <div className="chatinInterface">
 
-            {isConfettiActive && <Confetti recycle={false} active={isConfettiActive} onConfettiComplete={() => changeConfettiState()} />}
             <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
                 {/*Confirm message for deleted message*/}
                 <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
@@ -289,7 +270,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(setConversations(res))
             }
         })
-        socket.on('conversationBlocked', async (data) => {
+        socket.on('conversationUnblocked', async (data) => {
             if (reciever) {
                 dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
                 setBlocked(false)
@@ -303,6 +284,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(markEdited({ msgId: data.msgId, content: data.content }))
             }
         })
+    },[socket])
+    useEffect(() => {
         if (chat.type == 'chat') {
             setMessage('')
             socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
@@ -388,6 +371,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
     };
     const handleInputChange = (e) => {
+        socket.emit('typingStarted',{from:userData.value._id,to:reciever._id})
         if (e.target.value.startsWith(':emoji')) {
             setOpenEmoji(true)
             setMessage('')
@@ -469,6 +453,28 @@ function ChatingInterface({ setGo, setChat, chat }) {
             setMessage((msg) => msg.slice(0, -1));
         }
     };
+    const openGreeting = function (e) {
+        setConfettiActive(true)
+    }
+    const changeConfettiState = () => {
+        setConfettiActive(false)
+        const options = {
+            route: "disabledConfetti",
+            params: { userId: chat.data },
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            method: "PATCH"
+        }
+        Axios(options).then(async res => {
+            if (!res.data.success) {
+                toast.error(res.data.message)
+            }
+            const ms = await GetMessages(chat.data)
+            const cv = await GetChatList()
+            // setMessages(ms)
+            dispatch(setConversations(cv))
+            dispatch(setCurrentChat(ms))
+        })
+    }
     const props = {
         chat,
         setChat,
@@ -488,7 +494,9 @@ function ChatingInterface({ setGo, setChat, chat }) {
         isBlocked,
         fileInputRef,
         setConfettiActive,
-        isConfettiActive
+        isConfettiActive,
+        openGreeting,
+        changeConfettiState
     }
 
     return (
@@ -502,6 +510,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
             {(chat.type == 'chat' && reciever) && (
                 <div className="conversationContainer">
                     <ConversationTopBar {...props} />
+                    {isConfettiActive && <Confetti recycle={false} active={isConfettiActive} onConfettiComplete={() => changeConfettiState()} />}
+
                     <MessageRenderer {...props} />
                     <ConversationBottom {...props} removeLastEmoji={removeLastEmoji} />
                     {file?.data && <MediaSender isSending={isSending} setCaption={setCaption} sendMedia={sendMedia} fileInputRef={fileInputRef} setMedia={setMedia} file={file} />}

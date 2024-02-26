@@ -25,6 +25,7 @@ function CurrentList({ setChat, setGo }) {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const [isConfirmed, setConfirmed] = useState(false)
+    const [dailogueData,setDailogueData]=useState({})
     const dispatch = useDispatch()
     const [selectedConv, setSelectedConv] = useState(null)
     const setConversation = function (id) {
@@ -34,12 +35,33 @@ function CurrentList({ setChat, setGo }) {
     const gettUnread = function (msgs) {
         return msgs?.filter(el => (el?.isReaded == false && el.senderId != userData.value._id && !el.isDeleted))?.length
     }
-    const clearMessage = function () {
+    const clearMessage = function (el) {
         setConfirmed(false)
         const options = {
             route: "clearConversationMessages",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            params: { chatId: selectedConv._id }
+            params: { chatId: el._id }
+        }
+        Axios(options).then(async res => {
+            if (res.data.success) {
+                setChat({})
+                dispatch(setCurrentChat([]))
+                dispatch(setGlobalConversation(await GetChatlist()))
+                toast.success(res.data.message)
+            }
+        })
+    }
+    const deleteConversation = function () {
+        setConfirmed(false)
+        
+    }
+    const blockUser = function (el) {
+        setConfirmed(false)
+        const options = {
+            route: "blockContact",
+            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+            payload: { userId: el.opponent[0]._id },
+            method:"POST"
         }
         Axios(options).then(async res => {
             if (res.data.success) {
@@ -52,7 +74,12 @@ function CurrentList({ setChat, setGo }) {
     }
     const itemFunction = {
         viewContact: (el) => { setChat({ type: "UserProfile", data: el.opponent[0]._id }) },
-        clearMessage: (el) => {setSelectedConv(el); setConfirmed(true)}
+        // clearMessage: (el) => { setSelectedConv(el); setDailogueData({content:"Do you want to clear messages of the current Conversation.?",params:el,posFunc:clearMessage,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
+        // deleteConversation: (el) => { setSelectedConv(el); setDailogueData({content:"Do you want to delete this current Conversation.?",params:el,posFunc:deleteConversation,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
+        // blockUser: (el) => { setSelectedConv(el); setDailogueData({content:`Do you want to block ${el.opponent[0].username}..?`,params:el,posFunc:blockUser,children:"Note : You will not able send or recieve messages "});setConfirmed(true); },
+        clearMessage,
+        deleteConversation,
+        blockUser
     }
     const myNotesItems = [
         // {
@@ -80,7 +107,9 @@ function CurrentList({ setChat, setGo }) {
     ];
     return (
         <>
-            <Confirmation title="Think again.." posFunc={clearMessage} content={'Do you want to clear messages of this current Conversation.?'} value={isConfirmed} func={setConfirmed} />
+            <Confirmation title="Think again.." posFunc={dailogueData.posFunc} content={dailogueData.content} value={isConfirmed} func={setConfirmed}>
+                <p className='text-danger m-3 mb-1' style={{ fontSize: "13px" }} >{dailogueData.children}</p>
+            </Confirmation>
             {conversations.value.length && conversations.value.map((el, key) => {
                 const a = gettUnread(el.messages)
                 return (
@@ -99,7 +128,7 @@ function CurrentList({ setChat, setGo }) {
                                     {el?.messages.length ? <p className="lastMessage" style={{ whiteSpace: "nowrap" }}> {el.last_message?.isDeleted ? "This messsage has been vanished" : !el.last_message?.isMedia ? el.last_message?.content.slice(0, 45) : <img style={{ width: "20px" }} src={imageIcon} />}</p> : ""}
                                 </div>
                                 <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">
-                                    {el.last_message ? <h6 className='lastMsgTime' style={{whiteSpace:"nowrap"}}>{new Date(parseInt(el.last_message.sentTime)).getDate() == new Date().getDate() ? (el.sentTimeString ? el.sentTimeString : new Date(parseInt(el.last_message.sentTime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: "2-digit", hour12: true })) : new Date(parseInt(el.last_message.sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" : (el.sentDateString ? el.sentDateString : new Date(parseInt(el.last_message.sentTime)).toLocaleDateString())} </h6> : <h6 className='lastMsgTime' >None</h6>}
+                                    {el.last_message ? <h6 className='lastMsgTime' style={{ whiteSpace: "nowrap" }}>{new Date(parseInt(el.last_message.sentTime)).getDate() == new Date().getDate() ? (el.sentTimeString ? el.sentTimeString : new Date(parseInt(el.last_message.sentTime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: "2-digit", hour12: true })) : new Date(parseInt(el.last_message.sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" : (el.sentDateString ? el.sentDateString : new Date(parseInt(el.last_message.sentTime)).toLocaleDateString())} </h6> : <h6 className='lastMsgTime' >None</h6>}
                                     <p className={`unreadMsgCount ${a ? 'visible' : 'invisible'}`} >{a}</p>
                                 </div>
                             </div>
