@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux'
 import { markScheduledSent, setScheduledMsgs } from '../../Context/userContext'
 import { useSocket } from '../../Context/socketContext';
+import Confirmation from '../Confirmation/Dailogue'
 
 
 function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
@@ -20,6 +21,7 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
     const [isInvalid, setInvalid] = useState(false)
     const scheduledMsg = useSelector(state => state.scheduledMsg)
     const socket = useSocket()
+    const [openDltConfirm,setOpenDltConfirm] = useState(false)
     const [data, setData] = useState([])
     const [err, setErr] = useState('')
     const dispatch = useDispatch()
@@ -34,7 +36,6 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
             if (res.data.success) {
                 setSubLoading(false)
                 dispatch(setScheduledMsgs(res.data.body))
-                
             }
         })
     }
@@ -43,22 +44,12 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
             setData(scheduledMsg.value)
         }
     }, [scheduledMsg])
-    useEffect(()=>{
-        socket.on('scheduledMsgSent',(data)=>{
+    useEffect(() => {
+        socket.on('scheduledMsgSent', (data) => {
             dispatch(markScheduledSent(data.msg))
         })
-    },[socket])
-    const menuItems = [
-        {
-            label: "New",
-            icon: <MDBIcon fas icon="plus" />
-        },
-        {
-            label: "Delete all",
-            danger: true,
-            icon: <MDBIcon far icon="trash-alt" />
-        }
-    ];
+    }, [socket])
+    
     const handleInputChange = function (e) {
         let data = { ...scheduleData, [e.target.id]: e.target.value }
         if (e.target.id == 'username') {
@@ -122,8 +113,33 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
             setErr('Please fill everything')
         }
     }
+    const dltAllScheduledMsgs = function(){
+        dispatch(setScheduledMsgs([]))
+        setData([])
+        const options = {
+            route:"clearScheduledMsgs",
+            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
+            method:"DELETE"
+        }
+        Axios(options).then(res=>{
+            if(!res.data.success){
+                toast.error(res.data.message)
+            }
+        })
+    }
+    const menuItems = [
+        {
+            label: "Delete all",
+            danger: true,
+            icon: <MDBIcon far icon="trash-alt" />,
+            key:"clearMsgs"
+        }
+    ];
+    const itemFunction = {
+        clearMsgs:()=>setOpenDltConfirm(true)
+    }
     return (
-        <>
+        <div className='scheduleMsgsPage'>
             <div className="scheduleOptions">
                 <button onClick={() => setGo('')} >
                     <MDBIcon fas icon="angle-left" />
@@ -133,7 +149,7 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
                         arrow
                         menu={{
                             items: menuItems,
-                            // onClick: ({ key }) => itemFunction[key]?.call(),
+                            onClick: ({ key }) => itemFunction[key]?.call(),
                         }}
                         trigger={['click']}
                     >
@@ -144,8 +160,9 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
 
             <div className="scheduleMsgParent">
                 <FloatButton onClick={() => setOpen(true)} icon={<MDBIcon fas icon="plus" />} badge={'status'} style={{ position: "absolute" }} />
-                {isSubLoading && <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> }
-                {Boolean(!isSubLoading &&data?.length) ? data.map(el => {
+                <Confirmation posFunc={dltAllScheduledMsgs} title='Are you sure ?' content="This action will delete every scheduled messages." value={openDltConfirm} func={setOpenDltConfirm} />
+                {isSubLoading && <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div>}
+                {Boolean(!isSubLoading && data?.length) ? data.map(el => {
                     return (
                         <div className={`scheduleMsgItem`} >
                             <img src={el.recieverData.avatar_url} className='chatIcon' style={{ maxWidth: "60px" }} />
@@ -161,6 +178,7 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
                         </div>
                     )
                 }) : (!isSubLoading) && "No data"}
+
                 <Dailogue okBtnDisabled={!isValidated || isInvalid} okBtnText='Schedule' noBtnText='Cancell' posFunc={handleSubmit} value={isOpen} func={setOpen} title="Schedule message">
                     <div className='newScheduleMsg' >
                         <Input id='username' className={isInvalid && "invalid"} value={scheduleData.username} onChange={handleInputChange} placeholder="Enter recipient username" />
@@ -171,7 +189,7 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
                     </div>
                 </Dailogue>
             </div>
-        </>
+        </div>
     );
 }
 
