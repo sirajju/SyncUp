@@ -526,7 +526,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     <h1>Premium user</h1>
                 </div>
             )}
-            {(!userData.value.isPremium && !chat.type) && <Ads />}
+            {(!userData.value.isPremium && !chat.type) && <Ads chat={chat} />}
             {(chat.type == 'chat' && reciever) && (
                 <div className="conversationContainer">
                     <ConversationTopBar {...props} />
