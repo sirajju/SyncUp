@@ -43,7 +43,6 @@ function Chats() {
     const [activeTab, setActiveTab] = useState('Chats')
     const currentChat = useSelector(state => state.currentChat)
     useEffect(() => {
-
         function getAxiosOptions(route) {
             return {
                 route: route,

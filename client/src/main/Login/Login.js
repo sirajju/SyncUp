@@ -109,15 +109,15 @@ function Login() {
                 else if (res.data.err == 'EMAILNOTVERERR') {
                     localStorage.setItem('SyncUp_Auth_Token', res.data.token)
                     setAuth({ hasToVerify: true })
+                    dispatch(hideLoading())
                     toast.error(res.data.message)
                 }
                 else {
+                    dispatch(hideLoading())
                     toast.error(res.data.message)
                 }
             })
-            setTimeout(() => {
-                dispatch(hideLoading())
-            }, 1000);
+
         }
         else {
             toast.error("Please fill everything")
