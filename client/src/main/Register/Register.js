@@ -54,6 +54,7 @@ function Register() {
     }
     const handleChange = (e) => {
         const refferal = params.get('refferal')
+        console.log(refferal);
         if (refferal) {
             setUserData({ ...userData, refferal });;
         }
