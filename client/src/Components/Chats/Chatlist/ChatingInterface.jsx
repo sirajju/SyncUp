@@ -55,7 +55,6 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const [isTyping, setTyping] = useState(false)
     const conversation = useSelector(state => state.conversations)
     useEffect(() => {
-        console.log('conversation userDetails top bar');
         setLoading(true)
         GetChatList('conversationTop').then(res => {
             dispatch(setConversations(res))
@@ -113,25 +112,23 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
 
 };
 
-const MessageRenderer = ({ isBlocked, reciever, openGreeting, setReciever, setConfettiActive, isConfettiActive, chat }) => {
+const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, setReciever, setConfettiActive, isConfettiActive, chat }) => {
     const userData = useSelector(state => state.user)
-    const socket = useSocket()
     const doodleRef = useRef()
     const [messages, setMessages] = useState([])
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
     const [messageId, setMessageId] = useState(null)
     const [isConfirmed, displayConfirm] = useState(false)
-    const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
     const [editedMessage, setEdited] = useState('')
     const [showEdit, openEdit] = useState(false)
     const currentChat = useSelector(state => state.currentChat)
     const { show } = useContextMenu({ id: 'MENU_ID' });
+    const [isLoading, setLoading] = useState(false)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
         if (!currentChat.value?.length) {
-            console.log('running on local chat');
             if (data[0]?.messages?.length) {
                 setMessages(data[0].messages)
             } else {
@@ -199,44 +196,46 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, setReciever, setCo
                 </ConfirmBox>
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
+                {isChatLoading &&<div className='subLoader' style={{height:"100%"}} > <span className="subLoaderSpinner" ></span> </div>}
+                {!isChatLoading &&
+                    messages?.length && (
+                        messages.map((el, ind) => {
+                            if (el.isConfettiEnabled && el.senderId != userData.value._id) { openGreeting() }
+                            return (
+                                <>
+                                    {el.senderId === userData.value._id ? (
+                                        <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                            <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
+                                                <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
+                                                <p className='p-1 text-start' >{el.content}</p>
+                                            </>)}</div>
+                                            {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
+                                            <span className={`messageStatusIndicator`}>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
+                                        </div>
+                                    ) : (
+                                        <div key={ind} className={`message leftMessage text-center`}>
+                                            <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
+                                                <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
+                                                <p className='p-1' >{el.content}
+                                                    {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
+                                                </p>
+                                            </>)}</div>
 
-                {messages?.length ? (
-                    messages.map((el, ind) => {
-                        if (el.isConfettiEnabled && el.senderId != userData.value._id) { openGreeting() }
-                        return (
-                            <>
-                                {el.senderId === userData.value._id ? (
-                                    <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
-                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
-                                            <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
-                                            <p className='p-1 text-start' >{el.content}</p>
-                                        </>)}</div>
-                                        {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
-                                        <span className={`messageStatusIndicator`}>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
-                                    </div>
-                                ) : (
-                                    <div key={ind} className={`message leftMessage text-center`}>
-                                        <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
-                                            <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
-                                            <p className='p-1' >{el.content}
-                                                {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
-                                            </p>
-                                        </>)}</div>
-
-                                        <span className={`messageStatusIndicator`}> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
-                                    </div>
-                                )}
-                            </>
-                        )
-                    })
-                ) : (
+                                            <span className={`messageStatusIndicator`}> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        })
+                    )}
+                {(!messages?.length && isChatLoading)&&
                     <div className="newConversation">
                         <div>
                             <img src={chat_svg} alt="" />
                             <h6> {isBlocked ? "You cannot message to this user" : 'Begin a conversation by sending "Hi"'} </h6>
                         </div>
                     </div>
-                )}
+                }
             </div>
         </div>
     )
@@ -252,6 +251,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     const [openEmoji, setOpenEmoji] = useState(false)
     const [file, setMedia] = useState(false)
     const [isConfettiActive, setConfettiActive] = useState(false)
+    const [isChatLoading, setChatLoading] = useState(false)
     const fileInputRef = useRef()
     const inputRef = useRef();
     const [caption, setCaption] = useState(null)
@@ -299,6 +299,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
     }
     useEffect(() => {
         if (chat.type == 'chat') {
+            // setChatLoading(true)
             setMessage('')
             socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
 
@@ -308,6 +309,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 } else {
                     dispatch(setCurrentChat([]))
                 }
+                // setChatLoading(false)
             })
             const chatData = conversation.value.filter(el => el.opponent[0]._id == chat.data)
             if (chatData && chatData[0]?.opponent[0]) {
@@ -516,7 +518,9 @@ function ChatingInterface({ setGo, setChat, chat }) {
         setConfettiActive,
         isConfettiActive,
         openGreeting,
-        changeConfettiState
+        changeConfettiState,
+        isChatLoading,
+        setChatLoading
     }
 
     return (

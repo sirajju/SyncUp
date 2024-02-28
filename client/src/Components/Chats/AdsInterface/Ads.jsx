@@ -56,7 +56,7 @@ const App = ({ chat }) => {
     }, [ads, chat])
     return (
         <>
-            <Carousel className='adsContainer' autoplaySpeed={3000} dots={false} effect="fade" autoplay>
+            <Carousel className='adsContainer'dots={false} effect="fade" autoplay>
                 {data.length && data.map((el, ind) => {
                     return (
                         <div key={ind}>
