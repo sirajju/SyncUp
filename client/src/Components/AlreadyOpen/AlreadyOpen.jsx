@@ -14,6 +14,7 @@ function AlreadyOpen() {
     useEffect(()=>{
         dispatch(hideLoading())   
     },[])
+   
     return (
         <div className="otpContainer">
             <Box style={boxStyle}>
