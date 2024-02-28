@@ -33,12 +33,12 @@ export default function Basic() {
         route: "changeDp"
       }
       Axios(options).then(res => {
-        if (res.data.success) {
+        if (res?.data?.success) {
           toast.success(res.data.message)
-          dispatch(setUserData({ ...userData, avatar_url: secureUrl }))
+          dispatch(setUserData({ ...userData.value, avatar_url: secureUrl }))
           closeBtnRef.current.click()
         } else {
-          toast.error(res.data.message)
+          toast.error(res?.data?.message)
         }
       })
 

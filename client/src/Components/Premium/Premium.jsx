@@ -121,6 +121,7 @@ const Bigbox = function (props) {
             const res = await Axios(options)
             const result = await stripe.redirectToCheckout({
                 sessionId: res.data.id,
+                
             })
             if (result.error) {
                 toast.error(result.error);
