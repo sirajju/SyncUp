@@ -14,12 +14,30 @@ const message = new mongoose.Schema({
     isEdited:{type:Boolean,default:false},
     editedContent:{type:String},
     type:{type:String},
-    
+    isScheduled:{
+        type:Boolean,
+        default:false
+    },
+    scheduledConfig:{
+        date:{
+            type:String,
+        },
+        time:{
+            type:Object,
+        },
+        createdTime:{
+            type:Number
+        }
+    },
     clearedParticipants:{
         type:Array,
         default:[]
     },
     isConfettiEnabled:{
+        type:Boolean,
+        default:false
+    },
+    isScheduleCompleted:{
         type:Boolean,
         default:false
     },

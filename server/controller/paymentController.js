@@ -10,6 +10,15 @@ const createPaymentSession = async (req, res) => {
             const token = generateRandom(50, false)
             const em = `http://localhost:3000/plans?token=${token}&&u=${btoa(req.userEmail)}`
             console.log(em);
+            await stripe.customers.create({
+                name: 'Customer Name',
+                address: {
+                  line1: 'Address Line 1',
+                  city: 'City',
+                  postal_code: 'Postal Code',
+                  country: 'IN', // India
+                }
+              })
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
                 line_items: [
@@ -21,7 +30,11 @@ const createPaymentSession = async (req, res) => {
                 mode: plan == 'Monthly' ? "subscription" : "payment",
                 success_url: em,
                 cancel_url: `http://localhost:3000/plans?isCancelled=true`,
-                customer_email: req.userEmail
+                customer_email: req.userEmail,
+                currency:"inr",
+                shipping_address_collection: {
+                    allowed_countries: ['IN'] // Restrict to India
+                }
             })
             if (session) {
                 const userData = await User.findOne({ email: req.userEmail })
@@ -55,6 +68,7 @@ const verifyPremium = async(req,res)=>{
         if(token){
             const userData=await User.findOne({email:req.userEmail})
             const premiumData = await Premium.findOne({userId:userData._id})
+            console.log(premiumData,token);
             if(premiumData.authToken==token){
                 const updateData = await User.findOneAndUpdate({email:req.userEmail},{$set:{isPremium:true}})
                 const premiumUpdate = await Premium.findOneAndUpdate({userId:userData._id},{$set:{paymentStatus:"success",authToken:''}})

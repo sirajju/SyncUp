@@ -101,7 +101,11 @@
     color: white;
 }
 
-
+.lastMessage {
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 45vh;
+}
 
 @media (max-width:700px){
     .smallAds{

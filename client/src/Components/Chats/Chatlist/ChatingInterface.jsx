@@ -351,12 +351,12 @@ function ChatingInterface({ setGo, setChat, chat }) {
             }
         })
 
-    }, [chat,userData]);
-    useEffect(()=>{
-        if(userData.value.afk.isOn &&chat.type){
+    }, [chat, userData]);
+    useEffect(() => {
+        if (userData.value.afk.isOn && chat.type) {
             toggleAfk()
         }
-    },[chat])
+    }, [chat])
     const sendMessage = async () => {
         if (isSending) {
             return toast('Umm..trafic makes slow')
@@ -380,13 +380,14 @@ function ChatingInterface({ setGo, setChat, chat }) {
                     socket.emit('sendMsg', newMsg)
                     dispatch(addNewMessage(newMsg))
                     GetChatList('from first message sender').then(res => dispatch(setConversations(res)))
+                    if (reciever?.afk?.isOn) {
+                        const ms = await GetMessages(reciever._id)
+                        dispatch(setCurrentChat(ms))
+                    }
                 } else {
                     toast('No message')
                 }
-                if (reciever?.afk?.isOn) {
-                    const ms = await GetMessages(reciever._id)
-                    dispatch(setCurrentChat(ms))
-                }
+
                 setSending(false)
             }
         }

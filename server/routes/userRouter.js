@@ -25,6 +25,8 @@ app.get('/getNotes',isAuth,noteController.getNotes);
 app.get('/getMyNotes',isAuth,noteController.getMyNotes);
 app.get('/getCallLogs',isAuth,userController.getCallLogs);
 app.get('/clearConversationMessages',isAuth,messageController.clearMessages)
+app.get('/checkContactByUsername',isAuth,userController.checkContactByUsername)
+app.get('/getScheduledMessages',isAuth,messageController.getScheduledMessages)
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);
@@ -41,6 +43,7 @@ app.post('/reportContact',isAuth,userController.reportContact)
 app.post('/blockContact',isAuth,userController.blockContact)
 app.post('/unBlockContact',isAuth,userController.unBlockContact)
 app.post('/publishNote',isAuth,noteController.publishNote)
+app.post('/scheduleMessage',isAuth,messageController.scheduleMessage)
 
 app.put('/editMessage',isAuth,messageController.editMessage)
 app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)

@@ -1,16 +1,19 @@
 import React from 'react'
 import './ChatBox.css'
 
-function ChatBox({ children ,rightComponent }) {
+function ChatBox({ children, rightComponent }) {
     return (
-        <div className="chatsContainer">
-            <div className="chatsLeft chatsStyle">
-                {children}
+        <>
+        {/* <div className="navbarBannedParent"></div> */}
+            <div className="chatsContainer">
+                <div className="chatsLeft chatsStyle">
+                    {children}
+                </div>
+                <div className="chatsRight chatsStyle">
+                    {rightComponent}
+                </div>
             </div>
-            <div className="chatsRight chatsStyle">
-                {rightComponent}
-            </div>
-        </div>
+        </>
     )
 }
 

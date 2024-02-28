@@ -84,10 +84,10 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
         navigator.share({
           title: 'SyncUp',
           text: 'Share your referral link by',
-          url: `http://${window.location.hostname}:3000/register?referral=${btoa(userData.value.email)}`,
+          url: `http://${window.location.hostname}:3000/register?refferal=${btoa(userData.value.email)}`,
         });
       }
-      await navigator.clipboard.writeText(`Hi, User ${userData.value.username} wants to connect with you on SyncUp.\n\nClick the link to join:\nhttp://localhost:3000/register?referral=${btoa(userData.value.email)}`);
+      await navigator.clipboard.writeText(`Hi, User ${userData.value.username} wants to connect with you on SyncUp.\n\nClick the link to join:\nhttp://localhost:3000/register?refferal=${btoa(userData.value.email)}`);
       toast.success('Link copied to clipboard');
     } catch (error) {
       console.error('Failed to copy link:', error);
@@ -129,7 +129,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     myNotes: () => setActiveTab('My Notes'),
     premium: () => navigate('/plans'),
     clearNotes: clearUserNotes,
-    scheduleMsg: () => !userData.value.isPremium && setPremiumModalOpen(true),
+    scheduleMsg: () => !userData.value.isPremium ? setPremiumModalOpen(true) : setGo('ScheduleMessages'),
     afk:()=>userData.value.isPremium ? setGo('Profile') : setPremiumModalOpen(true)
 
   };
@@ -178,7 +178,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     },
     {
       label:
-        <span className='premiumRequired' style={{display:"flex",justifyContent:"space-between",alignItems:"center"}} >AFK {!userData.value.afk.isOn ? <span style={{color:'red',fontSize:"10px"}} >Not active</span>: <span style={{color:'green',fontSize:"10px"}} >Active</span> } </span>,
+        <span className='premiumRequired' style={{display:"flex",justifyContent:"space-between",alignItems:"center"}} >AFK {!userData.value.afk.isOn ? <span style={{color:'red',fontSize:"10px"}} >InActive</span>: <span style={{color:'green',fontSize:"10px"}} >Active</span> } </span>,
       key: 'afk',
       icon: <MDBIcon far icon="keyboard" />,
     },
@@ -201,7 +201,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   }
   return (
     <div className="topBarContainer">
-      <input type="text" onChange={handleSearch} maxLength={20} placeholder='Enter username' className="searchBar" />
+      <input type="text" onChange={handleSearch} maxLength={20} placeholder='Enter username or email' className="searchBar" />
       <div className="chatOptions">
         <div>
           {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}

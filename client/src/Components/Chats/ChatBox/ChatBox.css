@@ -32,6 +32,30 @@
     align-items: center;
     color: white;
 }
+.subLoader {
+    height: 75%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.subLoaderSpinner {
+    border: 3px solid #ee9ae5ff;
+    border-top: 3px solid transparent; 
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    animation: spin 0.5s linear infinite;
+}
+
+/* .navbarBannedParent {
+    position: absolute;
+    top:0;
+    width: 100%;
+    height: 50px;
+    background-color: red;
+    z-index: 54456;
+} */
 @media (max-width:700px){
     .chatsRight{
         display: none;

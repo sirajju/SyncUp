@@ -11,6 +11,7 @@ const Note = require('../models/noteSchema')
 const { encryptData } = require('./userController')
 const { ObjectId } = require('mongodb')
 const { toArray } = require('lodash')
+const cron = require('node-cron')
 
 cloudinary.config({
     cloud_name: 'djjuaf3cz',
@@ -92,7 +93,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                 senderId: userData._id,
                 recieverId,
                 content,
-                sentTime:Date.now()
+                sentTime: Date.now()
             })
             if (!conversationData) {
                 await new Conversation({
@@ -122,7 +123,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                     senderId: recieverData._id,
                     recieverId: userData._id,
                     content,
-                    sentTime:Date.now()
+                    sentTime: Date.now()
                 }).save()
                 await Conversation.findByIdAndUpdate({ _id: conversationData._id }, { $push: { messages: afkMessage._id } })
             }
@@ -335,6 +336,84 @@ const clearMessages = async (req, res) => {
     }
 }
 
+const getScheduledMessages = async(req,res)=>{
+    try {
+        const userData = await User.findOne({email:req.userEmail})
+        if(userData){
+            const scheduleData = await Message.aggregate([{$match:{senderId:userData._id.toString(),isScheduled:true}},{$addFields:{recieverObjectId:{$toObjectId:"$recieverId"}}},{$lookup:{from:"users",localField:"recieverObjectId",foreignField:"_id",as:"recieverData"}},{$project:{'recieverData.avatar_url':1,'recieverData.username':1,'recieverData.email':1,scheduledConfig:1,isScheduleCompleted:1,content:1,sentTime:1}},{$unwind:'$recieverData'},{$sort:{sentTime:-1}}])
+            const encData = encryptData(scheduleData)
+            if(encData){
+                res.json({success:true,body:encData})
+            }
+        }
+    } catch (error) {
+        res.status(500).json({success:false,message:"Internal server error"})
+    }
+}
+
+const scheduleMessage = async (req, res) => {
+    try {
+        const { data } = req.body
+        if (data) {
+            const userData = await User.findOne({ email: req.userEmail })
+            const recieverData = await User.findOne({ username: data.username, contacts: { $elemMatch: { id: userData._id } } })
+            if (recieverData) {
+                let sentTime = new Date(data.date)
+                sentTime.setHours(data.time.hours)
+                sentTime.setMinutes(data.time.minutes)
+                const newMessage = await new Message({
+                    senderId: userData._id,
+                    recieverId: recieverData._id,
+                    content: data.content,
+                    isScheduled: true,
+                    scheduledConfig: {
+                        date: sentTime,
+                        time: {
+                            hours: data.time.hours,
+                            minutes: data.time.minutes,
+                        },
+                        createdTime: Date.now()
+                    },
+                    sentTime
+                }).save()
+                if (newMessage) {
+                    const scheduleTime = new Date(newMessage.sentTime);
+
+                    const minute = scheduleTime.getMinutes();
+                    const hour = scheduleTime.getHours();
+                    const date = scheduleTime.getDate();
+                    const month = scheduleTime.getMonth() + 1; 
+                    const dayOfWeek = scheduleTime.getDay();
+
+                    const cronPattern = `${minute} ${hour} ${date} ${month} ${dayOfWeek}`;
+                    console.log(cronPattern);
+                    cron.schedule(cronPattern, async(data) => {
+                        await Conversation.updateOne({participents:{$all:[userData._id,recieverData._id]}},{$push:{messages:newMessage._id}})
+                        await Message.findByIdAndUpdate({_id:newMessage._id},{$set:{isScheduleCompleted:true,sentTime:Date.now()}})
+                        const connectionData =await Connection.find({userId:{$in:[userData._id,recieverData._id]}})
+                        if(connectionData){
+                            connectionData.forEach(el=>{
+                                req.io.to(el.socketId).emit('messageRecieved',{newMessage})
+                                if(el.userId==userData._id.toString()){
+                                    console.log('emitting');
+                                    req.io.to(el.socketId).emit('scheduledMsgSent',{msg:newMessage._id})
+                                }
+                            })
+                        }
+                    })
+
+                    res.json({ success: true, message: "Message scheduled" })
+                }
+            } else {
+                res.json({ success: false, message: "Recipient is not in your contact" })
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
 module.exports = {
     getUserInfo,
     getConversation,
@@ -345,5 +424,7 @@ module.exports = {
     deleteMessage,
     editMessage,
     disabledConfetti,
-    clearMessages
+    clearMessages,
+    scheduleMessage,
+    getScheduledMessages
 }

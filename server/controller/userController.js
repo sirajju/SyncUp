@@ -271,7 +271,7 @@ const verifyOtp = async (req, res) => {
                     await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
                     connData = await Connection.findOne({ userId: invData._id })
                     if (connData) {
-                        req.io.to(conData.socketId).emit('onUpdateNeeded')
+                        req.io.to(connData.socketId).emit('onUpdateNeeded')
                     }
                 }
                 const newMessage = new Messages({
@@ -489,10 +489,12 @@ const changeDp = async (req, res) => {
             } else {
                 res.json({ message: "Err while updating profile pic", success: false })
             }
+        }else{
+            res.json({success:false,message:"No img to update"})
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const cancellRequest = async (req, res) => {
@@ -816,6 +818,24 @@ const changeAfkMessage = async (req, res) => {
     }
 }
 
+const checkContactByUsername = async(req,res)=>{
+    try {
+        const {username} = req.query
+        if(username){
+            const userData =await User.findOne({username})
+            if(userData){
+                const contactData = await User.find({email:req.userEmail,contacts:{$elemMatch:{id:userData._id}}})
+                if(contactData.length){
+                    return res.json({success:true})
+                }
+            }
+        }
+        return res.json({success:false})
+    } catch (error) {
+        res.json({success:false,message:error.message})
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
@@ -850,6 +870,7 @@ module.exports = {
     getCallLogs,
     resetCalllogs,
     toggleAfk,
-    changeAfkMessage
+    changeAfkMessage,
+    checkContactByUsername
 
 }

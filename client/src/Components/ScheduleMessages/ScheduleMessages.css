@@ -1,0 +1,82 @@
+.scheduleDltIcon {
+    padding: 10px;
+    border-radius: 100%;
+    cursor: pointer;
+    background-color: rgb(216, 216, 216);
+    margin: 5px;
+}
+
+.scheduleMsgParent {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.scheduleMsgItem {
+    width: 100%;
+    height: 100px;
+    background: #F8F8F8;
+    border-radius: 5px;
+    display: flex;
+    margin-top: 10px;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+    font-weight: bold;
+    padding: 20px;
+    transition: all 0.5s ease-in-out;
+}
+
+.scheduleOptions {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.scheduleOptions button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.callDuration {
+    font-size: 10px;
+    color: grey;
+}
+
+.scheDuleDetails {
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+}
+
+.ScheduleContactName {
+    font-size: 18px;
+}
+
+.ScheduleMessage {
+    font-weight: 400;
+}
+
+.ScheduleTime {
+    color: grey;
+}
+
+.scheduleMsgOptions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.newScheduleMsg {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}

@@ -90,7 +90,7 @@ const user = mongoose.Schema({
         type:Array,
         default:[{
             type:"premium",
-            message:"You have earned 100 chat points by registerting",
+            message:"You have earned 100 chat points by registering",
             time:Date.now(),
             isReaded:false
         }]

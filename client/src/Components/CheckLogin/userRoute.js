@@ -20,12 +20,12 @@ function IsAuth({ children }) {
             navigate('/login')
         }
         else {
-            if (!opened) {
-                localStorage.setItem('syncup_opened', true)
-                window.addEventListener('beforeunload', () => localStorage.removeItem('syncup_opened'))
-            } else {
-                setOpened(true)
-            }
+            // if (!opened) {
+            //     localStorage.setItem('syncup_opened', true)
+            //     window.addEventListener('beforeunload', () => localStorage.removeItem('syncup_opened'))
+            // } else {
+            //     setOpened(true)
+            // }
             const options = {
                 route: 'isAlive',
                 headers: { Authorization: `Bearer ${token}` },
@@ -46,9 +46,9 @@ function IsAuth({ children }) {
         }
     }, []);
     return <>
-        {opened && <AlreadyOpen />}
-        {!opened&&auth && children}
-        {/* {auth && children} */}
+        {/* {opened && <AlreadyOpen />}
+        {!opened&&auth && children} */}
+        {auth && children}
     </>;
 }
 

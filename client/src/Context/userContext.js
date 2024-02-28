@@ -194,6 +194,30 @@ const callLogs = createSlice({
   }
 })
 
+const scheduledMessages = createSlice({
+  name: "scheduledMessages",
+  initialState: { value: [] },
+  reducers: {
+    setScheduledMsgs: (state, action) => {
+      state.value = action.payload
+    },
+    markScheduledSent: (state, action) => {
+      state.value = state.value.map(el=>{
+        if(el._id.toString()==action.payload){
+          return {...el,isScheduleCompleted:true}
+        }
+        return el
+      })
+    },
+    removeScheduledMsg: (state, action) => {
+      state.value = state.value.filter(el => el._id != action.payload)
+    },
+    resetScheduledMsgs: (state) => {
+      state.value = []
+    }
+  }
+})
+
 export const { setConversations, resetConversation } = totalConversations.actions;
 export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen, markEdited } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
@@ -205,6 +229,8 @@ export const { setChat } = chatState.actions;
 export const { setCallData } = callState.actions;
 export const { setAuthConfig } = adminContext.actions
 export const { setLogs, resetLogs } = callLogs.actions
+export const { setScheduledMsgs, markScheduledSent, removeScheduledMsg, resetScheduledMsgs } = scheduledMessages.actions
+
 const rootReducer = combineReducers({
   progress: progressContext.reducer,
   user: userSlice.reducer,
@@ -216,8 +242,10 @@ const rootReducer = combineReducers({
   ads: adsData.reducer,
   notes: notesData.reducer,
   myNotes: myNotes.reducer,
-  callLogs: callLogs.reducer
+  callLogs: callLogs.reducer,
+  scheduledMsg:scheduledMessages.reducer
 });
+
 export const store = configureStore({
   reducer: rootReducer,
 });
