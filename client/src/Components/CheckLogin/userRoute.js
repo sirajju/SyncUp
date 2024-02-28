@@ -15,7 +15,6 @@ function IsAuth({ children }) {
     const [auth, setAuth] = useState(false)
     useEffect(() => {
         const token = localStorage.getItem('SyncUp_Auth_Token')
-        dispatch(showLoading())
         if (!token) {
             navigate('/login')
         }
@@ -26,13 +25,14 @@ function IsAuth({ children }) {
             // } else {
             //     setOpened(true)
             // }
+            dispatch(showLoading())
             const options = {
                 route: 'isAlive',
                 headers: { Authorization: `Bearer ${token}` },
                 params: { getData: true },
                 crypto: true,
             }
-            axios(options).then(res=>{
+            axios(options).then(res => {
                 if (res.data.success) {
                     dispatch(setUserData(res.data.body));
                     setAuth(true)
@@ -42,7 +42,6 @@ function IsAuth({ children }) {
                     localStorage.removeItem('SyncUp_Auth_Token')
                 }
             })
-            dispatch(hideLoading())
         }
     }, []);
     return <>
