@@ -29,6 +29,7 @@
     align-items: center;
     flex-direction: column;
     padding: 40px;
+    position: relative;
 }
 .profilePremiumBadge{
     display: flex;
@@ -57,6 +58,18 @@
     margin: 5px;
     /* border: 1px solid rgb(234, 234, 234); */
 }
+.profileLogoutBtn {
+    position: absolute;
+    bottom:0;
+}
 .premiumToggle {
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+}
+.profileBtnLogout {
+    background-color: #5961f9ff;
+    color: white;
+    border-radius: 10px;
+    height: 40px;
+    width: 200px;
+    border: none;
 }

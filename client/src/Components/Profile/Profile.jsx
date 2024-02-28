@@ -1,4 +1,4 @@
-import React, { useRef, useState,useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import ChatBox from '../Chats/ChatBox/ChatBox';
 import { useDispatch, useSelector } from 'react-redux';
 import './Profile.css';
@@ -8,19 +8,23 @@ import pencil from '../../assets/Images/pencil.png';
 import tickSave from '../../assets/Images/tick_save.png';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { setUserData } from '../../Context/userContext';
+import { hideLoading, setAds, setConversations, setCurrentChat, setMyNotes, setNotes, setScheduledMsgs, setUserData, showLoading } from '../../Context/userContext';
 import Axios from '../../interceptors/axios';
 import { Switch } from 'antd'
 import PremiumDailogue from '../Premium/PremiumDailogue'
+import Confirmation from '../Confirmation/Dailogue'
+import { useTimer } from 'react-timer-hook'
 
-function Profile({ setGo,chat }) {
+function Profile({ setGo, chat }) {
     const userData = useSelector((state) => state.user);
     const [editable, setEditable] = useState({ usernameEditable: false, afkEditable: false });
     const dispatch = useDispatch();
     const [username, setUsername] = useState(userData.value.username);
     const [afkMessage, setAfkMessage] = useState(userData.value.afk.message)
     const [isUsernameValid, setIsUsernameValid] = useState(true);
-    const [isPremiumModalOpen,openPremiumModal]=useState(false)
+    const [isLogoutCofirm, setLogoutConfirm] = useState(false)
+    const [isPremiumModalOpen, openPremiumModal] = useState(false)
+    const [isChecked,setChecked]=useState(false)
     const navigate = useNavigate()
     const toggleAfk = function () {
         const options = {
@@ -79,7 +83,7 @@ function Profile({ setGo,chat }) {
             setIsUsernameValid(false);
         }
     };
-    
+
     const changeAfkMessage = function (e) {
         if (e.target.value.trim()) {
             setAfkMessage(e.target.value)
@@ -101,6 +105,26 @@ function Profile({ setGo,chat }) {
                 toast.error(res.data.message)
             }
 
+        })
+    }
+    const logoutAccount = function () {
+        setLogoutConfirm(false)
+        dispatch(showLoading())
+        const options = {
+            route:"logoutAccount",
+            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
+            method:"DELETE"
+        }
+        Axios(options).then(res=>{
+            if(res.data.success){
+                localStorage.removeItem('SyncUp_Auth_Token')
+                localStorage.removeItem('syncup_opened')
+                toast.success(res.data.message)
+                navigate('/login')
+                dispatch(hideLoading())
+            }else{
+                toast.error(res.data.message)
+            }
         })
     }
     return (
@@ -126,6 +150,13 @@ function Profile({ setGo,chat }) {
                 <Modal />
             </div>
             <PremiumDailogue setIsModalOpen={openPremiumModal} isModalOpen={isPremiumModalOpen} />
+            <Confirmation okBtnDisabled={!isChecked} blockOutSideClick={true} title="Warning ⚠️" content='Do you want to logout you account from this device ?' value={isLogoutCofirm} func={setLogoutConfirm} posFunc={logoutAccount}>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center",marginTop:"20px"}}>
+                    <input type="checkbox" checked={isChecked} onChange={(e)=>setChecked(e.target.checked)} id="checkBx" name="checkBx" style={{ marginRight: '5px' }} />
+                    <label htmlFor="checkBx" style={{ marginBottom: 0 }}>I got it </label>
+                </div>
+
+            </Confirmation>
             <div className="profileConfig">
                 <div class="input-group mb-3">
                     <input
@@ -153,7 +184,7 @@ function Profile({ setGo,chat }) {
                     <span>Select your premium badge : </span>
                     <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer' }} >Premium</span>
                 </div>
-                <div className='afkDiv' onClick={()=>!userData.value.isPremium && openPremiumModal(true)} >
+                <div className='afkDiv' onClick={() => !userData.value.isPremium && openPremiumModal(true)} >
                     <span>Turn on or off away from keyboard : </span>
                     <Switch
                         checkedChildren={'ON'}
@@ -165,7 +196,7 @@ function Profile({ setGo,chat }) {
                     />
 
                 </div>
-                <p style={{fontSize:"10px",color:"red"}} >Note : Afk will automatically turn off if an activity detects</p>
+                {userData.value.afk.isOn && <p style={{ fontSize: "10px", color: "red" }} >Note : Afk will automatically turn off if an activity detects</p>}
                 <div class="input-group mb-3" hidden={!userData.value.afk.isOn} >
                     <input
                         type="text"
@@ -187,6 +218,11 @@ function Profile({ setGo,chat }) {
                             <img style={{ width: '20px' }} src={editable.afkEditable ? tickSave : pencil} />{' '}
                         </span>
                     </div>
+                </div>
+                <div className='profileLogoutBtn'>
+                    <button onClick={()=>setChecked(false) || setLogoutConfirm(true)} className="profileBtnLogout">
+                        Logout account
+                    </button>
                 </div>
             </div>
         </>
