@@ -836,6 +836,19 @@ const checkContactByUsername = async(req,res)=>{
     }
 }
 
+const logoutAccount = async(req,res)=>{
+    try {
+        const userData = await User.findOneAndUpdate({email:req.userEmail},{$inc:{logged_devices:-1}})
+        if(userData){
+            res.json({success:true,message:`Good Bye ${userData.username}`})
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+        
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
@@ -871,6 +884,7 @@ module.exports = {
     resetCalllogs,
     toggleAfk,
     changeAfkMessage,
-    checkContactByUsername
+    checkContactByUsername,
+    logoutAccount
 
 }
