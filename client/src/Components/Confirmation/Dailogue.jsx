@@ -12,11 +12,11 @@ import {
 import './Dailogue.css'
 
 const App = React.memo(
-    function ({ okBtnText,okBtnDisabled,noBtnText,value, func, title, content, posFunc,children,params}) {
+    function ({ blockOutSideClick,okBtnText,okBtnDisabled,noBtnText,value, func, title, content, posFunc,children,params,negFunc}) {
         const toggleOpen = () => func(!value);
         return (
             <>
-                <MDBModal tabIndex='-1' open={value} setOpen={func}>
+                <MDBModal staticBackdrop={blockOutSideClick} tabIndex='-1' open={value} setOpen={func}>
                     <MDBModalDialog size='sm' centered>
                         <MDBModalContent>
                             <MDBModalHeader>
@@ -30,7 +30,7 @@ const App = React.memo(
                                 </p>
                             </MDBModalBody>
                             <MDBModalFooter>
-                                <MDBBtn style={{ background: '#5961F9', color: 'white' }} onClick={toggleOpen}>
+                                <MDBBtn style={{ background: '#5961F9', color: 'white' }} onClick={negFunc || toggleOpen}>
                                     {noBtnText || 'No'}
                                 </MDBBtn>
                                 <MDBBtn disabled={okBtnDisabled || false} onClick={(e)=>posFunc(params || e)} style={{ background: '#ED80FD' }} >{okBtnText || 'Yes'}</MDBBtn>
