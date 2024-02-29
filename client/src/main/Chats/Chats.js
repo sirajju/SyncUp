@@ -235,7 +235,8 @@ function Chats() {
                         {
                             ['Notes', 'My Notes'].includes(activeTab) ?
                                 <Notes activeTab={activeTab} /> :
-                                    isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> :<Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
+                                    isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> :
+                                    <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
                         }
                         <Joyride />
                     </>}

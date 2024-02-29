@@ -340,7 +340,7 @@ const getScheduledMessages = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
         if (userData) {
-            const scheduleData = await Message.aggregate([{ $match: { senderId: userData._id.toString(), isScheduled: true,isScheduledMsgCleared:false } }, { $addFields: { recieverObjectId: { $toObjectId: "$recieverId" } } }, { $lookup: { from: "users", localField: "recieverObjectId", foreignField: "_id", as: "recieverData" } }, { $project: { 'recieverData.avatar_url': 1, 'recieverData.username': 1, 'recieverData.email': 1, scheduledConfig: 1, isScheduleCompleted: 1, content: 1, sentTime: 1 } }, { $unwind: '$recieverData' }, { $sort: { sentTime: -1 } }])
+            const scheduleData = await Message.aggregate([{ $match: { senderId: userData._id.toString(), isScheduled: true, isScheduledMsgCleared: false } }, { $addFields: { recieverObjectId: { $toObjectId: "$recieverId" } } }, { $lookup: { from: "users", localField: "recieverObjectId", foreignField: "_id", as: "recieverData" } }, { $project: { 'recieverData.avatar_url': 1, 'recieverData.username': 1, 'recieverData.email': 1, scheduledConfig: 1, isScheduleCompleted: 1, content: 1, sentTime: 1 } }, { $unwind: '$recieverData' }, { $sort: { sentTime: -1 } }])
             const encData = encryptData(scheduleData)
             if (encData) {
                 res.json({ success: true, body: encData })
@@ -375,7 +375,7 @@ const scheduleMessage = async (req, res) => {
                         createdTime: Date.now()
                     },
                     sentTime,
-                    isScheduledMsgCleared:false
+                    isScheduledMsgCleared: false
                 }).save()
                 if (newMessage) {
                     const scheduleTime = new Date(newMessage.sentTime);
@@ -417,16 +417,28 @@ const scheduleMessage = async (req, res) => {
 
 const clearScheduledMsgs = async (req, res) => {
     try {
-        const userData = await User.findOne({email:req.userEmail})
-        if(userData){
-            const dltData = await Message.updateMany({senderId:userData._id,isScheduled:true},{$set:{isScheduledMsgCleared:true}})
-            if(dltData){
-                return res.json({success:true})
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            const dltData = await Message.updateMany({ senderId: userData._id, isScheduled: true }, { $set: { isScheduledMsgCleared: true } })
+            if (dltData) {
+                return res.json({ success: true })
             }
         }
-        return res.json({success:false,message:"Err user not found"})
+        return res.json({ success: false, message: "Err user not found" })
     } catch (error) {
         res.status(500).json({ success: false, message: "Err while clearing" })
+    }
+}
+
+const deleteConversation = async (req, res) => {
+    try {
+        const {chatId} = req.query
+        if(chatId){
+            
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Err while deleting conversation" })
     }
 }
 
@@ -443,5 +455,6 @@ module.exports = {
     clearMessages,
     scheduleMessage,
     getScheduledMessages,
-    clearScheduledMsgs
+    clearScheduledMsgs,
+    deleteConversation
 }

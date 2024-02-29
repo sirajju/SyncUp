@@ -4,7 +4,7 @@ import { setCurrentChat, setConversations as setGlobalConversation, setUserData 
 import { useSocket } from '../../../Context/socketContext'
 import imageIcon from '../../../assets/Images/image.png'
 import businessBadge from '../../../assets/Images/verified.png'
-import { Dropdown } from 'antd';
+import { Dropdown, FloatButton } from 'antd';
 import menuIcon from '../../../assets/svgIcons/menu.png';
 import syncIcon from '../../../assets/svgIcons/sync.png';
 import notification from '../../../assets/Images/notification.png';
@@ -52,8 +52,18 @@ function CurrentList({ setChat, setGo }) {
         })
     }
     const deleteConversation = function (el) {
-        console.log(selectedConv,dailogueData.params,el);
         setConfirmed(false)
+        const options = {
+            route:"deleteConversation",
+            params:{chatId:el._id},
+            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
+            method:"DELETE"
+        }
+        Axios(options).then(res=>{
+            if(res.data.success){
+                toast.success(res.data.message)
+            }
+        })
         
     }
     const blockUser = function (el) {
@@ -109,6 +119,7 @@ function CurrentList({ setChat, setGo }) {
             <Confirmation title="Think again.." params={dailogueData.params} posFunc={dailogueData.posFunc} content={dailogueData.content} value={isConfirmed} func={setConfirmed}>
                 <p className='text-danger m-3 mb-1' style={{ fontSize: "13px" }} >{dailogueData.children}</p>
             </Confirmation>
+
             {conversations.value.length && conversations.value.map((el, key) => {
                 const a = gettUnread(el.messages)
                 return (

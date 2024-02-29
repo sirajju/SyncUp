@@ -329,7 +329,7 @@ const sendReset = async (req, res) => {
             }
         }
     } catch (error) {
-        res.json({ message: "Something went wrong", success: false })
+        res.status(500).json({ message: "Something went wrong", success: false })
         console.log(error);
 
     }
@@ -379,7 +379,7 @@ const changePasword = async (req, res) => {
             res.json({ message: "Signature verification failed!!" })
         }
     } catch (error) {
-        res.json({ message: "Something went wrong", success: false })
+        res.status(500).json({ message: "Something went wrong", success: false })
     }
 }
 const checkUsername = async (req, res) => {
@@ -406,7 +406,7 @@ const getAds = async (req, res) => {
         }
         res.json({ success: true, body: encrypted })
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const checkUser = async (req, res) => {
@@ -518,7 +518,7 @@ const cancellRequest = async (req, res) => {
             res.json({ success: false, message: `Something went wrong` })
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const getNoti = async (req, res) => {
@@ -566,7 +566,7 @@ const acceptReq = async (req, res) => {
 
         }
     } catch (error) {
-        res.json({ message: error.message, success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const removeContact = async (req, res) => {
@@ -586,7 +586,7 @@ const removeContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const changeUsername = async (req, res) => {
@@ -659,17 +659,26 @@ const saveContacts = async (req, res) => {
 }
 const getContacts = async (req, res) => {
     try {
-        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username': 1, 'contactData.avatar_url': 1 } }])
-        console.log(contactData);
+        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username':1,'contactData.email':1,'contactData._id':1,'contactData.avatar_url':1,'contactData.isBusiness':1,'contactData.isPremium':1 } },{$unwind:"$contactData"},{$sort:{'contactData.username':1}}])
+        if(contactData.length){
+            const userData = await User.findOne({email:req.userEmail})
+            if(userData.googleContacts.length){
+                    
+            }
+            const encData = encryptData(contactData)
+            return res.json({success:true,body:encData})
+        }
+        return res.json({success:false,message:"No contacts found!!"})
     } catch (error) {
-        res.json({ message: error.message })
+        res.status(500).json({success:false,message:"Err while getting contacts"})
+        console.log(error);
     }
 }
 const makeFinishedRide = async (req, res) => {
     try {
         const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { joyRideFinished: true } })
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const reportContact = async (req, res) => {
@@ -696,7 +705,7 @@ const reportContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 const blockContact = async (req, res) => {
@@ -749,7 +758,7 @@ const unBlockContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
@@ -832,7 +841,7 @@ const checkContactByUsername = async(req,res)=>{
         }
         return res.json({success:false})
     } catch (error) {
-        res.json({success:false,message:error.message})
+        res.status(500).json({success:false,message:error.message})
     }
 }
 

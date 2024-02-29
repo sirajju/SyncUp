@@ -67,6 +67,7 @@ app.delete('/clearNotes',isAuth,noteController.clearExpiredNotes)
 app.delete('/resetCallLogs',isAuth,userController.resetCalllogs)
 app.delete('/logoutAccount',isAuth,userController.logoutAccount)
 app.delete('/clearScheduledMsgs',isAuth,messageController.clearScheduledMsgs)
+app.delete('/deleteConversation',isAuth,messageController.deleteConversation)
 
 
 module.exports = app;

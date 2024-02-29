@@ -29,7 +29,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   const [isOpen, setOpen] = useState(false);
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [notiNum, setNotiNum] = useState(0);
-  const [afkSwitchState,setAfkSwitchState]=useState(userData.value.afk.isOn)
+  const [afkSwitchState, setAfkSwitchState] = useState(userData.value.afk.isOn)
   const myNotes = useSelector(state => state.myNotes)
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => saveContact(codeResponse),
@@ -111,18 +111,18 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   }
   const toggleAfk = function () {
     const options = {
-        route: "toggleAfk",
-        headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-        method: "PATCH"
+      route: "toggleAfk",
+      headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+      method: "PATCH"
     }
     Axios(options).then(res => {
-        if (res.data.success) {
-            dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
-        } else {
-            toast.error(res.data.message)
-        }
+      if (res.data.success) {
+        dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
+      } else {
+        toast.error(res.data.message)
+      }
     })
-}
+  }
   const itemFunction = {
     reffer: copyLink,
     createNote: () => setOpen(!isOpen),
@@ -130,7 +130,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     premium: () => navigate('/plans'),
     clearNotes: clearUserNotes,
     scheduleMsg: () => !userData.value.isPremium ? setPremiumModalOpen(true) : setGo('ScheduleMessages'),
-    afk:()=>userData.value.isPremium ? setGo('Profile') : setPremiumModalOpen(true)
+    afk: () => userData.value.isPremium ? setGo('Profile') : setPremiumModalOpen(true)
 
   };
   const canCreateNote = function () {
@@ -178,7 +178,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     },
     {
       label:
-        <span className='premiumRequired' style={{display:"flex",justifyContent:"space-between",alignItems:"center"}} >AFK {!userData.value.afk.isOn ? <span style={{color:'red',fontSize:"10px"}} >InActive</span>: <span style={{color:'green',fontSize:"10px"}} >Active</span> } </span>,
+        <span className='premiumRequired' style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} >AFK {!userData.value.afk.isOn ? <span style={{ color: 'red', fontSize: "10px" }} >InActive</span> : <span style={{ color: 'green', fontSize: "10px" }} >Active</span>} </span>,
       key: 'afk',
       icon: <MDBIcon far icon="keyboard" />,
     },
@@ -220,6 +220,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
         >
           <img src={menuIcon} className='icon menuIcon' alt='Menu Icon' />
         </Dropdown>
+        <img src={settingIcon} className='icon settingsIcon' alt='Profile' />
         <img src={userData.value.avatar_url} onClick={() => setGo('Profile')} style={{ borderRadius: '50px' }} className='icon profileIcon' alt='Profile' />
       </div>
     </div>
