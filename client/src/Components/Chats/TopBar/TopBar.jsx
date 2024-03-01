@@ -220,7 +220,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
         >
           <img src={menuIcon} className='icon menuIcon' alt='Menu Icon' />
         </Dropdown>
-        <img src={settingIcon} className='icon settingsIcon' alt='Profile' />
+        {/* <img src={settingIcon} className='icon settingsIcon' alt='Profile' /> */}
         <img src={userData.value.avatar_url} onClick={() => setGo('Profile')} style={{ borderRadius: '50px' }} className='icon profileIcon' alt='Profile' />
       </div>
     </div>
