@@ -45,9 +45,7 @@ function Otp() {
     else if (parseInt(e.target.value) > 9) {
       e.target.value = e.target.value[0]
     } else {
-      console.log(inputRefs[i]?.current);
       if(inputRefs[i+1]?.current) {
-        console.log('have');
         inputRefs[i+1].current.focus()
       }
       return true
