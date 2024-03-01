@@ -25,7 +25,7 @@ function CurrentList({ setChat, setGo }) {
     const userData = useSelector(state => state.user)
     const socket = useSocket()
     const [isConfirmed, setConfirmed] = useState(false)
-    const [dailogueData,setDailogueData]=useState({})
+    const [dailogueData, setDailogueData] = useState({})
     const dispatch = useDispatch()
     const [selectedConv, setSelectedConv] = useState(null)
     const setConversation = function (id) {
@@ -54,38 +54,42 @@ function CurrentList({ setChat, setGo }) {
     const deleteConversation = function (el) {
         setConfirmed(false)
         const options = {
-            route:"deleteConversation",
-            params:{chatId:el._id},
-            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
-            method:"DELETE"
+            route: "deleteConversation",
+            params: { chatId: el._id },
+            headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
+            method: "DELETE"
         }
-        Axios(options).then(res=>{
-            if(res.data.success){
+        Axios(options).then(res => {
+            if (res.data.success) {
                 toast.success(res.data.message)
             }
         })
-        
+
     }
     const blockUser = function (el) {
         setConfirmed(false)
         const options = {
-            route: "blockContact",
+            route: isBlocked(el) ? 'unBlockContact' : 'blockContact',
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
             payload: { userId: el.opponent[0]._id },
-            method:"POST"
+            method: "POST"
         }
         Axios(options).then(async res => {
             if (res.data.success) {
-                dispatch(setUserData({ ...userData.value, blockedContacts: [...userData.value.blockedContacts, { userId: el.opponent[0]._id, blockedAt: Date.now() }] }))
+                if (options['route'] == 'unBlockContact') {
+                    dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(u => u.userId != el.opponent[0]._id) }))
+                } else {
+                    dispatch(setUserData({ ...userData.value, blockedContacts: [...userData.value.blockedContacts, { userId: el.opponent[0]._id, blockedAt: Date.now() }] }))
+                }
                 toast.success(res.data.message)
             }
         })
     }
     const itemFunction = {
         viewContact: (el) => { setChat({ type: "UserProfile", data: el.opponent[0]._id }) },
-        clearMessage: (el) => { setDailogueData({content:"Do you want to clear messages of the current Conversation.?",params:el,posFunc:clearMessage,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
-        deleteConversation: (el) => { setDailogueData({content:"Do you want to delete this current Conversation.?",params:el,posFunc:deleteConversation,children:"Note : All media and messages will be cleared"});setConfirmed(true); },
-        blockUser: (el) => { setDailogueData({content:`Do you want to block ${el.opponent[0].username}..?`,params:el,posFunc:blockUser,children:"Note : You will not able send or recieve messages "});setConfirmed(true); },
+        clearMessage: (el) => { setDailogueData({ content: "Do you want to clear messages of the current Conversation.?", params: el, posFunc: clearMessage, children: "Note : All media and messages will be cleared" }); setConfirmed(true); },
+        deleteConversation: (el) => { setDailogueData({ content: "Do you want to delete this current Conversation.?", params: el, posFunc: deleteConversation, children: "Note : All media and messages will be cleared" }); setConfirmed(true); },
+        blockUser: (el) => { setDailogueData({ content: `Do you want to block ${el.opponent[0].username}..?`, params: el, posFunc: blockUser, children: "Note : You will not able send or recieve messages " }); setConfirmed(true); },
         // clearMessage,
         // deleteConversation,
         // blockUser
@@ -111,9 +115,23 @@ function CurrentList({ setChat, setGo }) {
             label: 'Block user',
             key: 'blockUser',
             icon: <MDBIcon fas icon="ban" />,
-            danger: true
+            danger: true,
         },
     ];
+    const isBlocked = (usr) => {
+        return userData.value.blockedContacts.filter(el => el.userId == usr.opponent[0]._id).length
+    }
+    const getItems = (usr) => {
+        if (isBlocked(usr)) {
+            return myNotesItems.map(el => {
+                if (el.key == 'blockUser') {
+                    return { ...el, label: <span className='text-success' >UnBlock user</span>, icon: <MDBIcon far className='text-success' icon="circle" />, danger: false }
+                }
+                return el
+            })
+        }
+        return myNotesItems
+    }
     return (
         <>
             <Confirmation title="Think again.." params={dailogueData.params} posFunc={dailogueData.posFunc} content={dailogueData.content} value={isConfirmed} func={setConfirmed}>
@@ -125,8 +143,12 @@ function CurrentList({ setChat, setGo }) {
                 return (
                     <Dropdown
                         menu={{
-                            items: myNotesItems,
+                            items: getItems(el),
                             onClick: ({ key }) => itemFunction[key]?.call(this, el),
+                        }}
+                        placement="bottom"
+                        arrow={{
+                            pointAtCenter: true,
                         }}
                         trigger={['contextMenu']}
                     >
