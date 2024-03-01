@@ -98,9 +98,9 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, se
         <div className="chatlistContainer" data-aos="fade-up" data-aos-duration="700" >
             <FloatButton onClick={()=>openContactsModal(true)} style={{position:"absolute",'right':"50px",height:"50px",'width':"50px"}} icon={<MDBIcon className='floatBtnIcon' fas icon="plus" />} />
 
-            {contactsModal && <Contactslist contactsModal={contactsModal} openContactsModal={openContactsModal} />}
+            {contactsModal && <Contactslist  contactsModal={contactsModal} setChat={setChat} openContactsModal={openContactsModal} />}
 
-            {Boolean(searchResult.length) &&
+            {Boolean(searchResult.length && !conversation.value.length) &&
                 <SearchResult setSearchData={setSearchData} addToContact={addToContact} copyLink={copyLink} cancellRequest={cancellRequest} setChat={setChat} searchResult={searchResult} checkCondact={checkCondact} />
             }
             {(searchResult.notfound && !conversation.value.length) &&
