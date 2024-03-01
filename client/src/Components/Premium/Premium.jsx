@@ -47,6 +47,7 @@ function Premium() {
                 })
             }
         }
+        dispatch(hideLoading())
 
     }, [])
     const convertPointsToPremium = () => {
