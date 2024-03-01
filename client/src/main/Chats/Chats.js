@@ -37,7 +37,7 @@ function Chats() {
     const dispatch = useDispatch()
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
-    const [isSubLoading,setSubLoading]=useState(false)
+    const [isSubLoading, setSubLoading] = useState(false)
     const history = useNavigate()
     const conversation = useSelector(state => state.conversations)
     const [activeTab, setActiveTab] = useState('Chats')
@@ -85,10 +85,10 @@ function Chats() {
                     dispatch(setConversations(res));
                 })
                 .then(getAds)
-                .then(() => fetchData('getNotes').then(res=>dispatch(setNotes(res))))
-                .then(() => fetchData('getMyNotes').then(res=>dispatch(setMyNotes(res))))
-                .then(() => fetchData('getCallLogs').then(res=>dispatch(setLogs(res))))
-                .then(() => fetchData('getScheduledMessages').then(res=>dispatch(setScheduledMsgs(res))))
+                .then(() => fetchData('getNotes').then(res => dispatch(setNotes(res))))
+                .then(() => fetchData('getMyNotes').then(res => dispatch(setMyNotes(res))))
+                .then(() => fetchData('getCallLogs').then(res => dispatch(setLogs(res))))
+                .then(() => fetchData('getScheduledMessages').then(res => dispatch(setScheduledMsgs(res))))
                 .then(() => {
                     return new Promise(resolve => {
                         resolve();
@@ -158,11 +158,11 @@ function Chats() {
         socket.on('logoutUser', handleLogout)
         socket.on('msgSeen', handleSeen)
         socket.on('msgDelivered', handleDelivered)
-        socket.on('callDeclined', (data) => {
-            toast.error('Call declined')
-            const id = data.from == userData.value._id ? data.to : data.from
-            setChat({ type: 'chat', data: id })
-        })
+        // socket.on('callDeclined', (data) => {
+        //     toast.error('Call declined')
+        //     const id = data.from == userData.value._id ? data.to : data.from
+        //     setChat({ type: 'chat', data: id })
+        // })
 
         socket.on('messageRecieved', async (data) => {
             if (data.newMessage) {
@@ -184,9 +184,18 @@ function Chats() {
             setChat({ type: null })
         })
     }, [socket])
-    const handleSearch = useCallback(async (e) => {
+
+    const reConfgiConversation = async () => {
         setSubLoading(true)
+        setSearchData([])
+        dispatch(setConversations(await GetChatList('searchFunction')))
+        setSubLoading(false)
+    }
+
+    const handleSearch = useCallback(async (e) => {
+        if (activeTab !== 'Chats') setActiveTab('Chats')
         if (e.target.value.trim()) {
+            setSubLoading(true)
             setChat({ type: null })
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
@@ -204,10 +213,10 @@ function Chats() {
                 dispatch(resetConversation())
                 setSearchData({ notfound: true, data: [...res.data.body, { username: e.target.value }] })
             }
+            setSubLoading(false)
         } else {
             setSearchData([])
             dispatch(setConversations(await GetChatList('searchFunction')))
-            setSubLoading(false)
         }
     }, [])
 
@@ -230,12 +239,12 @@ function Chats() {
                 {!go &&
                     <>
 
-                        <TopBar activeTab={activeTab} setActiveTab={setActiveTab} handleSearch={handleSearch} setGo={setGo} />
+                        <TopBar reConfgiConversation={reConfgiConversation} activeTab={activeTab} setActiveTab={setActiveTab} handleSearch={handleSearch} setGo={setGo} />
                         <ChatTabs setGo={setGo} activeTab={activeTab} setActiveTab={setActiveTab} />
                         {
                             ['Notes', 'My Notes'].includes(activeTab) ?
                                 <Notes activeTab={activeTab} /> :
-                                    isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> :
+                                isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> :
                                     <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
                         }
                         <Joyride />
