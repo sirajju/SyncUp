@@ -57,6 +57,7 @@
     flex-direction: column;
     overflow-y: auto;
     padding: 10px;
+    transform: background .3s ease-out .1s;
     /* scroll-behavior: smooth; */
 }
 

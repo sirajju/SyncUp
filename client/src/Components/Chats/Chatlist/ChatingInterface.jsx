@@ -125,6 +125,10 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const currentChat = useSelector(state => state.currentChat)
     const { show } = useContextMenu({ id: 'MENU_ID' });
     const [isLoading, setLoading] = useState(false)
+    useEffect(()=>{
+        doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
+
+    },[doodleRef])
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
@@ -197,8 +201,8 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
                 {isChatLoading &&<div className='subLoader' style={{height:"100%"}} > <span className="subLoaderSpinner" ></span> </div>}
-                {!isChatLoading &&
-                    messages?.length && (
+                {
+                    Boolean(messages?.length) && (
                         messages.map((el, ind) => {
                             if (el.isConfettiEnabled && el.senderId != userData.value._id) { openGreeting() }
                             return (
@@ -228,7 +232,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                             )
                         })
                     )}
-                {(!messages?.length && isChatLoading)&&
+                {!Boolean(messages?.length) &&
                     <div className="newConversation">
                         <div>
                             <img src={chat_svg} alt="" />
