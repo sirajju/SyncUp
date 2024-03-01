@@ -16,7 +16,7 @@ import message from '../../../assets/Images/message.png'
 import pending from '../../../assets/Images/pending.png'
 import businessBadge from '../../../assets/Images/verified.png'
 
-export default function App({ contactsModal, openContactsModal }) {
+export default function App({ contactsModal, openContactsModal,setChat }) {
   const [data, setData] = useState([])
   const [isLoading, setLoading] = useState(true)
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function App({ contactsModal, openContactsModal }) {
                         </p>
                       </div>
                       <div className="followRqstDiv">
-                        <button className="sendFrndRqst">
+                        <button className="sendFrndRqst"  onClick={()=>{openContactsModal(!contactsModal);setChat({type:"chat",data:el.contactData._id})}}  >
                           <img style={{ 'width': '20px' }} src={message} alt="" />
                         </button>
                       </div>
