@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import LoginPage from '../../Components/LoginPage/Login'
 import { Link, useNavigate } from 'react-router-dom'
 import OtpPage from '../../Components/OtpPage/Otp'
@@ -15,6 +15,7 @@ function Otp() {
   let [count, setCount] = useState(1)
   let [tries, incTrie] = useState(0)
   const dispatch = useDispatch()
+  const inputRefs = [useRef(null),useRef(null),useRef(null),useRef(null),useRef(null)]
   const navigate = useNavigate()
   useEffect(() => {
     let token = localStorage.getItem('SyncUp_Auth_Token')
@@ -31,20 +32,31 @@ function Otp() {
       })
     }
   }, [])
-  const checkValid = function (e) {
+  const handleBack = function(e,i){
+    if(e.key=='Backspace' && inputRefs[i-2]?.current){
+      e.target.value =''
+      inputRefs[i-2].current.focus()
+    }
+  }
+  const checkValid = function (e,i) {
     if (isNaN(parseInt(e.target.value))) {
       e.target.value = ''
     }
     else if (parseInt(e.target.value) > 9) {
       e.target.value = e.target.value[0]
     } else {
+      console.log(inputRefs[i]?.current);
+      if(inputRefs[i+1]?.current) {
+        console.log('have');
+        inputRefs[i+1].current.focus()
+      }
       return true
     }
   }
   const generateOtpInputs = function (num) {
     const elements = []
     for (let i = 1; i <= num; i++) {
-      elements.push(<input key={i * 35499} type='number' name={i} onInput={(e) => { checkValid(e) && setOtp({ ...otp, [e.target.name]: parseInt(e.target.value) }) }} pattern='[0-9]' />)
+      elements.push(<input key={i} type='number' onKeyDown={(e)=>handleBack(e,i)} ref={inputRefs[i-1]} name={i} onChange={(e) => { checkValid(e,i-1) && setOtp({ ...otp, [e.target.name]: parseInt(e.target.value) }) }} pattern='[0-9]' />)
     }
     return elements
   }
