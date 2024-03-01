@@ -53,7 +53,7 @@
 .userName span {
     position: absolute;
     font-size: 10px;
-    margin-top: 5px;
+    margin: 7px;
 }
 .premiumBadge {
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
@@ -61,7 +61,7 @@
     width: 40px;
     font-size: 7px !important;
     height: 12px;
-    position: relative !important;
+    /* position: relative !important; */
 }
 .smallAds{
     display: none;

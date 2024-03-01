@@ -16,7 +16,7 @@ function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,cop
                     <div className="chatDetails">
                         <div className="userContent">
                             <h5 className='userName' style={{ textTransform: 'capitalize' }}>
-                                {userData.value._id == el._id ? `${el.username} (You)` : (el.username.length > 10 ?el.username.slice(0,10)+'...' : el.username)} {el?.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>} {el.isBusiness && <img src={businessBadge} className='businessBadge'></img>}
+                                {userData.value._id == el._id ? `${el.username} (You)` : (el.username.length > 10 ?el.username.slice(0,10)+'...' : el.username)} {el?.isPremium && <span title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</span>} {el.isBusiness && <img src={businessBadge} className='businessBadge'></img>}
                             </h5>
                             <p className="lastMessage">
                                 {(() => {

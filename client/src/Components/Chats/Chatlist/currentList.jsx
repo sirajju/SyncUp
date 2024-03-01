@@ -156,7 +156,7 @@ function CurrentList({ setChat, setGo }) {
                             <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                             <div className="chatDetails">
                                 <div>
-                                    <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <sup className="badge badge-success rounded-pill d-inline premiumBadge">Premium</sup>}  {el.opponent[0].isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </h5>
+                                    <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <span className="badge badge-success rounded-pill d-inline premiumBadge">Premium</span>}  {el.opponent[0].isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </h5>
                                     {el?.messages.length ? <p className="lastMessage"> {el.last_message?.isDeleted ? "This messsage has been vanished" : !el.last_message?.isMedia ? el.last_message?.content : <img style={{ width: "20px" }} src={imageIcon} />}</p> : ""}
                                 </div>
                                 <div className="messageDetails d-flex flex-column justify-content-center align-items-center mt-2">

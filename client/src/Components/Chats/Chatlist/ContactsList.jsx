@@ -55,7 +55,7 @@ export default function App({ contactsModal, openContactsModal,setChat }) {
                     <div className="chatDetails">
                       <div className="userContent">
                         <h5 className='userName' style={{ textTransform: 'capitalize' }}>
-                          {(el.contactData.username.length > 10 ? el.contactData.username.slice(0, 10) + '...' : el.contactData.username)} {el?.contactData.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</sup>} {el.contactData.isBusiness && <img src={businessBadge} className='businessBadge'></img>}
+                          {(el.contactData.username.length > 10 ? el.contactData.username.slice(0, 10) + '...' : el.contactData.username)} {el?.contactData.isPremium && <span title='Premium member' className="badge rounded-pill d-inline premiumBadge">Premium</span>} {el.contactData.isBusiness && <img src={businessBadge} className='businessBadge'></img>}
                         </h5>
                         <p className="lastMessage">
                           Message to your contacts
