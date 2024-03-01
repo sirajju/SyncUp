@@ -127,6 +127,21 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
             }
         })
     }
+
+    const deleteSchedule = function(id){
+        const options = {
+            route:"deleteScheduledMsg",
+            params:{id},
+            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
+            method:"DELETE"
+        }
+        Axios(options).then(res=>{
+            if(res.data.success){
+                getScheduledMsg()
+            }
+        })
+    }
+
     const menuItems = [
         {
             label: "Delete all",
@@ -172,12 +187,12 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
                                 <span className='ScheduleTime' >Time : {new Date(el.scheduledConfig.date).toLocaleDateString('en-GB', { day: "2-digit", month: '2-digit', year: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true })}</span>
                             </div>
                             <div className={`scheduleMsgOptions`}>
-                                {!el.isScheduleCompleted ? <MDBIcon className="scheduleDltIcon text-danger" far icon="trash-alt" />
+                                {!el.isScheduleCompleted ? <MDBIcon className="scheduleDltIcon text-danger" far onClick={()=>deleteSchedule(el._id)} icon="trash-alt" />
                                     : <MDBIcon fas className='scheduleDltIcon text-success' icon="check" />}
                             </div>
                         </div>
                     )
-                }) : (!isSubLoading) && "No data"}
+                }) : (!isSubLoading) && <div className='notFoundSchdl'><h3>No messages scheduled</h3></div>}
 
                 <Dailogue okBtnDisabled={!isValidated || isInvalid} okBtnText='Schedule' noBtnText='Cancell' posFunc={handleSubmit} value={isOpen} func={setOpen} title="Schedule message">
                     <div className='newScheduleMsg' >
