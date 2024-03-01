@@ -412,9 +412,11 @@ const getAds = async (req, res) => {
 const checkUser = async (req, res) => {
     try {
         const { user } = req.query
+        const me = await User.findOne({email:req.userEmail})
         if (user) {
             const regex = { $regex: user, $options: 'i' }
-            const userData = await User.find({ $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } })
+            const userData = await User.aggregate([{ $match: { $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } } }, { $addFields: { isContact: { $in: [me._id, { $map: { input: "$contacts", as: "contact", in: "$$contact.id" } }] } } }, { $sort: { isContact: -1 } }]);
+
             if (userData.length) {
                 const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
                 googleSearch.map((el, ind) => {
@@ -489,8 +491,8 @@ const changeDp = async (req, res) => {
             } else {
                 res.json({ message: "Err while updating profile pic", success: false })
             }
-        }else{
-            res.json({success:false,message:"No img to update"})
+        } else {
+            res.json({ success: false, message: "No img to update" })
         }
     } catch (error) {
         console.log(error);
@@ -659,18 +661,18 @@ const saveContacts = async (req, res) => {
 }
 const getContacts = async (req, res) => {
     try {
-        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username':1,'contactData.email':1,'contactData._id':1,'contactData.avatar_url':1,'contactData.isBusiness':1,'contactData.isPremium':1 } },{$unwind:"$contactData"},{$sort:{'contactData.username':1}}])
-        if(contactData.length){
-            const userData = await User.findOne({email:req.userEmail})
-            if(userData.googleContacts.length){
-                    
+        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username': 1, 'contactData.email': 1, 'contactData._id': 1, 'contactData.avatar_url': 1, 'contactData.isBusiness': 1, 'contactData.isPremium': 1 } }, { $unwind: "$contactData" }, { $sort: { 'contactData.username': 1 } }])
+        if (contactData.length) {
+            const userData = await User.findOne({ email: req.userEmail })
+            if (userData.googleContacts.length) {
+
             }
             const encData = encryptData(contactData)
-            return res.json({success:true,body:encData})
+            return res.json({ success: true, body: encData })
         }
-        return res.json({success:false,message:"No contacts found!!"})
+        return res.json({ success: false, message: "No contacts found!!" })
     } catch (error) {
-        res.status(500).json({success:false,message:"Err while getting contacts"})
+        res.status(500).json({ success: false, message: "Err while getting contacts" })
         console.log(error);
     }
 }
@@ -802,8 +804,8 @@ const toggleAfk = async (req, res) => {
         if (userData) {
             userData.afk.isOn = !userData.afk.isOn;
             const savedUser = await userData.save();
-            if (savedUser) {    
-                res.json({ success: true, message: `Afk ${savedUser.afk.isOn ? "On" :"Off"}` });
+            if (savedUser) {
+                res.json({ success: true, message: `Afk ${savedUser.afk.isOn ? "On" : "Off"}` });
             }
         }
     } catch (error) {
@@ -827,34 +829,34 @@ const changeAfkMessage = async (req, res) => {
     }
 }
 
-const checkContactByUsername = async(req,res)=>{
+const checkContactByUsername = async (req, res) => {
     try {
-        const {username} = req.query
-        if(username){
-            const userData =await User.findOne({username})
-            if(userData){
-                const contactData = await User.find({email:req.userEmail,contacts:{$elemMatch:{id:userData._id}}})
-                if(contactData.length){
-                    return res.json({success:true})
+        const { username } = req.query
+        if (username) {
+            const userData = await User.findOne({ username })
+            if (userData) {
+                const contactData = await User.find({ email: req.userEmail, contacts: { $elemMatch: { id: userData._id } } })
+                if (contactData.length) {
+                    return res.json({ success: true })
                 }
             }
         }
-        return res.json({success:false})
+        return res.json({ success: false })
     } catch (error) {
-        res.status(500).json({success:false,message:error.message})
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
-const logoutAccount = async(req,res)=>{
+const logoutAccount = async (req, res) => {
     try {
-        const userData = await User.findOneAndUpdate({email:req.userEmail},{$inc:{logged_devices:-1}})
-        if(userData){
-            res.json({success:true,message:`Good Bye ${userData.username}`})
+        const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $inc: { logged_devices: -1 } })
+        if (userData) {
+            res.json({ success: true, message: `Good Bye ${userData.username}` })
         }
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:error.message})
-        
+        res.json({ success: false, message: error.message })
+
     }
 }
 
