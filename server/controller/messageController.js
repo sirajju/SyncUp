@@ -389,18 +389,22 @@ const scheduleMessage = async (req, res) => {
                     const cronPattern = `${minute} ${hour} ${date} ${month} ${dayOfWeek}`;
                     console.log(cronPattern);
                     cron.schedule(cronPattern, async (data) => {
-                        await Conversation.updateOne({ participents: { $all: [userData._id, recieverData._id] } }, { $push: { messages: newMessage._id } })
-                        await Message.findByIdAndUpdate({ _id: newMessage._id }, { $set: { isScheduleCompleted: true, sentTime: Date.now() } })
-                        const connectionData = await Connection.find({ userId: { $in: [userData._id, recieverData._id] } })
-                        if (connectionData) {
-                            connectionData.forEach(el => {
-                                req.io.to(el.socketId).emit('messageRecieved', { newMessage })
-                                if (el.userId == userData._id.toString()) {
-                                    console.log('emitting');
-                                    req.io.to(el.socketId).emit('scheduledMsgSent', { msg: newMessage._id })
-                                }
-                            })
+                        const msData = await Message.findById({ _id: newMessage._id })
+                        if (!msData.isScheduledMsgCleared) {
+                            await Conversation.updateOne({ participents: { $all: [userData._id, recieverData._id] } }, { $push: { messages: newMessage._id } })
+                            await Message.findByIdAndUpdate({ _id: newMessage._id }, { $set: { isScheduleCompleted: true, sentTime: Date.now() } })
+                            const connectionData = await Connection.find({ userId: { $in: [userData._id, recieverData._id] } })
+                            if (connectionData) {
+                                connectionData.forEach(el => {
+                                    req.io.to(el.socketId).emit('messageRecieved', { newMessage })
+                                    if (el.userId == userData._id.toString()) {
+                                        console.log('emitting');
+                                        req.io.to(el.socketId).emit('scheduledMsgSent', { msg: newMessage._id })
+                                    }
+                                })
+                            }
                         }
+
                     })
 
                     res.json({ success: true, message: "Message scheduled" })
@@ -432,13 +436,30 @@ const clearScheduledMsgs = async (req, res) => {
 
 const deleteConversation = async (req, res) => {
     try {
-        const {chatId} = req.query
-        if(chatId){
-            
+        const { chatId } = req.query
+        if (chatId) {
+
         }
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: "Err while deleting conversation" })
+    }
+}
+
+const deleteScheduledMsg = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        const { id } = req.query
+        if (id) {
+            const dltData = await Message.findByIdAndDelete({ _id: id }, { $set: { isScheduledMsgCleared: true } })
+            if (dltData) {
+                return res.json({ success: true })
+            }
+        }
+        return res.json({ success: false, message: "Err id not found" })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Err while clearing" })
     }
 }
 
@@ -456,5 +477,6 @@ module.exports = {
     scheduleMessage,
     getScheduledMessages,
     clearScheduledMsgs,
-    deleteConversation
+    deleteConversation,
+    deleteScheduledMsg
 }
