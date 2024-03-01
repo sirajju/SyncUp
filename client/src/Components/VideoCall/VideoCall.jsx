@@ -12,10 +12,11 @@ import toast from 'react-hot-toast';
 function VideoCall(props) {
   const socket = useSocket()
   const [userData, setUserData] = useState({})
+  const me = useSelector(state => state.user)
   const conversationRef = useRef(null);
   const [chat, setChat] = useState(props.chat)
   const [isLoaded, setLoaded] = useState(false)
-  const [localStream, setLocalStream] = useState(null)
+  const localStream = useRef(null)
   const [remoteStream, setRemote] = useState(null)
   // const [ua, setUa] = useState(new UserAgent({
   //   uri: 'apiKey:58fe00be7be7c9805c1c0b98b195669a'
@@ -23,7 +24,7 @@ function VideoCall(props) {
   const callState = useSelector(state => state.call)
 
   const onStreamListChangedHandler = function (streamInfo) {
-   if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
+    if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
       if (conversationRef.current)
         conversationRef.current.subscribeToStream(streamInfo.streamId)
           .then((stream) => {
@@ -36,12 +37,14 @@ function VideoCall(props) {
   //streamAdded : Add the participant's display to the UI
   const onStreamAddedHandler = function (stream) {
     if (stream.isRemote) {
-      stream.addInDiv('opVideo', 'remote-media-' + stream.streamId, {}, false);
+      setLoaded(true)
+      console.log(stream);
+      stream.addInDiv('opVideo', 'remoteMediaPlayer', {}, false);
     }
   }
   //streamRemoved: Remove the participant's display from the UI
   const onStreamRemovedHandler = function (stream) {
-    stream.removeFromDiv('opVideo', 'remote-media-' + stream.streamId)
+    stream.removeFromDiv('opVideo', 'remoteMediaPlayer' + stream.streamId)
   }
   const initializeVideo = async () => {
     const apikey = "58fe00be7be7c9805c1c0b98b195669a"
@@ -64,13 +67,13 @@ function VideoCall(props) {
       //Instantiate a local video stream object
       ua.createStream({
         constraints: {
-          audio: true,
+          audio: false,
           video: true
         }
       })
         .then((stream) => {
           let strm = stream
-          setLocalStream(stream)
+          localStream.current = strm
           stream.attachToElement(document.getElementById('local-video-stream'));
           conversation.join()
             .then((response) => {
@@ -80,13 +83,13 @@ function VideoCall(props) {
                   console.log('local published')
                 })
                 .catch((err) => {
-                  console.error("publish error", err);
+                  toast.error("publish error", err);
                 });
             }).catch((err) => {
-              console.error('Conversation join error', err);
+              toast.error('Conversation join error', err);
             });
         }).catch((err) => {
-          console.error('create stream error', err);
+          toast.error('create stream error', err);
         });
     });
   }
@@ -110,38 +113,29 @@ function VideoCall(props) {
         }
       })
     }
-    socket.on('callEnded', (data) => {
-      // if (conversationRef.current) {
-      //   conversationRef.current.leave().then(() => {
-      //     conversationRef.current.destroy()
-      //   })
-      // }
+    
+    const handleCallEnd = (data) => {
+      if (localStream.current) {
+        localStream.current.data.getTracks().forEach(el => {
+          return el.stop()
+        })
+      }
+      setChat({ type: null })
       toast.error('Call ended')
-    })
-    socket.on('callAccepted', () => {
+    }
+    const handleCallAccepted = () => {
       setChat({ ...chat, isAccepted: true })
       initializeVideo()
       setLoaded(true)
 
-    })
-    // socket.on('callEnded', (data) => {
-    //   const videos = document.querySelectorAll('video')
-    //   videos.forEach(video => {
-    //       const stream = video.srcObject
-    //       stream.getVideoTracks().forEach(track => track.stop());
-    //       stream.getAudioTracks().forEach(track => track.stop());
-    //       video.srcObject = null
-    //   })
-    // })
-    // socket.on('callDeclined', (data) => {
-    //   const videos = document.querySelectorAll('video')
-    //   videos.forEach(video => {
-    //       const stream = video.srcObject
-    //       stream.getVideoTracks().forEach(track => track.stop());
-    //       stream.getAudioTracks().forEach(track => track.stop());
-    //       video.srcObject = null
-    //   })
-    // })
+    }
+    socket.on('callEnded', handleCallEnd)
+    socket.on('callDeclined', handleCallEnd)
+    socket.on('callAccepted', handleCallAccepted)
+    return () => {
+      socket.off('callEnded', handleCallEnd)
+      socket.off('callAccepted'.handleCallAccepted)
+    }
   }, [socket])
 
   const acceptCall = function () {
@@ -149,15 +143,21 @@ function VideoCall(props) {
     setChat({ ...chat, isAccepted: true })
     initializeVideo()
   }
-  const hangupCall = function () {
-    if (conversationRef.current) {
-      conversationRef.current.leave().then(() => {
-        conversationRef.current.destroy()
-      })
-      socket.emit('onHangup', chat.data)
 
+  const hangUpCall = function () {
+    if(conversationRef.current){
+      conversationRef.current.leave()
     }
+    if (localStream.current) {
+      localStream.current.data.getTracks().forEach(el => {
+        return el.stop()
+      })
+    }
+    socket.emit('onHangup', chat.data)
+    const id = chat.data.from == me.value._id ? chat.data.to : chat.data.from
+    setChat({ type: null })
   }
+
   return (
     <>
       {userData && <div className='userDetailsVidCall'>
@@ -166,21 +166,7 @@ function VideoCall(props) {
       </div>}
       {callState.value && <div className="videoContainer">
         {isLoaded ? <>
-          {/* <div className="callOptions"> */}
-          {chat.isRecieved && !chat.isAccepted ?
-            <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
-              <button className="callBtn Accept" onClick={acceptCall} >
-                <img src={imgAccept} alt="" />
-              </button>
-              <button className="callBtn Decline" onClick={props.declineCall} >
-                <img src={imgDecline} alt="" />
-              </button>
-            </div>
-            :
-            <div className={chat.isAccepted ? "AccpetedOPtions" : "callOptions"}>
-              <button onClick={props.hangUpCall}> <img src={imgDecline} alt="" /> </button>
-            </div>}
-          {/* </div> */}
+
           <div className="callUi">
             <div className="selfVideo" id='selfVideo'>
               <video id="local-video-stream" className='selfStream' autoPlay muted></video>
@@ -195,6 +181,22 @@ function VideoCall(props) {
           <button className='btnHangup' onClick={props.declineCall}> <img src={imgDecline} alt="" /></button>
 
         </div>}
+        <div className="callOptions">
+          {chat.isRecieved && !chat.isAccepted ?
+            <div>
+              <button className="callBtn Accept" onClick={acceptCall} >
+                <img src={imgAccept} alt="" />
+              </button>
+              <button className="callBtn Decline" onClick={props.declineCall} >
+                <img src={imgDecline} alt="" />
+              </button>
+            </div>
+            :
+            <div>
+              <button onClick={hangUpCall}> <img src={imgDecline} alt="" /> </button>
+            </div>}
+        </div>
+
       </div>
       }
     </>
