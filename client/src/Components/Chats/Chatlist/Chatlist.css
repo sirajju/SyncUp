@@ -17,6 +17,8 @@
     display: flex;
     cursor: pointer;
     margin-top: 10px;
+    position: relative ;
+
 }
 .chatIcon {
     width: 80px;
@@ -61,7 +63,7 @@
     width: 40px;
     font-size: 7px !important;
     height: 12px;
-    /* position: relative !important; */
+    position: absolute !important;
 }
 .smallAds{
     display: none;

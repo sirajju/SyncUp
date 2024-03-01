@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTimer } from 'react-timer-hook'
 import './Otp.css'
 import { useDispatch } from 'react-redux'
