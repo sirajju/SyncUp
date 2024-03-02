@@ -19,7 +19,7 @@ function Emoji({ setMessage, setOpenEmoji }) {
   }
   return (
     <div ref={emojiContainerRef} className="emojiContainer" >
-      <EmojiPicker lazyLoadEmojis={true} emojiStyle='native' onEmojiClick={a} />
+      <EmojiPicker lazyLoadEmojis={true} onEmojiClick={a} />
     </div>
   )
 }

@@ -98,7 +98,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
                 <MDBIcon fas icon="arrow-right" onClick={closeChat} size='sm' style={{ color: "white" }} />
                 <img src={reciever.avatar_url} alt="" onClick={goToProfile} className="conversationAvatar" />
                 <div className="conversationUserDetails" onClick={goToProfile}>
-                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <sup title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</sup>} {reciever.isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </span>
+                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{reciever.username} {reciever.isPremium && <span title='Premium member' className="badge rounded-pill d-inline premiumBadge mx-1">Premium</span>} {reciever.isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </span>
                     {!isBlocked && <span> {isTyping ? "Typing..." : reciever.last_seen != 'online' ? `last seen ${new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() ? "today" : new Date(parseInt(reciever.last_seen)).getDate() == new Date().getDate() - 1 ? "yesterday" : " was " + new Date(parseInt(reciever.last_seen)).toLocaleDateString()} at ${new Date(parseInt(reciever.last_seen)).toLocaleTimeString()}` : <font color='white'>Online</font>}</span>}
                 </div>
             </div>
@@ -118,7 +118,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const [messages, setMessages] = useState([])
     const conversation = useSelector(state => state.conversations)
     const dispatch = useDispatch()
-    const [messageId, setMessageId] = useState(null)
+    const [currentMessage, setCurrentMessage] = useState(null)
     const [isConfirmed, displayConfirm] = useState(false)
     const [editedMessage, setEdited] = useState('')
     const [showEdit, openEdit] = useState(false)
@@ -142,8 +142,8 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
             setMessages(currentChat.value)
         }
     }, [currentChat])
-    function displayMenu(e, id) {
-        setMessageId(id)
+    function displayMenu(e, msg) {
+        setCurrentMessage(msg)
         show({
             event: e,
         });
@@ -152,14 +152,14 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
         displayConfirm(false)
         const options = {
             route: "deleteMessage",
-            params: { id: messageId },
+            params: { id: currentMessage?._id },
             headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
             method: "DELETE"
         }
         Axios(options).then(res => {
             if (res.data.success) {
-                setMessageId('')
-                dispatch(deleteMessage(messageId))
+                setCurrentMessage('')
+                dispatch(deleteMessage(currentMessage?._id))
             } else {
                 toast.error(res.data.message)
             }
@@ -169,15 +169,15 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const saveMessage = function () {
         const options = {
             route: "editMessage",
-            payload: { msgId: messageId, message: editedMessage },
+            payload: { msgId: currentMessage?._id, message: editedMessage },
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
             method: "PUT"
         }
         Axios(options).then(res => {
             if (res.data.success) {
-                dispatch(markEdited({ msgId: messageId, content: editedMessage }))
+                dispatch(markEdited({ msgId: currentMessage?._id, content: editedMessage }))
                 setEdited('')
-                setMessageId('')
+                setCurrentMessage('')
                 openEdit(false)
             } else {
                 alert(res.data.message)
@@ -187,16 +187,20 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const downloadImage = function (el) {
         saveAs(el.mediaConfig.url, `image_syncUp_${el.sentTime}`)
     }
-
+    const confirmationNegtvFunc = function(){
+        setCurrentMessage('')
+        openEdit(false)
+        displayConfirm(false)
+    }
     return (
         <div className="chatinInterface">
 
-            <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setMessageId('') }} ref={doodleRef}>
+            <div className="doodles" onClick={(e) => { (!isConfirmed && !showEdit) && setCurrentMessage('') }} ref={doodleRef}>
                 {/*Confirm message for deleted message*/}
-                <ConfirmBox func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
+                <ConfirmBox negFunc={confirmationNegtvFunc} func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
                 {/*Message editor*/}
-                <ConfirmBox func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
-                    <input onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
+                <ConfirmBox negFunc={confirmationNegtvFunc} func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
+                    <input value={currentMessage?.content} onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
                 </ConfirmBox>
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
@@ -208,7 +212,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                             return (
                                 <>
                                     {el.senderId === userData.value._id ? (
-                                        <div key={ind} className={`message rightMessage ${messageId == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el._id)}>
+                                        <div key={ind} className={`message rightMessage ${currentMessage?._id == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el)}>
                                             <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                                 <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
                                                 <p className='p-1 text-start' >{el.content}</p>

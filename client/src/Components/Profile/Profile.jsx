@@ -182,7 +182,7 @@ function Profile({ setGo, chat }) {
                 </div>
                 <div onClick={userData.value.isPremium ? () => toast('Currently we only have this type    ') : () => openPremiumModal(true)} className={`profilePremiumBadge ${!userData.value.isPremium && 'cursor-pointer'}`}>
                     <span>Select your premium badge : </span>
-                    <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer' }} >Premium</span>
+                    <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer',right:"10px" }} >Premium</span>
                 </div>
                 <div className='afkDiv' onClick={() => !userData.value.isPremium && openPremiumModal(true)} >
                     <span>Turn on or off away from keyboard : </span>
