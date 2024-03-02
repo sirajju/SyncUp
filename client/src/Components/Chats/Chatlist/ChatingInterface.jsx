@@ -200,7 +200,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                 <ConfirmBox negFunc={confirmationNegtvFunc} func={displayConfirm} value={isConfirmed} posFunc={deleteMsg} title='Are you sure ?' content="Do you want to delete this message ?" />
                 {/*Message editor*/}
                 <ConfirmBox negFunc={confirmationNegtvFunc} func={openEdit} value={showEdit} posFunc={saveMessage} title='Edit your message' >
-                    <input value={currentMessage?.content} onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
+                    <input onKeyUp={(e) => e.key == 'Enter' && saveMessage()} onChange={(e) => setEdited(e.target.value)} className='confirmInput m-1' type="text" placeholder={'Enter message'} />
                 </ConfirmBox>
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
