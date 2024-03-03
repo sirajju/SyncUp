@@ -113,7 +113,7 @@ function VideoCall(props) {
         }
       })
     }
-    
+
     const handleCallEnd = (data) => {
       if (localStream.current) {
         localStream.current.data.getTracks().forEach(el => {
@@ -145,7 +145,7 @@ function VideoCall(props) {
   }
 
   const hangUpCall = function () {
-    if(conversationRef.current){
+    if (conversationRef.current) {
       conversationRef.current.leave()
     }
     if (localStream.current) {
@@ -165,24 +165,9 @@ function VideoCall(props) {
         <h4>{userData.username}</h4>
       </div>}
       {callState.value && <div className="videoContainer">
-        {isLoaded ? <>
 
-          <div className="callUi">
-            <div className="selfVideo" id='selfVideo'>
-              <video id="local-video-stream" className='selfStream' autoPlay muted></video>
-            </div>
-            <div className="opVideo" id='opVideo'>
-              <video id="op-video-stream" className='opponentVideo' autoPlay muted></video>
-
-            </div>
-          </div></> : <div className="vidLoading">
-          <span className="spinner" />
-          <p className='text-light' >Waiting...</p>
-          <button className='btnHangup' onClick={props.declineCall}> <img src={imgDecline} alt="" /></button>
-
-        </div>}
         <div className="callOptions">
-          {chat.isRecieved && !chat.isAccepted ?
+          {Boolean(chat.isRecieved && !chat.isAccepted)?
             <div>
               <button className="callBtn Accept" onClick={acceptCall} >
                 <img src={imgAccept} alt="" />
@@ -192,9 +177,25 @@ function VideoCall(props) {
               </button>
             </div>
             :
-            <div>
-              <button onClick={hangUpCall}> <img src={imgDecline} alt="" /> </button>
-            </div>}
+           isLoaded && <div>
+           <button onClick={hangUpCall}> <img src={imgDecline} alt="" /> </button>
+         </div> }
+          {isLoaded ? <>
+
+            <div className="callUi">
+              <div className="selfVideo" id='selfVideo'>
+                <video id="local-video-stream" className='selfStream' autoPlay muted></video>
+              </div>
+              <div className="opVideo" id='opVideo'>
+                <video id="op-video-stream" className='opponentVideo' autoPlay muted></video>
+
+              </div>
+            </div></> : <div className="vidLoading">
+            <span className="spinner" />
+            <p className='text-light' >Waiting...</p>
+            <button className='btnHangup' onClick={props.declineCall}> <img src={imgDecline} alt="" /></button>
+
+          </div>}
         </div>
 
       </div>
