@@ -44,7 +44,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
 import { saveAs } from 'file-saver'
-import { v4 as random } from 'uuid'
+
 import Confetti from 'react-confetti'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
@@ -104,7 +104,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${random()}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -373,7 +373,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         } else {
             if (message.length) {
                 const newMsg = {
-                    _id: v4(),
+                    _id: v4().split('-').join(''),
                     recieverId: reciever._id,
                     senderId: userData.value._id,
                     content: message.charAt(0).toUpperCase() + message.slice(1),
@@ -438,7 +438,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         const { secure_url } = res?.data
         if (secure_url) {
             const newMsg = {
-                _id: v4(),
+                _id: v4().split('-').join(''),
                 recieverId: reciever._id,
                 senderId: userData.value._id,
                 content: caption,
