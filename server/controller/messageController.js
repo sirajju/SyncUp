@@ -48,7 +48,8 @@ const getConversation = async (req, res) => {
             try {
                 const userData = await User.findOne({ email: req.userEmail });
                 const recieverData = await User.findOne({ _id: recieverId });
-                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true } })
+                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true} })
+                await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: ''} })
                 const conversationData = await Conversation.findOne({
                     $or: [
                         { participents: [userData._id, recieverData._id] },
