@@ -44,6 +44,9 @@ const message = new mongoose.Schema({
     isScheduledMsgCleared:{
         type:Boolean,
     },
+    tempId:{
+        type:String,
+    },
     sentTime:{
         type:Number,
         default:Date.now()

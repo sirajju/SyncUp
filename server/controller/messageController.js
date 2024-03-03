@@ -83,7 +83,7 @@ const getConversation = async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 }
-const sendMessage = async ({ recieverId, content, userEmail }) => {
+const sendMessage = async ({ recieverId, content, userEmail, _id }) => {
     try {
         if (recieverId && content) {
             const userData = await User.findOne({ email: userEmail })
@@ -93,6 +93,7 @@ const sendMessage = async ({ recieverId, content, userEmail }) => {
                 senderId: userData._id,
                 recieverId,
                 content,
+                tempId: _id,
                 sentTime: Date.now()
             })
             if (!conversationData) {
@@ -212,13 +213,14 @@ const sendMediaMessage = async (data) => {
     try {
         if (data) {
             const userData = await User.findOne({ email: data.userEmail })
-            const recieverData = await User.findOne({ _id: new ObjectId(data.recieverId) })
+            const recieverData = await User.findById({ _id: data.recieverId })
             const conversationData = await Conversation.findOne({ participents: { $all: [userData._id, recieverData._id] } })
             const messageData = new Message({
                 senderId: userData._id,
                 recieverId: recieverData._id,
                 content: data.content || '',
                 sentTime: data.sentTime,
+                tempId: data._id,
                 isMedia: true,
                 mediaConfig: { ...data.mediaConfig },
                 isDelivered: false,
@@ -253,19 +255,25 @@ const sendMediaMessage = async (data) => {
 const deleteMessage = async (req, res) => {
     try {
         const { id } = req.query
+        let updateData;
         if (id) {
-            const updateData = await Message.findOneAndUpdate({ _id: id }, { $set: { isDeleted: true } }, { new: true })
-            if (updateData) {
+            updateData = await Message.findOneAndUpdate({ tempId: id }, { $set: { isDeleted: true } }, { new: true })
+            if (!updateData) {
+                updateData = await Message.findByIdAndUpdate({ _id: id }, { $set: { isDeleted: true } }, { new: true })
+            }
+            else {
                 const roomData = await Room.findOne({ senderId: { $in: [updateData.senderId, updateData.recieverId] }, recieverId: { $in: [updateData.senderId, updateData.recieverId] } })
                 if (roomData) {
                     req.io.to(roomData.roomId).emit('msgDeleted', { id: updateData._id })
+                    res.json({ success: true })
                 }
-                res.json({ success: true })
-            } else {
-                res.json({ success: false, message: 'Err while deleting message' })
             }
         }
+        else {
+            res.json({ success: false, message: 'Err while deleting message' })
+        }
     } catch (error) {
+        console.log(error);
         res.status(500).json({ success: false, message: error.message })
 
     }
@@ -273,8 +281,12 @@ const deleteMessage = async (req, res) => {
 const editMessage = async (req, res) => {
     try {
         const { msgId, message } = req.body
+        let messageData;
         if (msgId && message) {
-            const messageData = await Message.findById({ _id: msgId })
+            messageData = await Message.findOne({ tempId: msgId })
+            if (!messageData) {
+                messageData = await Message.findById({ _id: msgId })
+            }
             if (messageData) {
                 messageData.isEdited = true
                 messageData.editedContent = messageData.content
@@ -284,12 +296,12 @@ const editMessage = async (req, res) => {
                     if (connectionData) {
                         req.io.to(connectionData.socketId).emit('msgEdited', { content: message, msgId: messageData._id })
                     }
-                    res.json({ success: true, message: "Edited" })
+                    return res.json({ success: true, message: "Edited" })
                 }
             }
-        } else {
-            res.json({ success: false, message: "No message" })
         }
+        return res.json({ success: false, message: "No message" })
+
     } catch (error) {
         res.status(500).json({ success: false, message: error.message })
     }
