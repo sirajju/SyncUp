@@ -4,6 +4,10 @@ const room = new mongoose.Schema({
     roomId: {
         type: String
     },
+    conversationName:{
+        type:String,
+        default:null
+    },
     senderId: {
         type: String,
         required: true
@@ -15,6 +19,10 @@ const room = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now()
+    },
+    participants:{
+        type:Array,
+        default:[]
     }
 })
 const Room = mongoose.model('Room', room)

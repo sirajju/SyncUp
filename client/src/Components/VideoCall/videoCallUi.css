@@ -1,0 +1,64 @@
+.videoCallUIParent {
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+}
+.videoCallUserDetails {
+    width: 100%;
+    height: 20vh;
+    color: white;
+    gap: 30px;
+}
+.videoCallStreams {
+    width: 100%;
+    height:60vh;
+    gap: 10px;
+    /* position: relative; */
+}
+.videoCallControls {
+    width: 100%;
+    height:20%;
+}
+.flex-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.vidStream {
+    max-width: 45%;
+}
+.syncup-pink-btn {
+    background: #ED80FD;
+    height: 40px;
+    border: none;
+    color: white;
+    width: 80px;
+    border-radius: 10px;
+    margin: 10px;
+    font-size: 14px;
+}
+.videoCallLoader {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    gap: 10px;
+    color: white;
+}
+.videoCallLoaderSpinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid white;
+    border-radius: 100%;
+    border-top-color: transparent;
+    animation: spin 0.7s linear infinite;
+}
+.selfStream {
+    position: absolute;
+    right:0;
+    bottom:0;
+}
+.vidCallAvatar{
+    width: 60px;
+    border-radius: 100%;
+}

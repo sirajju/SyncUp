@@ -44,7 +44,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import MediaSender from './MediaSender/MediaSender';
 import { saveAs } from 'file-saver'
-
+import VideoCallUi from '../../VideoCall/VideoCallUi';
 import Confetti from 'react-confetti'
 
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
@@ -104,7 +104,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id,participants:[reciever._id,userData.value._id], conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -125,10 +125,6 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const currentChat = useSelector(state => state.currentChat)
     const { show } = useContextMenu({ id: 'MENU_ID' });
     const [isLoading, setLoading] = useState(false)
-    useEffect(()=>{
-        doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
-
-    },[doodleRef])
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
         const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
@@ -528,7 +524,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         openGreeting,
         changeConfettiState,
         isChatLoading,
-        setChatLoading
+        setChatLoading,
     }
 
     return (

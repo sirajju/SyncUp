@@ -77,9 +77,18 @@ function intializeSocket(server) {
                     socket.to(roomData.roomId).emit('callError', { message: "Err while connecting" })
                 }
             })
+            socket.on('memberJoined',async data=>{
+                const roomData = await  Room.findOne({conversationName: data.conversationName})
+                if(roomData){
+                    socket.join(roomData.roomId)
+                    socket.emit(roomData.roomId).emit('userJoinedToCall',{data})
+                }
+            })
             socket.on('onHangup', async (data) => {
-                const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
+                const roomData = await Room.findOne({ conversationName: data.conversationName})
                 const callData = await call_log.findOne({ conversationName: data.conversationName })
+                const senderConnection = await Connection.findOne({ userId: data.from })
+                const recieverConnection = await Connection.findOne({ userId: data.to })
                 console.log(`Ending conversation ${data.conversationName}`);
                 if (callData) {
                     const ms = Date.now() - new Date(callData.createdAt).getTime()
@@ -98,11 +107,12 @@ function intializeSocket(server) {
                     await callData.save()
                 }
                 if (roomData) {
-                    socket.to(roomData.roomId).emit('callEnded', { userId: data })
+                    socket.to(recieverConnection.socketId).emit('callEnded', { userId: data })
+                    socket.to(senderConnection.socketId).emit('callEnded', { userId: data })
                 }
             })
             socket.on('onDeclined', async (data) => {
-                const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
+                const roomData = await Room.findOne({conversationName:data.conversationName})
                 console.log(`Declined call ${data.conversationName}`);
                 if (roomData) {
                     socket.to(roomData.roomId).emit('callDeclined', data)
@@ -174,7 +184,9 @@ function intializeSocket(server) {
                     const newRoom = await new Room({
                         roomId: `${data.senderId}_${data.recieverId}`,
                         senderId: data.senderId,
-                        recieverId: data.recieverId
+                        recieverId: data.recieverId,
+                        participants:[data.senderId,data.recieverId],
+                        conversationName:data.conversationName
                     }).save()
                     if (newRoom) {
                         return newRoom
@@ -209,12 +221,14 @@ function intializeSocket(server) {
                 if (from, to, conversationName) {
                     await new call_log({
                         conversationName: conversationName || delete this.conversationName,
+                        pariticpants:[from,to],
                         from,
                         to,
                         isAccepted,
                         duration,
                         createdAt: Date.now(),
-                        endTime: endTime || delete this.endTime
+                        endTime: endTime || delete this.endTime,
+                        
                     }).save()
                 }
 

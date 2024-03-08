@@ -897,5 +897,4 @@ module.exports = {
     changeAfkMessage,
     checkContactByUsername,
     logoutAccount
-
 }

@@ -12,6 +12,10 @@ const callLog = new mongoose.Schema({
         type: String,
         required: true
     },
+    pariticpants:{
+        type:Array,
+        default:[]
+    },
     createdAt: {
         type: Number,
         default: Date.now()

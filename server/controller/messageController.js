@@ -26,14 +26,21 @@ const opts = {
 
 const getUserInfo = async (req, res) => {
     try {
-        const { userId } = req.query
+        const { userId,arrayOfIds } = req.query
         if (userId) {
             const userData = await User.findOne({ _id: userId })
             if (userData) {
                 const encData = crypto.AES.encrypt(JSON.stringify(userData), process.env.CRYPTO_SECRET)
                 res.json({ success: true, body: encData.toString() })
             }
-        } else {
+        } else if (arrayOfIds) {
+            const userData = await User.find({ _id: {$in:arrayOfIds} })
+            if (userData) {
+                const encData = crypto.AES.encrypt(JSON.stringify(userData), process.env.CRYPTO_SECRET)
+                res.json({ success: true, body: encData.toString() })
+            }
+        }
+        else {
             res.json({ success: false })
         }
     } catch (error) {
@@ -48,8 +55,8 @@ const getConversation = async (req, res) => {
             try {
                 const userData = await User.findOne({ email: req.userEmail });
                 const recieverData = await User.findOne({ _id: recieverId });
-                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true} })
-                await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: ''} })
+                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true } })
+                await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: '' } })
                 const conversationData = await Conversation.findOne({
                     $or: [
                         { participents: [userData._id, recieverData._id] },
