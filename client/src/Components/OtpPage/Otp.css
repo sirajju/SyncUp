@@ -51,7 +51,7 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 .button {
-    width: 100px;
+    /* width: 100px; */
     height: 38px;
     margin: 20px;
     background:transparent;
@@ -60,6 +60,7 @@ input::-webkit-inner-spin-button {
     color:#010851;
     font-size: 13px;
     font-weight: 500;
+    padding: 10px;
 }
 .verifyOtp {
     background: linear-gradient(135deg, #EE9AE5 0%, #5961F9 100%);

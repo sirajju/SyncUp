@@ -41,6 +41,7 @@ function IsAuth({ children }) {
                     toast.error(res.data.message)
                     localStorage.removeItem('SyncUp_Auth_Token')
                 }
+                dispatch(hideLoading())
             })
         }
     }, []);

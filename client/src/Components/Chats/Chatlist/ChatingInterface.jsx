@@ -127,7 +127,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
         doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
-        const data = conversation.value.filter(el => el.opponent[0]._id == reciever._id)
+        const data = conversation.value?.filter(el => el.opponent[0]._id == reciever._id)
         if (!currentChat.value?.length) {
             if (data[0]?.messages?.length) {
                 setMessages(data[0].messages)
@@ -273,7 +273,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         })
         socket.on('conversationUnblocked', async (data) => {
             if (reciever) {
-                dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(el => el.userId != data.userId) }))
+                dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts?.filter(el => el.userId != data.userId) }))
                 setBlocked(false)
             } else {
                 const res = await GetChatList()
@@ -315,11 +315,11 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 }
                 // setChatLoading(false)
             })
-            const chatData = conversation.value.filter(el => el.opponent[0]._id == chat.data)
+            const chatData = conversation.value?.filter(el => el.opponent[0]._id == chat.data)
             if (chatData && chatData[0]?.opponent[0]) {
                 const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)
-                const anotherBlock = chatData[0].opponent[0].blockedContacts.filter(el => el.userId == userData.value._id).length
-                const conversationBanned = conversation.value.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
+                const anotherBlock = chatData[0].opponent[0].blockedContacts?.filter(el => el.userId == userData.value._id).length
+                const conversationBanned = conversation.value?.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
                 setBlocked(blocked || anotherBlock || conversationBanned)
                 setReciever(chatData[0].opponent[0])
             } else {
@@ -331,8 +331,8 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 }
                 Axios(options).then(res => {
                     const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length).length
-                    const anotherBlock = res.data.body.blockedContacts.filter(el => el.userId == userData.value._id).length
-                    const conversationBanned = conversation.value.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
+                    const anotherBlock = res.data.body.blockedContacts?.filter(el => el.userId == userData.value._id).length
+                    const conversationBanned = conversation.value?.filter(el => el.opponent[0]._id == chat.data && el.isBanned).length
 
                     setBlocked(blocked || anotherBlock || conversationBanned)
                     setReciever(res.data.body)

@@ -24,12 +24,11 @@ export default function Otp({  isTimeExpired, generateOtpInputs, resendOtp,verif
                 <h1 className='otpHeader'>OTP</h1>
                 <span className="otpDescription">We have sent you <b>OTP</b> to your registered email</span>
                 <p className="otpDescription2">Please enter the otp</p>
-                {!isTimeExpired && <p className="timer">{timer.minutes}:{timer.seconds}</p>}
                 <div className="otp">
                     {generateOtpInputs(5)}
                 </div>
                 <div className="btns">
-                    <button onClick={resendMyOtp} disabled={!isTimeExpired} className="button resendOtp">Resend otp</button>
+                    <button onClick={resendMyOtp} disabled={!isTimeExpired} className="button resendOtp">Resend otp {!isTimeExpired && timer.minutes+':'+timer.seconds} </button>
                     <button onClick={verifyOtp} className="button verifyOtp">Verify otp</button>
                 </div>
             </div>

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import ContactLIst from '../Chats/Chatlist/ContactsList'
 import videoCallIcon from '../../assets/Images/videocall.png'
+import Webcam from 'react-webcam';
 
 
 function VideoCallUi({ setChat, chat, reciever }) {
@@ -20,6 +21,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
   const [isLoading, setLoading] = useState(false)
   const [isModalOpen, setModalOpen] = useState(false)
   const localStream = useRef(null)
+  const webcamRef = useRef(null);
 
   const getUserData = async function () {
     if (chat.data.participants.length) {
@@ -128,21 +130,21 @@ function VideoCallUi({ setChat, chat, reciever }) {
       conversation.on("streamAdded", onStreamAddedHandler)
       conversation.on("streamRemoved", onStreamRemovedHandler)
       //Instantiate a local video stream object
-      if (!localStream.current) {
-        navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: true
-        })
-          .then(async (stream) => {
-            let strm = await ua.createStreamFromMediaStream(stream)
-            localStream.current = strm
-            addStreamInVideo(strm, true)
-            strm.attachToElement(document.getElementById('local-video-stream'));
+      ua.createStream({
+        constraints: {
+            audio: false,
+            video: true
+        }
+    })
+          .then((stream) => {
+            localStream.current = stream
+            addStreamInVideo(stream, true)
+            stream.attachToElement(document.getElementById('local-video-stream'));
             console.log(conversation);
             conversation.join()
               .then((response) => {
                 conversation
-                  .publish(strm)
+                  .publish(stream)
                   .then(() => {
                     toast.success('User joined')
                   })
@@ -155,7 +157,6 @@ function VideoCallUi({ setChat, chat, reciever }) {
           }).catch((err) => {
             toast.error(`${err.message} ${localStream.current?.streamId}`);
           });
-      }
     });
   }
 
@@ -190,6 +191,11 @@ function VideoCallUi({ setChat, chat, reciever }) {
   }, [socket])
 
   const acceptCall = function () {
+    if(webcamRef.current){
+      toast('taking screenshot')
+      const url = webcamRef.current.getScreenshot()
+      console.log(url);
+    }
     setAccepted(true)
     setLoading(true)
     socket.emit('userAcceptedACall', chat.data)
@@ -228,8 +234,19 @@ function VideoCallUi({ setChat, chat, reciever }) {
     socket.emit('onCall', { ...chat.data, to: id })
     setChat({ ...chat, data: { ...chat.data, participants: { ...chat.data?.participants, id } } })
   }
+  const videoConstraints = {
+    width: 1,  // Set to a very small width
+    height: 1, // Set to a very small height
+    facingMode: 'user', // Use the user-facing camera
+  };
   return (
     <div className="videoCallUIParent">
+      {/* <Webcam
+        audio={false}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        videoConstraints={videoConstraints}
+      /> */}
       <ContactLIst contactsModal={isModalOpen} openContactsModal={setModalOpen} subTitle={"Add user to the meeting"} modalTitle={'New member'} icon={videoCallIcon} onClick={addMember} />
       {!isAccepted && <div className="videoCallUserDetails center">
         <div className='d-flex'>
