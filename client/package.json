@@ -2,6 +2,7 @@
   "name": "syncup",
   "version": "0.1.0",
   "private": true,
+  "homepage":"https://syncuppp.netlify.app/",
   "dependencies": {
     "@apirtc/apirtc": "^5.0.19",
     "@emoji-mart/data": "^1.1.2",

@@ -136,7 +136,7 @@ function Register() {
                     <input onChange={handleChange} type="text" id="username" value={userData.username} placeholder='Enter username' className='loginInput' />
                 </div>
                 <div data-mdb-input-init className="form-outline">
-                    <input onChange={handleChange} type="email" id="email" value={userData.email} placeholder='Enter email' className='loginInput' />
+                    <input onChange={handleChange} type="email" id="email" placeholder='Enter email' className='loginInput' />
                 </div>
                 <div data-mdb-input-init className="form-outline">
                     <input onChange={handleChange} value={userData.password} type={showPass ? "text" : "password"} id="password" placeholder='Enter password' className='loginInput' />
