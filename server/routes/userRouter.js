@@ -27,6 +27,7 @@ app.get('/getCallLogs',isAuth,userController.getCallLogs);
 app.get('/clearConversationMessages',isAuth,messageController.clearMessages)
 app.get('/checkContactByUsername',isAuth,userController.checkContactByUsername)
 app.get('/getScheduledMessages',isAuth,messageController.getScheduledMessages)
+app.get('/getLikes',isAuth,noteController.getLikes)
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);

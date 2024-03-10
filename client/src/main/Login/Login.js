@@ -15,6 +15,7 @@ function Login() {
     const [err, setErr] = useState()
     const [showPass, setShow] = useState(false)
     const [isAuth, setAuth] = useState({ hasToVerify: false })
+    const [isLoading,setLoading]=useState(false)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const login = useGoogleLogin({
@@ -94,7 +95,7 @@ function Login() {
     const handleSubmit = (e) => {
         const val = Object.values(userData).filter((el) => el.trim()).length
         if (val == 2) {
-            dispatch(showLoading())
+            setLoading(true)
             const options = {
                 route: "login",
                 payload: userData,
@@ -104,16 +105,17 @@ function Login() {
                 if (res.data.success) {
                     toast.success(res.data.message)
                     localStorage.setItem('SyncUp_Auth_Token', res.data.token)
+                    setLoading(false)
                     navigate('/chats')
                 }
                 else if (res.data.err == 'EMAILNOTVERERR') {
                     localStorage.setItem('SyncUp_Auth_Token', res.data.token)
                     setAuth({ hasToVerify: true })
-                    dispatch(hideLoading())
+                    setLoading(false)
                     toast.error(res.data.message)
                 }
                 else {
-                    dispatch(hideLoading())
+                    setLoading(false)
                     toast.error(res.data.message)
                 }
             })
@@ -143,7 +145,7 @@ function Login() {
                     </div>
                     <Link style={{ 'fontSize': "13px" }} to='/forgetPassword'>Forget password ?</Link>
                 </div>
-                <button className="btnLogin" onClick={handleSubmit}>Login</button>
+                <button className="btnLogin" onClick={isLoading ? ()=>toast('Validating..') : handleSubmit}> {isLoading ? <div className='loginBtnSpinnerParent' > <span className="spinner"></span> </div> : "Login" }</button>
                 <button className="button resendOtp m-1 mt-2" style={{ height: '35px', width: '130px' }} onClick={login}>Google</button>
 
                 <p className='createHere'>Don't have an account ? <Link to={'/register'}>Create here</Link></p>

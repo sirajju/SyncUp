@@ -116,6 +116,7 @@ function ScheduleMessages({ setGo, setChat, setSubLoading, isSubLoading }) {
     const dltAllScheduledMsgs = function(){
         dispatch(setScheduledMsgs([]))
         setData([])
+        setOpenDltConfirm(false)
         const options = {
             route:"clearScheduledMsgs",
             headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},

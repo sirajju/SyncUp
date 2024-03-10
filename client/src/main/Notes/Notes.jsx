@@ -10,13 +10,15 @@ import toast from 'react-hot-toast'
 import { setArchived, setExpired, setMyNotes, setNotes } from '../../Context/userContext'
 import Axios from '../../interceptors/axios'
 import { useSocket } from '../../Context/socketContext'
+import Contacts from '../../Components/Chats/Chatlist/ContactsList'
 
 export default function Notes({ activeTab }) {
     const socket = useSocket()
     const userData = useSelector(state => state.user)
     const notesData = useSelector(state => state.notes)
     const myNotes = useSelector(state => state.myNotes)
-    const [isLiked, setLiked] = useState(false)
+    const [currentNote,setCurrentNote] = useState('')
+    const [isModalOpened,setModalOpened]=useState(false)
     const dispatch = useDispatch()
     const [notes, setLocalNotes] = useState([])
     const refreshNotes = function () {
@@ -57,7 +59,6 @@ export default function Notes({ activeTab }) {
             setLocalNotes(notesData.value)
             // refreshNotes()
         }
-        console.log('Rendering');
     }, [activeTab, myNotes, notesData])
     useEffect(()=>{
         socket.on('noteDeleted', () => {
@@ -117,6 +118,7 @@ export default function Notes({ activeTab }) {
 
     return (
         <div className="notesContainer" data-aos="fade-up" data-aos-duration="700">
+            {currentNote && <Contacts contactsModal={isModalOpened} openContactsModal={setModalOpened} modalTitle={'Likes'} route={'getLikes'} params={{noteId:currentNote._id}} />}
             {activeTab == 'My Notes' && <p style={{ width: '100%', textAlign: 'center', color: 'rgb(184, 184, 184)' }} >Note : You cannot publish two notes at a time.</p>}
             {Boolean(activeTab == 'Notes' && notes.length) && notes.map(el => {
                 return (
@@ -147,7 +149,7 @@ export default function Notes({ activeTab }) {
                         <div className="notesState">
                             <p className='time' >{new Date(el.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
                             <p style={{ fontSize: '10px' }}>{el.isExpired ? "Expired" : <img className='btnDelete' onClick={deleteNote} src={deleteIcon} />}</p>
-                            <p style={{ fontSize: '10px' }}>{el?.likes?.length} likes</p>
+                            <p style={{ fontSize: '10px','cursor':"pointer" }} onClick={()=>{if(el?.likes?.length){setCurrentNote(el);setModalOpened(true)}}} >{el?.likes?.length} likes</p>
                         
                         </div>
                     </div>

@@ -29,28 +29,35 @@ const registerUser = async (req, res) => {
     try {
         let { username, email, password, refferal } = req.body
         console.log(refferal);
-        password = await makeHashed(password)
-        const user = new User({
-            username,
-            email,
-            password,
-            invitedBy: refferal && atob(refferal)
-        })
-        if (await user.save()) {
-            jwt.sign({ username, email }, process.env.JWT_SECRET, async (err, data) => {
-                if (data) {
-                    res.status(200).json({ message: "Registration success", token: data, success: true })
-                }
-                else {
-                    throw new Error('Oops!,Something went wrong try again later').stack(err)
-                }
+        const userData = await User.findOne({ email })
+        if (!userData) {
+            password = await makeHashed(password)
+            const user = new User({
+                username,
+                email,
+                password,
+                invitedBy: refferal && atob(refferal)
             })
-        } else {
-            res.status(200).json({ message: "Oops!,Something went wrong", success: false })
+            if (await user.save()) {
+                jwt.sign({ username, email }, process.env.JWT_SECRET, async (err, data) => {
+                    if (data) {
+                        res.status(200).json({ message: "Registration success", token: data, success: true })
+                    }
+                    else {
+                        throw new Error('Oops!,Something went wrong try again later').stack(err)
+                    }
+                })
+            } else {
+                res.status(203).json({ message: "Oops!,Something went wrong", success: false })
+            }
+        }else{
+            res.status(203).json({ message: "Account already exists", success: false })
+
         }
+
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: 'Account is already exists', success: false })
+        res.status(500).json({ message: error.message, success: false })
     }
 }
 const OauthRegister = async (req, res) => {
@@ -412,13 +419,24 @@ const getAds = async (req, res) => {
 const checkUser = async (req, res) => {
     try {
         const { user } = req.query
-        const me = await User.findOne({email:req.userEmail})
+        const me = await User.findOne({ email: req.userEmail })
         if (user) {
             const regex = { $regex: user, $options: 'i' }
-            const userData = await User.aggregate([{ $match: { $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } } }, { $addFields: { isContact: { $in: [me._id, { $map: { input: "$contacts", as: "contact", in: "$$contact.id" } }] } } }, { $sort: { isContact: -1 } }]);
+            const userData = await User.aggregate([
+                { $match: { $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } } },
+                { $addFields: { isContact: { $in: [me._id, { $map: { input: "$contacts", as: "contact", in: "$$contact.id" } }] } } },
+                { $sort: { isContact: -1 } }
+            ]);
 
             if (userData.length) {
-                const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
+                const googleSearch = await User.aggregate([
+                    { $match: { email: req.userEmail } },
+                    { $unwind: '$googleContacts' },
+                    { $unwind: '$googleContacts.names' },
+                    { $match: { 'googleContacts.names.displayName': regex } },
+                    { $unwind: '$googleContacts.photos' },
+                    { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }
+                ])
                 googleSearch.map((el, ind) => {
                     const obj = {
                         _id: ind,
@@ -431,7 +449,14 @@ const checkUser = async (req, res) => {
                 const encData = encryptData(userData)
                 res.json({ success: true, body: encData })
             } else {
-                const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1 } }])
+                const googleSearch = await User.aggregate([
+                    { $match: { email: req.userEmail } },
+                    { $unwind: '$googleContacts' },
+                    { $unwind: '$googleContacts.names' },
+                    { $match: { 'googleContacts.names.displayName': regex } },
+                    { $unwind: '$googleContacts.photos' },
+                    { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1 } }
+                ])
                 const temp = googleSearch.map((el, ind) => {
                     return {
                         _id: ind,
@@ -525,7 +550,12 @@ const cancellRequest = async (req, res) => {
 }
 const getNoti = async (req, res) => {
     try {
-        const notifications = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$notifications" }, { $lookup: { from: 'users', localField: 'notifications.userId', foreignField: '_id', as: 'notiData' } }, { $project: { 'notifications': 1, 'notiData': 1, '_id': 1 } }])
+        const notifications = await User.aggregate([
+            { $match: { email: req.userEmail } },
+            { $unwind: "$notifications" },
+            { $lookup: { from: 'users', localField: 'notifications.userId', foreignField: '_id', as: 'notiData' } },
+            { $project: { 'notifications': 1, 'notiData': 1, '_id': 1 } }
+        ])
         const requests = notifications.filter(el => el.notifications.type == 'request')
         const normal = notifications.filter(el => el.notifications.type != 'request')
         let notiToSend = [...normal]
@@ -642,7 +672,14 @@ const saveContacts = async (req, res) => {
         const { contacts } = req.body
         if (contacts) {
             const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { googleContacts: contacts, googleSynced: true } })
-            const googleSearch = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: '$googleContacts' }, { $unwind: '$googleContacts.names' }, { $match: { 'googleContacts.names.displayName': regex } }, { $unwind: '$googleContacts.photos' }, { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }])
+            const googleSearch = await User.aggregate([
+                { $match: { email: req.userEmail } },
+                { $unwind: '$googleContacts' },
+                { $unwind: '$googleContacts.names' },
+                { $match: { 'googleContacts.names.displayName': regex } },
+                { $unwind: '$googleContacts.photos' },
+                { $project: { 'googleContacts.names.displayName': 1, 'googleContacts.photos.url': 1, 'googleContacts.emailAddresses': 1 } }
+            ])
             googleSearch.forEach(async el => {
                 if (el.googleContacts.emailAddresses[0].value) {
                     await User.findOneAndUpdate({ email: req.userEmail }, { $push: { contacts: { isGoogleContact: true, email: el.googleContacts.emailAddresses[0].value, isAccepted: false } } })
@@ -661,7 +698,14 @@ const saveContacts = async (req, res) => {
 }
 const getContacts = async (req, res) => {
     try {
-        const contactData = await User.aggregate([{ $match: { email: req.userEmail } }, { $unwind: "$contacts" }, { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } }, { $project: { 'contactData.username': 1, 'contactData.email': 1, 'contactData._id': 1, 'contactData.avatar_url': 1, 'contactData.isBusiness': 1, 'contactData.isPremium': 1 } }, { $unwind: "$contactData" }, { $sort: { 'contactData.username': 1 } }])
+        const contactData = await User.aggregate([
+            { $match: { email: req.userEmail } },
+            { $unwind: "$contacts" },
+            { $lookup: { from: "users", foreignField: "email", localField: "contacts.email", as: "contactData" } },
+            { $project: { 'contactData.username': 1, 'contactData.email': 1, 'contactData._id': 1, 'contactData.avatar_url': 1, 'contactData.isBusiness': 1, 'contactData.isPremium': 1 } },
+            { $unwind: "$contactData" },
+            { $sort: { 'contactData.username': 1 } }
+        ])
         if (contactData.length) {
             const userData = await User.findOne({ email: req.userEmail })
             if (userData.googleContacts.length) {
@@ -772,10 +816,21 @@ const getCallLogs = async (req, res) => {
             await Call_log.updateMany({ to: userData._id.toString() }, { $addToSet: { readedParticipants: userData._id } })
         }
 
-        // Removing conversationName after the usage to maintain consistancy
+        // Removing conversationName after the usage to maintain redundancy
         await Call_log.updateMany({ $or: [{ from: userData._id.toString() }, { to: userData._id.toString() }] }, { $set: { conversationName: "expired" } })
 
-        const callData = await Call_log.aggregate([{ $match: { $or: [{ from: userData._id.toString() }, { to: userData._id.toString() }], clearedParticipants: { $not: { $in: [userData._id] } } } }, { $project: { data: "$$ROOT", opponentId: { $cond: { if: { $eq: ['$from', userData._id.toString()] }, then: { $toObjectId: "$to" }, else: { $toObjectId: "$from" } } } } }, { $lookup: { from: "users", localField: "opponentId", foreignField: "_id", as: "opponentData" } }, { $unwind: "$opponentData" }, { $project: { 'opponentData.username': 1, 'opponentData._id': 1, 'opponentData.email': 1, 'opponentData.avatar_url': 1, opponentId: 1, data: 1 } }, { $sort: { 'data.createdAt': -1 } }]);
+        const callData = await Call_log.aggregate([
+            {
+                $match: {
+                    $or: [{ from: userData._id.toString() },
+                    { to: userData._id.toString() }], clearedParticipants: { $not: { $in: [userData._id] } }
+                }
+            },
+            { $project: { data: "$$ROOT", opponentId: { $cond: { if: { $eq: ['$from', userData._id.toString()] }, then: { $toObjectId: "$to" }, else: { $toObjectId: "$from" } } } } },
+            { $lookup: { from: "users", localField: "opponentId", foreignField: "_id", as: "opponentData" } },
+            { $unwind: "$opponentData" },
+            { $project: { 'opponentData.username': 1, 'opponentData._id': 1, 'opponentData.email': 1, 'opponentData.avatar_url': 1, opponentId: 1, data: 1 } },
+            { $sort: { 'data.createdAt': -1 } }]);
         const encData = encryptData(callData)
         if (encData) {
             res.json({ success: true, body: encData })
@@ -832,8 +887,10 @@ const changeAfkMessage = async (req, res) => {
 const checkContactByUsername = async (req, res) => {
     try {
         const { username } = req.query
+        const me = await User.findOne({ email: req.userEmail })
         if (username) {
-            const userData = await User.findOne({ username })
+            const userData = await User.findOne({ username, 'blockedContacts.userId': me._id })
+            console.log(userData);
             if (userData) {
                 const contactData = await User.find({ email: req.userEmail, contacts: { $elemMatch: { id: userData._id } } })
                 if (contactData.length) {
@@ -843,7 +900,8 @@ const checkContactByUsername = async (req, res) => {
         }
         return res.json({ success: false })
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        console.log(error);
+        res.status(403).json({ success: false, message: error.message })
     }
 }
 

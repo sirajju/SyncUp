@@ -71,7 +71,7 @@ export default function App({ isOpen, setOpen }) {
               <MDBBtn className='btn-close' color='none' onClick={discardChanges}></MDBBtn>
             </MDBModalHeader>
             <MDBModalBody style={{padding:'20px'}} >
-              <MDBInput autoComplete='off' value={note.content} onInput={handleInput} id='form5Example1' label='Content' />
+              <MDBInput autoComplete='off' onKeyUp={(e)=>{if(e.key=='Enter') publishNote(e)}} value={note.content} onInput={handleInput} id='form5Example1' label='Content' />
             </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn style={{ background: '#5961F9', color: 'white' }} onClick={discardChanges}>

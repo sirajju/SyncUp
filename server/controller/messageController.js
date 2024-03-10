@@ -26,7 +26,7 @@ const opts = {
 
 const getUserInfo = async (req, res) => {
     try {
-        const { userId,arrayOfIds } = req.query
+        const { userId, arrayOfIds } = req.query
         if (userId) {
             const userData = await User.findOne({ _id: userId })
             if (userData) {
@@ -34,7 +34,7 @@ const getUserInfo = async (req, res) => {
                 res.json({ success: true, body: encData.toString() })
             }
         } else if (arrayOfIds) {
-            const userData = await User.find({ _id: {$in:arrayOfIds} })
+            const userData = await User.find({ _id: { $in: arrayOfIds } })
             if (userData) {
                 const encData = crypto.AES.encrypt(JSON.stringify(userData), process.env.CRYPTO_SECRET)
                 res.json({ success: true, body: encData.toString() })
@@ -360,7 +360,14 @@ const getScheduledMessages = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
         if (userData) {
-            const scheduleData = await Message.aggregate([{ $match: { senderId: userData._id.toString(), isScheduled: true, isScheduledMsgCleared: false } }, { $addFields: { recieverObjectId: { $toObjectId: "$recieverId" } } }, { $lookup: { from: "users", localField: "recieverObjectId", foreignField: "_id", as: "recieverData" } }, { $project: { 'recieverData.avatar_url': 1, 'recieverData.username': 1, 'recieverData.email': 1, scheduledConfig: 1, isScheduleCompleted: 1, content: 1, sentTime: 1 } }, { $unwind: '$recieverData' }, { $sort: { sentTime: -1 } }])
+            const scheduleData = await Message.aggregate([
+                { $match: { senderId: userData._id.toString(), isScheduled: true, isScheduledMsgCleared: false } },
+                { $addFields: { recieverObjectId: { $toObjectId: "$recieverId" } } },
+                { $lookup: { from: "users", localField: "recieverObjectId", foreignField: "_id", as: "recieverData" } },
+                { $project: { 'recieverData.avatar_url': 1, 'recieverData.username': 1, 'recieverData.email': 1, scheduledConfig: 1, isScheduleCompleted: 1, content: 1, sentTime: 1 } },
+                { $unwind: '$recieverData' },
+                { $sort: { sentTime: -1 } }
+            ])
             const encData = encryptData(scheduleData)
             if (encData) {
                 res.json({ success: true, body: encData })

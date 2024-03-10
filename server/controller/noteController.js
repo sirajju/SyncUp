@@ -23,7 +23,8 @@ const publishNote = async (req, res) => {
                 const newNote = new Note({
                     userId: userData._id,
                     content: note.content,
-                    email: userData.email
+                    email: userData.email,
+                    createdAt:Date.now()
                 })
                 if (await newNote.save()) {
                     if (newNote.visibility == 'contacts') {
@@ -51,8 +52,20 @@ const getNotes = async (req, res) => {
         const userData = await User.findOne({ email: req.userEmail })
         if (userData) {
             await Note.updateMany({ isExpired: false, expiresAt: { $lte: Date.now() } }, { $set: { isExpired: true } })
-            const notesData = await User.aggregate([{ $match: { email: userData.email } }, { $unwind: "$contacts" }, { $lookup: { from: "notes", localField: "contacts.email", foreignField: "email", as: "notes" } }, { $unwind: "$notes" }, { $match: { 'notes.isExpired': false } }, { $lookup: { from: "users", localField: "contacts.email", foreignField: "email", as: "userData" } }, { $sort: { 'notes.createdAt': -1 } }, { $project: { userData: 1, notes: 1 } }])
+            const notesData = await User.aggregate([
+                { $match: { email: userData.email } },
+                { $unwind: "$contacts" }, { $lookup: { from: "notes", localField: "contacts.email", foreignField: "email", as: "notes" } },
+                { $unwind: "$notes" },
+                { $match: { 'notes.isExpired': false } },
+                { $lookup: { from: "users", localField: "contacts.email", foreignField: "email", as: "userData" } },
+                { $addFields: { likesCount: { $size: "$notes.likes" } } },
+                { $addFields: { difference: { $subtract: [Date.now(), "$notes.createdAt"] } } },
+                { $addFields: { totalLikesWithinTime: {$cond:{if:{$eq:['$likesCount',0]},then:0,else:{$divide:['$difference',"$likesCount"]}  }}} },
+                { $project: { userData: 1, notes: 1,totalLikesWithinTime:1} },
+                { $sort: { 'totalLikesWithinTime': -1 } }
+            ])
             const validNotesData = notesData.filter((el => el.notes.length != 0))
+            console.log(validNotesData);
             const encNotes = encryptData(validNotesData)
             if (encNotes) {
                 res.json({ success: true, body: encNotes })
@@ -70,7 +83,11 @@ const getMyNotes = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
         if (userData) {
-            const notesData = await Note.find({ email: userData.email, isCleared: false })
+            const notesData = await Note.aggregate([
+                { $match: { email: userData.email, isCleared: false } },
+                { $sort: { "createdAt": 1 } }
+            ]);
+
             if (notesData) {
                 const encData = encryptData(notesData.reverse())
                 res.json({ success: true, body: encData })
@@ -134,17 +151,17 @@ const likeNote = async (req, res) => {
         if (userData) {
             const notesData = await Note.findById({ _id: noteId })
             if (notesData && !notesData.likes.includes(userData._id)) {
-                await new Like({
+                const ldata = await new Like({
                     userId: userData._id,
                     userEmail: userData.email,
                     noteId: notesData._id
                 }).save()
                 const noteData = await Note.findByIdAndUpdate({ _id: notesData._id }, { $push: { likes: userData._id.toString() } })
                 if (noteData) {
-                    const sharedUser = await User.findByIdAndUpdate({ _id: notesData.userId }, { $push: { notifications: { type: "like",userId:userData._id, username: userData.username, avatar_url: userData.avatar_url, noteId: notesData._id,time:Date.now() } } }, { new: true })
+                    const sharedUser = await User.findByIdAndUpdate({ _id: notesData.userId }, { $push: { notifications: { type: "like", userId: userData._id, username: userData.username, avatar_url: userData.avatar_url, noteId: notesData._id, time: ldata.likedAt } } }, { new: true })
                     if (sharedUser) {
-                        const socketData = await Connection.findOne({userId:sharedUser._id})
-                        if(socketData){
+                        const socketData = await Connection.findOne({ userId: sharedUser._id })
+                        if (socketData) {
                             req.io.to(socketData.socketId).emit('onUpdateNeeded')
                             req.io.to(socketData.socketId).emit('refreshMyNotes')
                         }
@@ -169,10 +186,10 @@ const unLikeNote = async (req, res) => {
             const updateData = await Note.findByIdAndUpdate({ _id: noteId }, { $pull: { likes: userData._id.toString() } }, { new: true })
             const noteData = await Like.findOneAndDelete({ userEmail: userData.email, noteId: updateData._id })
             if (noteData) {
-                const sharedUserData = await User.findByIdAndUpdate({_id:updateData.userId},{$pull:{notifications:{type:"like",username:userData.username,noteId:updateData._id}}},{new:true})
+                const sharedUserData = await User.findByIdAndUpdate({ _id: updateData.userId }, { $pull: { notifications: { type: "like", username: userData.username, noteId: updateData._id } } }, { new: true })
                 if (sharedUserData) {
-                    const socketData = await Connection.findOne({userId:sharedUserData._id})
-                    if(socketData){
+                    const socketData = await Connection.findOne({ userId: sharedUserData._id })
+                    if (socketData) {
                         req.io.to(socketData.socketId).emit('onUpdateNeeded')
                         req.io.to(socketData.socketId).emit('refreshMyNotes')
                     }
@@ -187,6 +204,39 @@ const unLikeNote = async (req, res) => {
         res.json({ success: false, message: `Err while unliking note` })
     }
 }
+
+const getLikes = async (req, res) => {
+    try {
+        const { noteId } = req.query
+        if (noteId) {
+            const likesData = await Note.aggregate([
+                { $match: { _id: new ObjectId(noteId) } },
+                { $unwind: "$likes" },
+                { $lookup: { from: "likes", localField: "likes", foreignField: "userId", as: "noteLikeData" } },
+                { $unwind: "$noteLikeData" },
+                { $match: { 'noteLikeData.noteId': noteId } },
+                { $addFields: { userObject: { $toObjectId: "$likes" } } },
+                { $lookup: { from: "users", foreignField: "_id", localField: "userObject", as: "likedUserData" } },
+                { $unwind: "$likedUserData" },
+                { $addFields: { 'likedUserData.likedAt': "$noteLikeData.likedAt" } },
+                { $project: { 'likedUserData.likedAt': 1, 'likedUserData.username': 1, 'likedUserData.avatar_url': 1, 'likedUserData.email': 1, 'likedUserData._id': 1 } }
+            ])
+            if (likesData.length) {
+                console.log(likesData);
+                const encData = encryptData(likesData)
+                res.json({ success: true, body: encData })
+            } else {
+                res.json({ success: false, message: 'No likes found' })
+            }
+        } else {
+            res.json({ success: false, message: "Something went wrong" })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Err while getting likes" })
+    }
+}
+
 module.exports = {
     publishNote,
     getNotes,
@@ -195,5 +245,6 @@ module.exports = {
     deleteNote,
     clearExpiredNotes,
     likeNote,
-    unLikeNote
+    unLikeNote,
+    getLikes
 }

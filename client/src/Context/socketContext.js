@@ -5,7 +5,7 @@ import { io } from 'socket.io-client'
 const socketContext = createContext(null)
 
 export const SocketProvider = (props) => {
-    const socket = io(`http://${window.location.hostname}:5000`)
+    const socket = io(`https://syncup-fork.onrender.com`)
 
     return (
         <socketContext.Provider value={socket} >

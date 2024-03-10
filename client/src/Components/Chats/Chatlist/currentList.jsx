@@ -109,6 +109,7 @@ function CurrentList({ setChat, setGo }) {
             label: 'Delete conversation',
             key: 'deleteConversation',
             icon: <MDBIcon far icon="trash-alt" />,
+            disabled:true,
             danger: true
         },
         {

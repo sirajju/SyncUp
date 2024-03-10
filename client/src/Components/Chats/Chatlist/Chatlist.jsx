@@ -95,7 +95,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, se
         })
     }
     return (
-        <div className="chatlistContainer" data-aos="fade-up" data-aos-duration="700" >
+        <div className="chatlistContainer" >
             <FloatButton onClick={()=>openContactsModal(true)} style={{position:"absolute",'right':"50px",height:"50px",'width':"50px"}} icon={<MDBIcon className='floatBtnIcon' fas icon="plus" />} />
 
             {contactsModal && <Contactslist  contactsModal={contactsModal} setChat={setChat} openContactsModal={openContactsModal} />}

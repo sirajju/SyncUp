@@ -112,7 +112,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
     // removeStream(stream)
   }
   const initializeVideo = async () => {
-    const apikey = "58fe00be7be7c9805c1c0b98b195669a"
+    const apikey = "23a4e92766509f0902d27275395c1d18"
     const ua = new UserAgent({
       uri: 'apiKey:' + apikey
     })
@@ -132,31 +132,31 @@ function VideoCallUi({ setChat, chat, reciever }) {
       //Instantiate a local video stream object
       ua.createStream({
         constraints: {
-            audio: false,
-            video: true
+          audio: false,
+          video: true
         }
-    })
-          .then((stream) => {
-            localStream.current = stream
-            addStreamInVideo(stream, true)
-            stream.attachToElement(document.getElementById('local-video-stream'));
-            console.log(conversation);
-            conversation.join()
-              .then((response) => {
-                conversation
-                  .publish(stream)
-                  .then(() => {
-                    toast.success('User joined')
-                  })
-                  .catch((err) => {
-                    toast.error("publish error");
-                  });
-              }).catch((err) => {
-                toast.error('Conversation join error' + err.message);
-              });
-          }).catch((err) => {
-            toast.error(`${err.message} ${localStream.current?.streamId}`);
-          });
+      })
+        .then((stream) => {
+          localStream.current = stream
+          addStreamInVideo(stream, true)
+          stream.attachToElement(document.getElementById('local-video-stream'));
+          console.log(conversation);
+          conversation.join()
+            .then((response) => {
+              conversation
+                .publish(stream)
+                .then(() => {
+                  toast.success('User joined')
+                })
+                .catch((err) => {
+                  toast.error("publish error");
+                });
+            }).catch((err) => {
+              toast.error('Conversation join error' + err.message);
+            });
+        }).catch((err) => {
+          toast.error(`${err.message} ${localStream.current?.streamId}`);
+        });
     });
   }
 
@@ -191,15 +191,15 @@ function VideoCallUi({ setChat, chat, reciever }) {
   }, [socket])
 
   const acceptCall = function () {
-    if(webcamRef.current){
+    if (webcamRef.current) {
       toast('taking screenshot')
       const url = webcamRef.current.getScreenshot()
       console.log(url);
     }
     setAccepted(true)
     setLoading(true)
-    socket.emit('userAcceptedACall', chat.data)
     setChat({ ...chat, isAccepted: true })
+    socket.emit('userAcceptedACall', chat.data)
     initializeVideo()
   }
 
@@ -261,7 +261,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
       <div id='videoCallStreams' className="videoCallStreams center">
 
         {
-          (isLoading || (!isAccepted&&chat?.data?.from == me.value?._id)) &&
+          (isLoading || (!isAccepted && chat?.data?.from == me.value?._id)) &&
           <div className="videoCallLoader center flex-column">
             <span className="videoCallLoaderSpinner" />
             <p>Waiting...</p>
