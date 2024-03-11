@@ -37,7 +37,12 @@ function App() {
   }, [])
   return (
     <React.Fragment>
-      <div className='spinnerParent' style={{ display: isLoading ? "block" : 'none' }} ><span className="spinner-border" role="status" aria-hidden="true" /></div>
+      {isLoading && <div className='spinnerParent'>
+        <div className='spinnerBackdrop'>
+          <span className="spinner-border" role="status" aria-hidden="true" />
+          <p>Loading..</p>
+        </div>
+      </div>}
       <Router>
         <Routes>
           <Route path='/' element={<Home />} />
@@ -57,7 +62,7 @@ function App() {
           <Route path='/admin/announcement' element={<AdminRoute><AdminBroadcasts /></AdminRoute>} />
           <Route path='/admin/announcement/new' element={<AdminRoute><CreateBroadcast /></AdminRoute>} />
           <Route path='*' element={<h4>Not found</h4>} />
-          
+
         </Routes>
       </Router>
     </React.Fragment>

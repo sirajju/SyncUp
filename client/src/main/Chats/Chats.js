@@ -216,7 +216,12 @@ function Chats() {
             setSubLoading(false)
         } else {
             setSearchData([])
-            dispatch(setConversations(await GetChatList('searchFunction')))
+            setSubLoading(true)
+            GetChatList('searchFunction').then(res=>{
+                dispatch(setConversations(res))
+                setSubLoading(false)
+            })
+            
         }
     }, [])
 

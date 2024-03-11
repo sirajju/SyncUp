@@ -50,24 +50,20 @@ import Confetti from 'react-confetti'
 const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const userData = useSelector(state => state.user)
     const dispatch = useDispatch()
-    const [isLoading, setLoading] = useState(true)
+    const [isLoading, setLoading] = useState(false)
     const socket = useSocket()
     const [isTyping, setTyping] = useState(false)
     const conversation = useSelector(state => state.conversations)
     useEffect(() => {
         setLoading(true)
-        GetChatList('conversationTop').then(res => {
-            dispatch(setConversations(res))
+        GetMessages(reciever._id).then(msgList => {
+            if (msgList?.length) {
+                dispatch(setCurrentChat(msgList))
+            } else {
+                dispatch(setCurrentChat([]))
+            }
             setLoading(false)
-        })
-        const options = {
-            route: "getConversation",
-            params: { recieverId: reciever._id },
-            headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-            crypto: true
-        }
-        Axios(options).then(res => {
-            dispatch(setCurrentChat((res.data.body)))
+
         })
         socket.on('typing', () => {
             console.log('typing');
@@ -104,7 +100,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id,participants:[reciever._id,userData.value._id], conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, participants: [reciever._id, userData.value._id], conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
@@ -126,18 +122,34 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const { show } = useContextMenu({ id: 'MENU_ID' });
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
-        doodleRef.current.scrollTop = doodleRef.current.scrollHeight + 2000
-        const data = conversation.value?.filter(el => el.opponent[0]._id == reciever._id)
-        if (!currentChat.value?.length) {
-            if (data[0]?.messages?.length) {
-                setMessages(data[0].messages)
-            } else {
-                setMessages([])
-            }
+        const data = conversation.value?.filter(el => el.opponent[0]._id == chat.data)
+        if (data[0]?.messages?.length) {
+            setMessages(data[0].messages)
         } else {
+            setMessages([])
+            GetMessages(chat.data).then(msgList => {
+                if (msgList?.length) {
+                    setMessages(msgList)
+                } else {
+                    setMessages([])
+                }
+            })
+
+        }
+    }, [chat])
+
+    useEffect(() => {
+        if (currentChat.value.length) {
             setMessages(currentChat.value)
         }
     }, [currentChat])
+
+    useEffect(() => {
+        if (doodleRef.current) {
+            doodleRef.current.scrollTop = doodleRef.current.scrollHeight * 2000
+        }
+    }, [messages])
+
     function displayMenu(e, msg) {
         setCurrentMessage(msg)
         show({
@@ -183,7 +195,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     const downloadImage = function (el) {
         saveAs(el.mediaConfig.url, `image_syncUp_${el.sentTime}`)
     }
-    const confirmationNegtvFunc = function(){
+    const confirmationNegtvFunc = function () {
         setCurrentMessage('')
         openEdit(false)
         displayConfirm(false)
@@ -200,7 +212,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                 </ConfirmBox>
                 {/*Right click context menu*/}
                 <ContextMenu displayConfirm={displayConfirm} openEdit={openEdit} MENU_ID={'MENU_ID'} />
-                {isChatLoading &&<div className='subLoader' style={{height:"100%"}} > <span className="subLoaderSpinner" ></span> </div>}
+                {isChatLoading && <div className='subLoader' style={{ height: "100%" }} > <span className="subLoaderSpinner" ></span> </div>}
                 {
                     Boolean(messages?.length) && (
                         messages.map((el, ind) => {
@@ -307,14 +319,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
             setMessage('')
             socket.emit('join-room', { senderId: userData.value._id, recieverId: chat.data })
 
-            GetMessages(chat.data).then(msgList => {
-                if (msgList?.length) {
-                    dispatch(setCurrentChat(msgList))
-                } else {
-                    dispatch(setCurrentChat([]))
-                }
-                // setChatLoading(false)
-            })
             const chatData = conversation.value?.filter(el => el.opponent[0]._id == chat.data)
             if (chatData && chatData[0]?.opponent[0]) {
                 const blocked = (userData.value.blockedContacts?.filter(el => el.userId == chat.data)?.length)

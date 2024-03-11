@@ -24,9 +24,10 @@ function Profile({ setGo, chat }) {
     const [isUsernameValid, setIsUsernameValid] = useState(true);
     const [isLogoutCofirm, setLogoutConfirm] = useState(false)
     const [isPremiumModalOpen, openPremiumModal] = useState(false)
-    const [isChecked,setChecked]=useState(false)
+    const [isChecked, setChecked] = useState(false)
     const navigate = useNavigate()
     const toggleAfk = function () {
+        dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
         const options = {
             route: "toggleAfk",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
@@ -34,7 +35,6 @@ function Profile({ setGo, chat }) {
         }
         Axios(options).then(res => {
             if (res.data.success) {
-                dispatch(setUserData({ ...userData.value, afk: { ...userData.value.afk, isOn: !userData.value.afk.isOn } }))
             } else {
                 toast.error(res.data.message)
             }
@@ -111,18 +111,18 @@ function Profile({ setGo, chat }) {
         setLogoutConfirm(false)
         dispatch(showLoading())
         const options = {
-            route:"logoutAccount",
-            headers:{Authorization:`Bearer ${localStorage.getItem("SyncUp_Auth_Token")}`},
-            method:"DELETE"
+            route: "logoutAccount",
+            headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
+            method: "DELETE"
         }
-        Axios(options).then(res=>{
-            if(res.data.success){
+        Axios(options).then(res => {
+            if (res.data.success) {
                 localStorage.removeItem('SyncUp_Auth_Token')
                 localStorage.removeItem('syncup_opened')
                 toast.success(res.data.message)
                 navigate('/login')
                 dispatch(hideLoading())
-            }else{
+            } else {
                 toast.error(res.data.message)
             }
         })
@@ -151,8 +151,8 @@ function Profile({ setGo, chat }) {
             </div>
             <PremiumDailogue setIsModalOpen={openPremiumModal} isModalOpen={isPremiumModalOpen} />
             <Confirmation okBtnDisabled={!isChecked} blockOutSideClick={true} title="Warning ⚠️" content='Do you want to logout you account from this device ?' value={isLogoutCofirm} func={setLogoutConfirm} posFunc={logoutAccount}>
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center",marginTop:"20px"}}>
-                    <input type="checkbox" checked={isChecked} onChange={(e)=>setChecked(e.target.checked)} id="checkBx" name="checkBx" style={{ marginRight: '5px' }} />
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "20px" }}>
+                    <input type="checkbox" checked={isChecked} onChange={(e) => setChecked(e.target.checked)} id="checkBx" name="checkBx" style={{ marginRight: '5px' }} />
                     <label htmlFor="checkBx" style={{ marginBottom: 0 }}>I got it </label>
                 </div>
 
@@ -182,7 +182,7 @@ function Profile({ setGo, chat }) {
                 </div>
                 <div onClick={userData.value.isPremium ? () => toast('Currently we only have this type    ') : () => openPremiumModal(true)} className={`profilePremiumBadge ${!userData.value.isPremium && 'cursor-pointer'}`}>
                     <span>Select your premium badge : </span>
-                    <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer',right:"10px" }} >Premium</span>
+                    <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer', right: "10px" }} >Premium</span>
                 </div>
                 <div className='afkDiv' onClick={() => !userData.value.isPremium && openPremiumModal(true)} >
                     <span>Turn on or off away from keyboard : </span>
@@ -220,7 +220,7 @@ function Profile({ setGo, chat }) {
                     </div>
                 </div>
                 <div className='profileLogoutBtn'>
-                    <button onClick={()=>setChecked(false) || setLogoutConfirm(true)} className="profileBtnLogout">
+                    <button onClick={() => setChecked(false) || setLogoutConfirm(true)} className="profileBtnLogout">
                         Logout account
                     </button>
                 </div>
