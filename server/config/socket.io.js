@@ -81,7 +81,7 @@ function intializeSocket(server) {
                 const roomData = await  Room.findOne({conversationName: data.conversationName})
                 if(roomData){
                     socket.join(roomData.roomId)
-                    socket.emit(roomData.roomId).emit('userJoinedToCall',{data})
+                    socket.to(roomData.roomId).emit('userJoinedToCall',{data})
                 }
             })
             socket.on('onHangup', async (data) => {
