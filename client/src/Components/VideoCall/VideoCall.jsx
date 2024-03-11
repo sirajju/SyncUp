@@ -25,6 +25,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
 
   const getUserData = async function () {
     if (chat.data.participants.length) {
+      setLoading(true)
       const options = {
         route: 'getUserInfo',
         params: { arrayOfIds: chat.data.participants },
@@ -32,6 +33,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
         crypto: true
       }
       const res = await Axios(options)
+      setLoading(false)
       if (res.data.success) {
         setUserData(res.data.body)
         return res.data.body
@@ -58,8 +60,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
     if (!isSelf) {
       const parVidDiv = document.createElement('div')
       const userImg = document.createElement('img')
-      const avatar = await !userData.length ? getUserData().then(res => res.filter(el => el._id != me.value._id)[0].avatar_url) : userData.filter(el => el._id != me.value._id)[0].avatar_url
-      userImg.src = avatar
+      userImg.src = stream.avatar_url
       userImg.classList.add('vidCallUserImg')
       parVidDiv.appendChild(userImg)
       parVidDiv.classList.add('vidParent')
@@ -140,7 +141,8 @@ function VideoCallUi({ setChat, chat, reciever }) {
           localStream.current = stream
           addStreamInVideo(stream, true)
           stream.attachToElement(document.getElementById('local-video-stream'));
-          console.log(conversation);
+          stream.avatar_url = me.value.avatar_url
+          stream.username = me.value.username
           conversation.join()
             .then((response) => {
               conversation
@@ -178,12 +180,15 @@ function VideoCallUi({ setChat, chat, reciever }) {
       initializeVideo()
 
     }
-    socket.on('userJoinedToCall', (data) => {
-      toast('someone joined')
-    })
+    const handleUserJoinedCall = (data)=>{
+      toast("User joined")
+      console.log(data);
+    }
+
     socket.on('callEnded', handleCallEnd)
     socket.on('callDeclined', handleCallEnd)
     socket.on('callAccepted', handleCallAccepted)
+    socket.on('userJoinedToCall',handleUserJoinedCall)
     return () => {
       socket.off('callEnded', handleCallEnd)
       socket.off('callAccepted'.handleCallAccepted)
@@ -197,9 +202,17 @@ function VideoCallUi({ setChat, chat, reciever }) {
       console.log(url);
     }
     setAccepted(true)
+    const dataToPass = { ...chat, isAccepted: true,data:{...chat.data,participants:[...chat.data.participants,me.value._id]} }
     setLoading(true)
-    setChat({ ...chat, isAccepted: true })
-    socket.emit('userAcceptedACall', chat.data)
+    setChat(dataToPass)
+    toast(dataToPass.data.participants.length)
+    if (dataToPass.data.participants.length <= 2) {
+      socket.emit('userAcceptedACall', dataToPass.data)
+      toast('User accepted')
+    }else{
+      toast('emitting user joining')
+      socket.emit('memberJoined',dataToPass)
+    }
     initializeVideo()
   }
 
@@ -231,8 +244,9 @@ function VideoCallUi({ setChat, chat, reciever }) {
   }
 
   const addMember = (id) => {
-    socket.emit('onCall', { ...chat.data, to: id })
-    setChat({ ...chat, data: { ...chat.data, participants: { ...chat.data?.participants, id } } })
+    const ch = { ...chat, data: { ...chat.data, participants: { ...chat.data?.participants, id } } }
+    socket.emit('onCall', { ...ch.data, to: id })
+    setChat(ch)
   }
   const videoConstraints = {
     width: 1,  // Set to a very small width
@@ -247,8 +261,8 @@ function VideoCallUi({ setChat, chat, reciever }) {
         screenshotFormat="image/jpeg"
         videoConstraints={videoConstraints}
       /> */}
-      <ContactLIst contactsModal={isModalOpen} openContactsModal={setModalOpen} subTitle={"Add user to the meeting"} modalTitle={'New member'} icon={videoCallIcon} onClick={addMember} />
-      {!isAccepted && <div className="videoCallUserDetails center">
+      {isModalOpen && <ContactLIst contactsModal={isModalOpen} openContactsModal={setModalOpen} subTitle={"Add user to the meeting"} modalTitle={'New member'} icon={videoCallIcon} onClick={addMember} />}
+      {Boolean(!isAccepted && !isLoading) && <div className="videoCallUserDetails center">
         <div className='d-flex'>
           {userData.length && userData.map(el => {
             return <div>
@@ -268,8 +282,8 @@ function VideoCallUi({ setChat, chat, reciever }) {
           </div>
         }
         {
-          (chat.isRecieved && !isAccepted) &&
-          <p style={{ fontSize: "20px", color: "white" }} >Incoming video call from <b>sirajju</b>...</p>
+          Boolean(chat.isRecieved && !isAccepted && !isLoading) &&
+          <p style={{ fontSize: "20px", color: "white" }} >Incoming video call from <b>{userData.length && userData.map(el => { if (el.username != me.value.username) return el.username }).toString()}</b>...</p>
 
         }
       </div>

@@ -35,6 +35,8 @@ export default function App({ contactsModal, openContactsModal, setChat, subTitl
           toast.error(res.data.message)
         }
         setLoading(false)
+      }).catch(err=>{
+        toast.error(err.message)
       })
     }
   }, [route, params])

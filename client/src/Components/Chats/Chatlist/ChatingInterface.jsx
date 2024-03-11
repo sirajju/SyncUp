@@ -148,6 +148,9 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
         if (doodleRef.current) {
             doodleRef.current.scrollTop = doodleRef.current.scrollHeight * 2000
         }
+        GetChatList().then(res=>{
+            dispatch(setConversations(res))
+        })
     }, [messages])
 
     function displayMenu(e, msg) {
@@ -409,6 +412,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         else {
             if (e.target.value.trim()) {
+                socket.emit('typingStarted',chat)
                 setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
             }
         }
