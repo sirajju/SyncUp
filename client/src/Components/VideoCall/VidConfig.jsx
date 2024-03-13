@@ -9,8 +9,8 @@ function VidConfig({ ...props }) {
     return (
         <div className="App">
             <header className="App-header">
-                {/* <VideoCallUi {...props} /> */}
                 <VideoCall {...props} />
+                {/* <VideoCallUi {...props} /> */}
             </header>
         </div>
     )

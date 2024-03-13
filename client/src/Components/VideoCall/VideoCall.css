@@ -2,34 +2,40 @@
     width: 100%;
     height: 100vh;
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    position: absolute;
 }
+
 .videoCallUserDetails {
     width: 100%;
     height: 20vh;
     color: white;
     gap: 30px;
 }
+
 .videoCallStreams {
     width: 100%;
-    height:83vh;
+    height: 83vh;
     gap: 10px;
-    /* position: relative; */
 }
+
 .videoCallControls {
     width: 100%;
-    height:10%;
+    height: 10%;
     position: absolute;
     bottom: 0;
 }
+
 .flex-column {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
 }
+
 .vidStream {
     max-width: 45%;
 }
+
 .syncup-pink-btn {
     background: #ED80FD;
     height: 40px;
@@ -41,6 +47,7 @@
     z-index: 100;
     padding: 10px;
 }
+
 .videoCallLoader {
     width: 100%;
     height: 100%;
@@ -48,6 +55,7 @@
     gap: 10px;
     color: white;
 }
+
 .videoCallLoaderSpinner {
     width: 40px;
     height: 40px;
@@ -56,23 +64,27 @@
     border-top-color: transparent;
     animation: spin 0.7s linear infinite;
 }
+
 .selfStream {
     position: absolute;
-    right:0;
-    bottom:0;
-    margin:10px;
+    right: 0;
+    margin: 10px;
+    bottom: 30px;
     width: 200px;
     z-index: 200;
 }
+
 .remoteStream {
     margin-top: 100px;
     position: relative;
 }
-.vidCallAvatar{
+
+.vidCallAvatar {
     width: 60px;
     border-radius: 100%;
     /* position: absolute; */
 }
+
 .vidCallUserImg {
     width: 80px;
     position: absolute;
@@ -80,16 +92,19 @@
     bottom: 0;
     z-index: 100;
     border-radius: 100%;
-    margin:30px;
+    margin: 30px;
 }
+
 .vidParent {
     position: relative;
 }
+
 @keyframes spin {
-    0%{
+    0% {
         transform: rotate(0deg);
     }
-    100%{
+
+    100% {
         transform: rotate(360deg);
     }
 }
