@@ -40,7 +40,7 @@ function App() {
       {isLoading && <div className='spinnerParent'>
         <div className='spinnerBackdrop'>
           <span className="spinner-border" role="status" aria-hidden="true" />
-          <p>Loading..</p>
+          <span>Loading..</span>
         </div>
       </div>}
       <Router>
