@@ -100,7 +100,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             </div>
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
-                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, participants: [reciever._id, userData.value._id], conversationName: `CONVERSATION_${v4()}` } })} alt="" />}
+                {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${v4().split('-').join('')}` } })} alt="" />}
                 <img src={menu} alt="" />
             </div>
         </div>
