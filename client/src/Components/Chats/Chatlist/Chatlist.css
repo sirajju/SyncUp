@@ -106,7 +106,7 @@
 .lastMessage {
     overflow: hidden;
     white-space: nowrap;
-    max-width: 45vh;
+    max-width: 35vh;
 }
 
 .chatlistContainer .ant-float-btn-body {

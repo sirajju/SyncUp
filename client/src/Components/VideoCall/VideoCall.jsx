@@ -21,15 +21,15 @@ function VideoCallUi({ setChat, chat, reciever }) {
   const streamsIds = new Set([])
   const [totalStreams, setTotalStreams] = useState([])
   const conversationRef = useRef(null);
-  const [isLoading, setLoading] = useState(false)
+  const [isLoading, setLoading] = useState({ type: null })
   const [isModalOpen, setModalOpen] = useState(false)
   const userAgentRef = useRef(null)
   const localStream = useRef(null)
   const webcamRef = useRef(null);
 
   useEffect(() => {
-    if (!chat.isRecieved) {
-      const id = chat.isRecieved ? chat.data.from : chat.data.to
+    if (chat.type == 'videoCall' && !chat.isRecieved) {
+      const id = chat.data.to
       if (id) {
         const options = {
           route: 'getUserInfo',
@@ -46,9 +46,10 @@ function VideoCallUi({ setChat, chat, reciever }) {
         })
       }
     } else {
-      setUserData(chat.data?.participantsData.filter(el=>el.username != me.value.username) || [])
+      console.log(chat);
+      setUserData(chat.data?.participantsData.filter(el => el.username != me.value.username) || [])
     }
-  }, [])
+  }, [chat])
 
 
   const addStreamInVideo = useCallback(async function (stream, isSelf) {
@@ -76,9 +77,23 @@ function VideoCallUi({ setChat, chat, reciever }) {
       } else {
         el.appendChild(videEl)
       }
-      setLoading(false)
+      setLoading({ type: null })
     }
   }, [totalCount])
+
+  const removeCamAccess = () => {
+    if (localStream.current) {
+      if (conversationRef.current && conversationRef.current.isPublishedStream(localStream.current)) {
+        toast('UnPublishing ')
+        conversationRef.current.unpublish(localStream.current)
+        conversationRef.current.cancelJoin()
+        conversationRef.current.leave()
+      }
+      localStream.current.data.getTracks().forEach(el => {
+        return el.stop()
+      })
+    }
+  }
 
   const removeStream = function (stream) {
     const el = document.querySelector('#videoCallStreams')
@@ -99,7 +114,6 @@ function VideoCallUi({ setChat, chat, reciever }) {
   //streamAdded : Add the participant's display to the UI
   const onStreamAddedHandler = function (stream) {
     if (stream.isRemote) {
-      toast("Remote Stream added")
       setCount(prev => prev + 1)
       console.log(userData);
       addStreamInVideo(stream)
@@ -110,20 +124,12 @@ function VideoCallUi({ setChat, chat, reciever }) {
   const onStreamRemovedHandler = function (stream) {
     toast("Call ended")
     try {
-      if (conversationRef.current) {
-        conversationRef.current.unsubscribeToMedia(stream.streamId)
-      }
       if (totalCount <= 1) {
-        if (localStream.current) {
-          localStream.current.data.getTracks().forEach(el => {
-            return el.stop()
-          })
-          conversationRef.current.unpublish(localStream.current.streamId)
-          if (userAgentRef.current?.isRegistered()) {
-            userAgentRef.current.unregister().then(() => toast('Fucking unregisterted'))
-          }
-          setChat({ type: null })
+        removeCamAccess()
+        if (userAgentRef.current?.isRegistered()) {
+          userAgentRef.current.unregister()
         }
+        setChat({ type: null })
       }
     } catch (error) {
       toast.error(error.message)
@@ -132,7 +138,6 @@ function VideoCallUi({ setChat, chat, reciever }) {
     // removeStream(stream)
   }
   const initializeVideo = async () => {
-    toast('intializing local stream')
     const apikey = "23a4e92766509f0902d27275395c1d18"
     const ua = new UserAgent({
       uri: 'apiKey:' + apikey
@@ -141,16 +146,11 @@ function VideoCallUi({ setChat, chat, reciever }) {
     //Connect the UserAgent and get a session
     userAgentRef.current = ua
     ua.setUsername(me.value.username)
-    toast(ua.isRegistered() ? "registered" : "registering")
     ua.register().then((session) => {
 
       const conversationName = chat.data.conversationName
 
-      toast(chat.data.conversationName)
-
       const conversation = session.getOrCreateConversation(conversationName, { meshOnlyEnabled: true })
-
-      toast(conversation.isJoined() ? "Already a person" : "Not a person who joined")
 
       // session.setUsername(me.value.username)
       conversationRef.current = conversation
@@ -166,27 +166,24 @@ function VideoCallUi({ setChat, chat, reciever }) {
         }
       })
         .then(async (stream) => {
-          toast("Created local stream")
           localStream.current = stream
           addStreamInVideo(stream, true)
           stream.attachToElement(document.getElementById('local-video-stream'));
           conversation.join()
             .then((response) => {
-              toast("Conversation joinied and published local")
               conversation
                 .publish(stream)
                 .then(() => {
-                  setLoading(false)
-                  toast.success('User joined')
+                  setLoading({ type: null })
                 })
                 .catch((err) => {
-                  toast.error("publish error");
+                  console.log("publish error");
                 });
             }).catch((err) => {
-              toast.error('Conversation join error' + err.message);
+              console.log('Conversation join error' + err.message);
             });
         }).catch((err) => {
-          toast.error(`${err.message} ${localStream.current?.streamId}`);
+          console.log(`${err.message} ${localStream.current?.streamId}`);
         });
     });
   }
@@ -194,23 +191,18 @@ function VideoCallUi({ setChat, chat, reciever }) {
   useEffect(() => {
 
     const handleCallEnd = (data) => {
-      if (localStream.current) {
-        localStream.current.data.getTracks().forEach(el => {
-          return el.stop()
-        })
-      }
+      removeCamAccess()
       setChat({ type: null })
-      toast.error('Call ended')
     }
     const handleCallAccepted = () => {
-      setLoading(true)
+      setLoading({ type: "Connecting" })
       setAccepted(true)
       setChat({ ...chat, isAccepted: true })
       initializeVideo()
 
     }
     const handleUserJoinedCall = (data) => {
-      toast("User joineddddddddddddddddddddddd")
+      toast("User joined")
       console.log(data);
     }
 
@@ -221,59 +213,41 @@ function VideoCallUi({ setChat, chat, reciever }) {
     return () => {
       socket.off('callEnded', handleCallEnd)
       socket.off('callAccepted'.handleCallAccepted)
+      socket.off('callDeclined'.handleCallEnd)
+      socket.off('userJoinedToCall'.handleUserJoinedCall)
     }
-  }, [socket])
+  }, [])
 
   const acceptCall = function () {
-    if (webcamRef.current) {
-      toast('taking screenshot')
-      const url = webcamRef.current.getScreenshot()
-      console.log(url);
-    }
     setAccepted(true)
-    setLoading(true)
-    toast(userData.length)
+    setLoading({ type: "Connecting" })
     if (userData.length <= 2) {
       const dataToPass = { ...chat, isAccepted: true }
       socket.emit('userAcceptedACall', dataToPass.data)
-      toast('User accepted')
       setChat(dataToPass)
     } else {
-      toast('emitting user joining')
       socket.emit('memberJoined', chat)
     }
     initializeVideo()
   }
 
   const hangUpCall = function () {
-    if (localStream.current) {
-      localStream.current.data.getTracks().forEach(el => {
-        return el.stop()
-      })
-    }
     if (conversationRef.current) {
-      conversationRef.current.unpublish(localStream.current)
       if (userAgentRef.current?.isRegistered()) {
-        userAgentRef.current.unregister().then(() => toast('Fucking unregisterted'))
+        userAgentRef.current.unregister()
       }
-
     }
+    removeCamAccess()
     socket.emit('onHangup', chat.data)
     setChat({ type: null })
   }
   const declineCall = () => {
-    if (localStream.current) {
-      localStream.current.data.getTracks().forEach(el => {
-        return el.stop()
-      })
-    }
     if (conversationRef.current) {
-      conversationRef.current.unpublish(localStream.current)
       if (userAgentRef.current?.isRegistered()) {
-        userAgentRef.current.unregister().then(() => toast('Fucking unregisterted'))
+        userAgentRef.current.unregister()
       }
-
     }
+    removeCamAccess()
     socket.emit('onDeclined', chat.data)
     setChat({ type: null })
   }
@@ -296,7 +270,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
 
       /> */}
       {isModalOpen && <ContactLIst contactsModal={isModalOpen} openContactsModal={setModalOpen} subTitle={"Add user to the meeting"} modalTitle={'New member'} icon={videoCallIcon} onClick={addMember} />}
-      {Boolean(!isAccepted && !isLoading) && <div className="videoCallUserDetails center">
+      {Boolean(!isAccepted && !isLoading.type) && <div className="videoCallUserDetails center">
         <div className='d-flex'>
           {userData?.length && userData.map(el => {
             return <div>
@@ -309,14 +283,14 @@ function VideoCallUi({ setChat, chat, reciever }) {
       <div id='videoCallStreams' className="videoCallStreams center">
 
         {
-          (isLoading || (!isAccepted && chat?.data?.from == me.value?._id)) &&
+          (isLoading.type || (!isAccepted && chat?.data?.from == me.value?._id)) &&
           <div className="videoCallLoader center flex-column">
             <span className="videoCallLoaderSpinner" />
-            <p>Waiting...</p>
+            <p>{isLoading.type || "Waiting for join"}...</p>
           </div>
         }
         {
-          Boolean(chat.isRecieved && !isAccepted && !isLoading) &&
+          Boolean(chat.isRecieved && !isAccepted && !isLoading.type) &&
           <p style={{ fontSize: "20px", color: "white" }} >Incoming video call from <b>{userData?.length && userData.map(el => { if (el.username != me.value.username) return el.username }).toString()}</b>...</p>
 
         }

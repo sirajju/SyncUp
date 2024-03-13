@@ -69,11 +69,11 @@ function Chats() {
             if (token && !userData.value.isPremium) {
                 return fetchData('getAds')
                     .then(data => {
-                        dispatch(setAds(data));
+                        return dispatch(setAds(data));
                     });
-            } else {
-                return Promise.resolve();
             }
+            return Promise.resolve();
+
         }
 
         function fetchDataMain() {
@@ -82,7 +82,7 @@ function Chats() {
             }
             return GetChatList('chat use effect')
                 .then(res => {
-                    dispatch(setConversations(res));
+                    return dispatch(setConversations(res));
                 })
                 .then(getAds)
                 .then(() => fetchData('getNotes').then(res => dispatch(setNotes(res))))
@@ -179,8 +179,8 @@ function Chats() {
             dispatch(setCallData({ userId: data.from, isRecieved: true, isAccepted: false, isEnded: false }))
         })
 
-        socket.on("requestJoin",async data=>{
-            setChat({type:"videoCall",data,isRequested:true,isRecieved:true})
+        socket.on("requestJoin", async data => {
+            setChat({ type: "videoCall", data, isRequested: true, isRecieved: true })
         })
 
         socket.on('userOffline', (data) => {
@@ -221,11 +221,11 @@ function Chats() {
         } else {
             setSearchData([])
             setSubLoading(true)
-            GetChatList('searchFunction').then(res=>{
+            GetChatList('searchFunction').then(res => {
                 dispatch(setConversations(res))
                 setSubLoading(false)
             })
-            
+
         }
     }, [])
 

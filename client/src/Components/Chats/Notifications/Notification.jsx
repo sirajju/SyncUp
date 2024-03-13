@@ -80,7 +80,7 @@ function Notification({ setGo, setChat,setActiveTab }) {
                         </div>}
                         {el.type == "request" && <div key={ind} data-aos="fade-down" data-aos-duration="700" className="notificationItem">
                             <img src={el.avatar_url} style={{width:"60px"}} className='chatIcon' />
-                            <span className='text-center p-3' style={{ width: '100%' }}>{el.type == 'request' && !userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length ? `Freind request recieved from ${el.username}` : `You accepted friend request from ${el.username}`}</span>
+                            <span className='text-center p-3' style={{ width: '100%' }}>{el.type == 'request' && !userData.value.contacts.filter(cn => cn.id == el.userId && cn.isAccepted).length ? `Friend request recieved from ${el.username}` : `You accepted friend request from ${el.username}`}</span>
                             <div className="followRqstDiv"  >
 
                                 {(() => {
