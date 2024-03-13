@@ -179,6 +179,10 @@ function Chats() {
             dispatch(setCallData({ userId: data.from, isRecieved: true, isAccepted: false, isEnded: false }))
         })
 
+        socket.on("requestJoin",async data=>{
+            setChat({type:"videoCall",data,isRequested:true,isRecieved:true})
+        })
+
         socket.on('userOffline', (data) => {
             toast.error(`User ${data.userName} is offline`)
             setChat({ type: null })

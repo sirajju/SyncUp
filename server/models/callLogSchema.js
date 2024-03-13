@@ -12,7 +12,7 @@ const callLog = new mongoose.Schema({
         type: String,
         required: true
     },
-    pariticpants:{
+    participants:{
         type:Array,
         default:[]
     },

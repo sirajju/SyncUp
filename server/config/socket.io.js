@@ -45,27 +45,25 @@ function intializeSocket(server) {
             socket.on('onCall', async (data) => {
                 const roomData = await Room.findOne({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } })
                 const to = await Connection.findOne({ userId: data.to })
+                let logData;
                 if (data.createLog) {
-                    const existsLog = await call_log.find({ conversationName: data.conversationName })
-                    console.log(existsLog);
-                    if (!existsLog.length) {
-                        createLog({ ...data })
+                    logData = await call_log.find({ conversationName: data.conversationName })
+                    if (!logData.length) {
+                        logData = await createLog({ ...data })
                     }
                 }
                 if (roomData) {
-                    console.log('Joining room');
                     socket.join(roomData.roomId)
                 }
                 else {
                     const newRoom = await createRoom({ senderId: data.to, recieverId: data.from })
                     if (newRoom) {
-                        console.log('Joining a room');
                         socket.join(newRoom.roomId)
                     }
                 }
-                if (to) {
-                    console.log('Call emitting');
-                    socket.to(to.socketId).emit('callRecieved', { ...data })
+                const participantsData = await User.find({ _id: { $all: logData?.participants } }, { username: 1, avatar_url: 1 })
+                if (participantsData) {
+                    socket.to(to.socketId).emit('callRecieved', { ...data, participantsData })
                 }
             })
             socket.on('userAcceptedACall', async (data) => {
@@ -77,15 +75,31 @@ function intializeSocket(server) {
                     socket.to(roomData.roomId).emit('callError', { message: "Err while connecting" })
                 }
             })
-            socket.on('memberJoined',async data=>{
-                const roomData = await  Room.findOne({conversationName: data.conversationName})
-                if(roomData){
+
+            socket.on("requestJoin", async (data) => {
+                const requestedUser = await User.findById({ _id: data.request })
+                if (requestedUser) {
+                    const callLog = await call_log.findOneAndUpdate({ conversationName: data.conversationName }, { $push: { participants: data.request } }, { new: true })
+                    const participentsData = await User.find({ _id: { $all: callLog.participants } }, { username: 1, avatar_url: 1 })
+                    if (participentsData) {
+                        const userConnection = await Connection.findOne({ userId: data.request })
+                        if (userConnection) {
+                            socket.to(userConnection.socketId).emit('requestJoin', { ...data, participantsData: participentsData })
+                        }
+                    }
+
+                }
+            })
+
+            socket.on('memberJoined', async data => {
+                const roomData = await Room.findOne({ conversationName: data.conversationName })
+                if (roomData) {
                     socket.join(roomData.roomId)
-                    socket.to(roomData.roomId).emit('userJoinedToCall',{data})
+                    socket.to(roomData.roomId).emit('userJoinedToCall', { data })
                 }
             })
             socket.on('onHangup', async (data) => {
-                const roomData = await Room.findOne({ conversationName: data.conversationName})
+                const roomData = await Room.findOne({ conversationName: data.conversationName })
                 const callData = await call_log.findOne({ conversationName: data.conversationName })
                 const senderConnection = await Connection.findOne({ userId: data.from })
                 const recieverConnection = await Connection.findOne({ userId: data.to })
@@ -112,7 +126,7 @@ function intializeSocket(server) {
                 }
             })
             socket.on('onDeclined', async (data) => {
-                const roomData = await Room.findOne({conversationName:data.conversationName})
+                const roomData = await Room.findOne({ conversationName: data.conversationName })
                 console.log(`Declined call ${data.conversationName}`);
                 if (roomData) {
                     socket.to(roomData.roomId).emit('callDeclined', data)
@@ -185,8 +199,8 @@ function intializeSocket(server) {
                         roomId: `${data.senderId}_${data.recieverId}`,
                         senderId: data.senderId,
                         recieverId: data.recieverId,
-                        participants:[data.senderId,data.recieverId],
-                        conversationName:data.conversationName
+                        participants: [data.senderId, data.recieverId],
+                        conversationName: data.conversationName
                     }).save()
                     if (newRoom) {
                         return newRoom
@@ -219,16 +233,16 @@ function intializeSocket(server) {
             const createLog = async function ({ from, to, conversationName, duration, isAccepted, endTime }) {
                 console.log('Creating call log')
                 if (from, to, conversationName) {
-                    await new call_log({
+                    return await new call_log({
                         conversationName: conversationName || delete this.conversationName,
-                        pariticpants:[from,to],
+                        participants: [from, to],
                         from,
                         to,
                         isAccepted,
                         duration,
                         createdAt: Date.now(),
                         endTime: endTime || delete this.endTime,
-                        
+
                     }).save()
                 }
 
