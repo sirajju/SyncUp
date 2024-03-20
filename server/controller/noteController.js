@@ -65,7 +65,6 @@ const getNotes = async (req, res) => {
                 { $sort: { 'totalLikesWithinTime': -1 } }
             ])
             const validNotesData = notesData.filter((el => el.notes.length != 0))
-            console.log(validNotesData);
             const encNotes = encryptData(validNotesData)
             if (encNotes) {
                 res.json({ success: true, body: encNotes })

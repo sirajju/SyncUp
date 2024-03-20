@@ -55,6 +55,7 @@ const getConversation = async (req, res) => {
             try {
                 const userData = await User.findOne({ email: req.userEmail });
                 const recieverData = await User.findOne({ _id: recieverId });
+                const unReadMsgsLength = await Message.find({ senderId: recieverData._id, recieverId: userData._id })?.length
                 await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true } })
                 await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: '' } })
                 const conversationData = await Conversation.findOne({
@@ -71,7 +72,7 @@ const getConversation = async (req, res) => {
                         clearedParticipants: { $nin: [userData._id.toString()] }
                     }).sort({ sentTime: 1 });
                     const connectData = await Connection.findOne({ userId: recieverData._id })
-                    if (connectData) {
+                    if (connectData && unReadMsgsLength) {
                         req.io.to(connectData.socketId).emit('msgSeen')
                     }
                     const encData = encryptData(messageData)
@@ -109,6 +110,14 @@ const sendMessage = async ({ recieverId, content, userEmail, _id }) => {
                     participents: [userData._id, recieverData._id],
                     type: 'personal',
                 }).save()
+                const isContact = await User.findOne({ _id: userData._id, contacts: { $elemMatch: { id: recieverId } } })
+                if (isContact) {
+                    console.log('Not in contact');
+                    // await User.findByIdAndUpdate({ _id: recieverId }, { $push: { contacts: { id: userData._id, isAccepted: true, email: userData.email }} })
+                } else {
+                    console.log('Already a contact');
+                }
+
             }
             else if (conversationData.isBanned) {
                 return false
@@ -146,6 +155,7 @@ const sendMessage = async ({ recieverId, content, userEmail, _id }) => {
 }
 const getCurrentConversations = async (req, res) => {
     try {
+        console.log('Getting conversations');
         const userData = await User.findOne({ email: req.userEmail }).lean();
 
         const conversationData = await Conversation.aggregate([
@@ -154,44 +164,60 @@ const getCurrentConversations = async (req, res) => {
             { $match: { 'participents': { $ne: userData._id } } },
             { $lookup: { from: 'users', localField: 'participents', foreignField: '_id', as: "opponent" } },
             { $lookup: { from: 'messages', foreignField: '_id', localField: 'messages', as: "messages" } },
-            { $project: { _id: 1, isBanned: 1, opponent: 1, startedAt: 1, updatedAt: 1, isConfettiEnabled: 1, messages: 1, last_message: { $slice: ['$messages', -1] } } },
+            {
+                $project: {
+                    _id: 1, isBanned: 1, opponent: 1, startedAt: 1, updatedAt: 1, isConfettiEnabled: 1, messages: {
+                        $filter: {
+                            input: '$messages',
+                            as: 'ms',
+                            cond: {
+                                $cond: {
+                                    if: { $gt: [{ $size: '$$ms.clearedParticipants' }, 0] },
+                                    then: { $not: { $in: [userData._id.toString(), '$$ms.clearedParticipants'] } },
+                                    else: true
+                                }
+                            }
+                        }
+                    }, last_message: { $slice: ['$messages', -1] }
+                }
+            },
             { $unwind: '$last_message' },
             { $sort: { 'last_message.sentTime': -1 } }
         ]);
 
-        const filteredData = conversationData?.map(el => {
-            return {
-                ...el, messages: el.messages.filter(ms => {
-                    if (ms?.clearedParticipants?.length) {
-                        return !ms.clearedParticipants.includes(userData._id.toString());
-                    }
-                    return true;
-                })
-            };
-        });
+        // const filteredData = conversationData?.map(el => {
+        //     return {
+        //         ...el, messages: el.messages.filter(ms => {
+        //             if (ms?.clearedParticipants?.length) {
+        //                 return !ms.clearedParticipants.includes(userData._id.toString());
+        //             }
+        //             return true;
+        //         })
+        //     };
+        // });
 
-        if (filteredData && filteredData.length > 0) {
-            const updatePromises = filteredData.map(async (el) => {
-                await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } });
+        if (conversationData && conversationData.length > 0) {
+            await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } });
+            const updatePromises = conversationData.map(async (el) => {
                 return Conversation.aggregate([
                     { $match: { participents: { $in: [userData._id] } } },
                     { $unwind: '$participents' },
                     { $match: { 'participents': { $ne: userData._id } } },
-                    { $project: { participents: 1 } }
+                    { $project: { participents: 1 } },
+                    // { $group :{_id:"$participents"}}
                 ]);
             });
 
             const dlvrData = await Promise.all(updatePromises);
-            await Promise.all(dlvrData.map(async (dlvr) => {
-                dlvr.forEach(async (el) => {
-                    const connectData = await Connection.findOne({ userId: el.participents });
-                    if (connectData) {
-                        req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id });
-                    }
-                });
+            await Promise.all(dlvrData[0].map(async (el) => {
+                const connectData = await Connection.findOne({ userId: el.participents });
+                if (connectData) {
+                    req.io.to(connectData.socketId).emit('msgDelivered', { recieverId: userData._id });
+                }
             }));
 
-            const encData = encryptData(filteredData);
+            const encData = encryptData(conversationData);
+            console.log('Rendering conversations');
             return res.json({ success: true, body: encData });
         } else {
             return res.json({ success: false });
