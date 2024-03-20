@@ -8,6 +8,7 @@
     margin: 10px;
     cursor: pointer;
     border-radius: 100px;
+    background-size: cover;
 }
 .modal-body{
     display: flex;
@@ -67,11 +68,15 @@
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
 }
 .profileBtnLogout {
-    background-color: #ee9ae5ff;
-    color: white;
+    border:1px solid #ED80FD;
+    color: #ED80FD;
     border-radius: 10px;
     height: 40px;
-    font-weight: bold;
-    width: 150px;
-    border: none;
+    font-weight: 400;
+    width: 100px;
+    background-color: white;
+}
+.profileBtnLogout:hover {
+    background-color: #ED80FD;
+    color: white;
 }

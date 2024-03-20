@@ -189,10 +189,8 @@ function Profile({ setGo, chat }) {
                     <Switch
                         checkedChildren={'ON'}
                         unCheckedChildren={'OFF'}
-                        defaultChecked={userData.value.afk.isOn}
-                        onClick={toggleAfk}
+                        value={userData.value.afk.isOn}
                         className='premiumToggle'
-                        disabled={!userData.value.isPremium}
                     />
 
                 </div>
@@ -219,9 +217,9 @@ function Profile({ setGo, chat }) {
                         </span>
                     </div>
                 </div>
-                <div className='profileLogoutBtn'>
+                <div className='profileLogoutBtn mb-3'>
                     <button onClick={() => setChecked(false) || setLogoutConfirm(true)} className="profileBtnLogout">
-                        Logout account
+                        Logout
                     </button>
                 </div>
             </div>
