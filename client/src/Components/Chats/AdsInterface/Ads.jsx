@@ -45,7 +45,7 @@ import { useSelector } from 'react-redux';
 import './Ads.css'
 
 
-const App = ({ chat }) => {
+const App = ({ chat,isMobile }) => {
     const ads = useSelector(state => state.ads)
     const [data, setData] = useState([])
 
@@ -56,23 +56,23 @@ const App = ({ chat }) => {
     }, [ads, chat])
     return (
         <>
-            <Carousel className='adsContainer'dots={false} effect="fade" autoplay>
+            <Carousel className='adsContainer' dots={false} effect="fade" autoplay>
                 {data.length && data.map((el, ind) => {
                     return (
-                        <div key={ind}>
-                            <Link to={el.redirect_url} target='_blank'>
-                                <img className="d-block w-100" src={el.image_url} alt="First slide" />
-                            </Link>
-                            <div className="carousel-caption bg-light d-none d-md-block">
-                                <h3>{el.title}</h3>
+                        <Link to={el.redirect_url} target='_blank'>
+                            <div key={ind}>
+                                <img className="d-block w-100" style={isMobile ? {height:"100vh"}:{}} src={el.image_url} alt="First slide" />
+                                <div className="carousel-caption bg-light d-none d-md-block">
+                                    <h3>{el.title}</h3>
+                                </div>
                             </div>
-                        </div>
+                        </Link>
                     )
                 })}
             </Carousel>
             <div className="belowAds cursor-pointer">
                 <Link to={'/plans'}>
-                    <p style={{ color: 'white' }} >To remove ads continue with <b>Premium 👑</b></p>
+                    <p style={{ color: isMobile ? "" :"white" }} >To remove ads continue with <b>Premium 👑</b></p>
                 </Link>
             </div>
         </>
