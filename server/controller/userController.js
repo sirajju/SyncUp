@@ -999,8 +999,7 @@ const isAlive = async (req, res) => {
                     const currentData = new Date()
                     const timeDifference = expiration.getTime() - currentData.getTime()
                     const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24))
-                    console.log(timeDifference, dayDifference);
-                    if (timeDifference <= 0) {
+                    if (dayDifference <= 0) {
                         const update = await Premium.findOneAndUpdate({ userId: userData._id }, { $set: { isExpired: true, userId: "expired", emailIfExpired: userData.email } })
                         if (update) {
                             const exprdNoti = { type: "premium", message: "Your premium has been expired", time: Date.now(), isReaded: false }

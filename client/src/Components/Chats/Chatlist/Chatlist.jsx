@@ -125,7 +125,7 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, se
             }
             <div className="chatListAdItem smallAds" style={{ 'height': '200px' }}>
                {!userData.value.isPremium && <Ads isMobile={true} />}
-                <div className='mobilePremiumText' ><h1>{userData.value.settingsConfig.replace_premium_text ? userData.value.username.toUpperCase() : 'Premium user'}</h1></div>
+                {userData.value.isPremium && <div className='mobilePremiumText' ><h1>{userData.value.settingsConfig.replace_premium_text ? userData.value.username.toUpperCase() : 'Premium user'}</h1></div>}
             </div>
         </div>
     )

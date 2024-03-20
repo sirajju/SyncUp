@@ -32,6 +32,7 @@ function Premium() {
         else if (params.get('token')) {
             const userMatch = atob(params.get('u')) == userData.value.email
             if (userMatch) {
+                dispatch(showLoading())
                 const options = {
                     route: "verifyPremium",
                     params: { token: params.get('token') },
@@ -39,6 +40,7 @@ function Premium() {
                 }
                 Axios(options).then(res => {
                     if (res.data.success) {
+                        dispatch(hideLoading())
                         dispatch(setUserData({ ...userData.value, isPremium: true }))
                         navigate('/chats')
                     } else {
@@ -52,6 +54,7 @@ function Premium() {
     }, [])
     const convertPointsToPremium = () => {
         if (userData.value.chatpoints >= 499) {
+            dispatch(showLoading())
             const options = {
                 method: "PATCH",
                 route: "convertPointsToPremium",
@@ -59,6 +62,8 @@ function Premium() {
             }
             Axios(options).then(res => {
                 if (res.data.success) {
+                    dispatch(hideLoading())
+
                     dispatch(setUserData({ ...userData.value, isPremium: true }))
                     navigate('/chats')
                     toast.success(res.data.message)
@@ -102,7 +107,7 @@ function Premium() {
 const Bigbox = function (props) {
     const userData = useSelector(state => state.user)
     const boxStyle = {
-        width: "40%",
+        width: "40vh",
         textAlign: "center",
         padding: "30px",
         margin: "30px",
@@ -122,12 +127,12 @@ const Bigbox = function (props) {
             const res = await Axios(options)
             const result = await stripe.redirectToCheckout({
                 sessionId: res.data.id,
-                
+
             })
             if (result.error) {
                 toast.error(result.error);
             }
-        }catch(err){
+        } catch (err) {
             toast.error(err.message)
         }
     }

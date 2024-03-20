@@ -9,6 +9,7 @@ async function Axios(options) {
     const { url, method, route, payload, headers, params, crypto } = options
     const requestUrl = url && (url.endsWith('/') ? url.slice(0, -1) : false);
     const requestRoute = route && route.startsWith('/') ? route.slice(1) : route;
+    // const host = requestUrl || ||`https://syncup-5jun.onrender.com`
     const host = requestUrl || `http://${window.location.hostname}:5000`
     const requestMethod = getMethod(method)
     if (!route) {

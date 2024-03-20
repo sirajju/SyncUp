@@ -121,7 +121,7 @@
 .lastMessage {
     overflow: hidden;
     white-space: nowrap;
-    max-width: 35vh;
+    max-width: 25vh;
     position: absolute;
 }
 

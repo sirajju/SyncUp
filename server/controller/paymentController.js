@@ -47,7 +47,7 @@ const createPaymentSession = async (req, res) => {
                     type: plan,
                     price: (session.amount_total) / 100,
                     authToken: token,
-                    expiresAt: plan == 'Monthly' ? futureDate.getTime() : 0,
+                    expiresAt: plan == 'Monthly' ? futureDate.getTime() : futureDate.getTime() * futureDate.getTime(),
                     expiresAtString:plan == 'Monthly' ? futureDate.toLocaleDateString('en-GB',{day:"2-digit",month:"short",year:"numeric"}) : "never",
                     paymentType: 'card',
                     paymentStatus: 'pending',

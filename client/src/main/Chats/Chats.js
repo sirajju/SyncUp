@@ -45,6 +45,10 @@ function Chats() {
             return false
         }
         if (cht.type == 'videoCall') {
+            window.onbeforeunload = (e) => {
+                e.preventDefault()
+                e.returnValue = ''
+            }
             return changeChat({ ...cht, isRestricted: true })
         }
         return changeChat(cht)
@@ -234,7 +238,7 @@ function Chats() {
     }, [])
 
     useEffect(() => {
-        if (window.outerWidth <= 800 && chat.type) {
+        if (window.outerWidth <= 1000 && chat.type) {
             setGo('MobileChat')
         } else {
             setGo('')

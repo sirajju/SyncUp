@@ -105,15 +105,14 @@ function Settings({ setGo }) {
                 />
             </div>
             <Divider plain={true} style={{ width: "300px" }} orientation='left'>Appearence</Divider>
-            <div  className={`settingsItem  ${userData.value.googleSynced && "disabled"}`} onClick={() => !userData.value.googleSynced&&toggleData({ hide_sync_icon: !userData.value.settingsConfig.hide_sync_icon })} >
-                <span>Hide contact sync icon : </span>
+            {!userData.value.googleSynced  && <div  className={`settingsItem`} onClick={() => toggleData({ hide_sync_icon: !userData.value.settingsConfig.hide_sync_icon })} >
+                <span>Hide google contact sync icon : </span>
                 <Switch
                     checkedChildren={'YES'}
                     unCheckedChildren={'NO'}
                     value={userData.value.settingsConfig.hide_sync_icon}
-                    disabled={userData.value.googleSynced}
                 />
-            </div>
+            </div>}
             {userData.value.isPremium&&<div className='settingsItem profilePremiumBadge' onClick={() => toggleData({ replace_premium_text: !userData.value.settingsConfig.replace_premium_text })}>
                 <span>Replace premium text with name : </span>
                 <Switch

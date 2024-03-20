@@ -56,6 +56,9 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
     const conversation = useSelector(state => state.conversations)
     useEffect(() => {
         setLoading(true)
+        GetChatList().then(res=>{
+            dispatch(setConversations(res))
+        })
         GetMessages(reciever._id).then(msgList => {
             if (msgList?.length) {
                 dispatch(setCurrentChat(msgList))
@@ -130,13 +133,17 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
             setMessages(currentChat.value)
         } else {
             setMessages([])
-            GetMessages(chat.data).then(msgList => {
-                if (msgList?.length) {
-                    setMessages(msgList)
-                } else {
-                    setMessages([])
-                }
+            GetChatList().then(res=>{
+                dispatch(setConversations(res))
+                GetMessages(chat.data).then(msgList => {
+                    if (msgList?.length) {
+                        setMessages(msgList)
+                    } else {
+                        setMessages([])
+                    }
+                })
             })
+            
         }
     }, [chat])
 
@@ -159,21 +166,26 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
         });
     }
     const deleteMsg = function () {
-        displayConfirm(false)
-        const options = {
-            route: "deleteMessage",
-            params: { id: currentMessage?._id },
-            headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
-            method: "DELETE"
-        }
-        Axios(options).then(res => {
-            if (res.data.success) {
-                setCurrentMessage('')
-                dispatch(deleteMessage(currentMessage?._id))
-            } else {
-                toast.error(res.data.message)
+        if(currentMessage){
+            displayConfirm(false)
+            const options = {
+                route: "deleteMessage",
+                params: { id: currentMessage?._id },
+                headers: { Authorization: `Bearer ${localStorage.getItem("SyncUp_Auth_Token")}` },
+                method: "DELETE"
             }
-        })
+            Axios(options).then(res => {
+                if (res.data.success) {
+                    setCurrentMessage('')
+                    dispatch(deleteMessage(currentMessage?._id))
+                } else {
+                    toast.error(res.data.message)
+                }
+            })
+        }else{
+            toast("Select a message")
+        }
+        
     }
 
     const saveMessage = function () {
