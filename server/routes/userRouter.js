@@ -8,7 +8,7 @@ const isAuth = require('../middlewares/isAuth');
 
 app.get('/sendReset',userController.sendReset);
 app.get('/checkUsername',userController.checkUsername);
-app.get('/isAlive',isAuth)
+app.get('/isAlive',isAuth,userController.isAlive)
 app.get('/getAds',isAuth,userController.getAds)
 app.get('/getContacts',isAuth,userController.getContacts)
 app.get('/sendOtp',isAuth,userController.sendOtp);
@@ -28,6 +28,8 @@ app.get('/clearConversationMessages',isAuth,messageController.clearMessages)
 app.get('/checkContactByUsername',isAuth,userController.checkContactByUsername)
 app.get('/getScheduledMessages',isAuth,messageController.getScheduledMessages)
 app.get('/getLikes',isAuth,noteController.getLikes)
+app.get('/getBlockedUsers',isAuth,userController.getBlockedUsers)
+app.get('/getPremiumDetails',isAuth,userController.getPremiumDetails)
 
 app.post('/register',userController.registerUser);
 app.post('/OauthRegister',userController.OauthRegister);
@@ -51,6 +53,7 @@ app.put('/joyrideFinished',isAuth,userController.makeFinishedRide)
 app.put('/likeNote',isAuth,noteController.likeNote)
 app.put('/unLikeNote',isAuth,noteController.unLikeNote)
 app.put('/changeAfkMessage',isAuth,userController.changeAfkMessage)
+app.put('/saveConfig',isAuth,userController.saveConfig)
 
 app.patch('/changePass',userController.changePasword)
 app.patch('/convertPointsToPremium',isAuth,userController.convertPointsToPremium);
