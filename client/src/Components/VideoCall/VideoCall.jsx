@@ -8,8 +8,10 @@ import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import ContactLIst from '../Chats/Chatlist/ContactsList'
 import videoCallIcon from '../../assets/Images/videocall.png'
+import { Dropdown } from 'antd';
 import Webcam from 'react-webcam';
 import ReactPlayer from 'react-player'
+import { MDBIcon } from 'mdb-react-ui-kit';
 
 
 function VideoCallUi({ setChat, chat, reciever }) {
@@ -20,6 +22,7 @@ function VideoCallUi({ setChat, chat, reciever }) {
   const [totalCount, setCount] = useState(0)
   const streamsIds = new Set([])
   const [totalStreams, setTotalStreams] = useState([])
+  const [configurations, setConfigurations] = useState({})
   const conversationRef = useRef(null);
   const [isLoading, setLoading] = useState({ type: null })
   const [isModalOpen, setModalOpen] = useState(false)
@@ -102,8 +105,8 @@ function VideoCallUi({ setChat, chat, reciever }) {
 
   const onStreamListChangedHandler = function (streamInfo) {
     if (streamInfo.listEventType === 'added' && streamInfo.isRemote) {
-      if (conversationRef.current)
-        conversationRef.current.subscribeToStream(streamInfo.streamId)
+      if (conversationRef.current && streamInfo.streamId)
+        conversationRef.current.subscribeToMedia(streamInfo.streamId)
           .then((stream) => {
             console.log('subscribeToStream success', streamInfo);
           }).catch((err) => {
@@ -161,12 +164,15 @@ function VideoCallUi({ setChat, chat, reciever }) {
       //Instantiate a local video stream object
       ua.createStream({
         constraints: {
-          audio: false,
+          audio: true,
           video: true
         }
       })
         .then(async (stream) => {
           localStream.current = stream
+          if(me.value.settingsConfig.blur_video_bg){
+            stream = await stream.blur()
+          }
           addStreamInVideo(stream, true)
           stream.attachToElement(document.getElementById('local-video-stream'));
           conversation.join()
@@ -260,6 +266,64 @@ function VideoCallUi({ setChat, chat, reciever }) {
     height: 1, // Set to a very small height
     facingMode: 'user', // Use the user-facing camera
   };
+
+  const toggleCamera = () => {
+    if (localStream.current) {
+      if (localStream.current.isVideoEnabled()) {
+        setConfigurations({ ...configurations, camDisabled: true })
+        return localStream.current.disableVideo(true)
+      }
+      setConfigurations({ ...configurations, camDisabled: false })
+      return localStream.current.enableVideo(true)
+    }
+  }
+  const toggleMic = () => {
+    if (localStream.current) {
+      if (localStream.current.isAudioEnabled()) {
+        setConfigurations({ ...configurations, micDisabled: true })
+        return localStream.current.disableAudio(true)
+      }
+      setConfigurations({ ...configurations, micDisabled: false })
+      return localStream.current.enableAudio(true)
+    }
+  }
+  const blurBg = (isBlur) => {
+    if (localStream.current) {
+      localStream.current.blur()
+      setConfigurations({ ...configurations, isBlur: true })
+    }
+  }
+  const unBlurBg = (isBlur) => {
+    if (localStream.current) {
+      localStream.current.unblur()
+      setConfigurations({ ...configurations, isBlur: false })
+    }
+  }
+  const menuItems = [
+    {
+      label: configurations.camDisabled ? 'Enable camera' : 'Disable camera',
+      key: 'toggleCamera',
+      icon: <MDBIcon className='menuIcon' fas icon="video" />,
+      // disabled: !localLogs.value?.length
+    },
+    {
+      label: configurations.micDisabled ? 'Enable mic' : 'Diable mic',
+      key: 'toggleMic',
+      icon: <MDBIcon className='menuIcon' fas icon="microphone" />,
+      // disabled: !localLogs.value?.length
+    },
+    {
+      label: configurations.isBlur ? 'Unblur background' : 'Blur background',
+      key: 'blurBg',
+      icon: <MDBIcon className='menuIcon' fas icon="filter" />,
+      // disabled: !localLogs.value?.length
+    },
+  ]
+  const itemFunction = {
+    toggleCamera,
+    toggleMic,
+    blurBg: configurations.isBlur ? unBlurBg : blurBg
+  }
   return (
     <div className="videoCallUIParent">
       {/* <Webcam
@@ -300,6 +364,18 @@ function VideoCallUi({ setChat, chat, reciever }) {
           (!chat.isRecieved || isAccepted) && <>
             <button onClick={declineCall} className='syncup-pink-btn' >Hangup</button>
             <button onClick={() => setModalOpen(true)} className='syncup-pink-btn' >Add members</button>
+            {isAccepted && <Dropdown
+              arrow
+              menu={{
+                items: menuItems,
+                onClick: ({ key }) => itemFunction[key]?.call(),
+              }}
+              trigger={['click']}
+            >
+              <button className="syncup-pink-btn">
+                <MDBIcon fas icon="ellipsis-v" />
+              </button>
+            </Dropdown>}
           </>
         }
         {
