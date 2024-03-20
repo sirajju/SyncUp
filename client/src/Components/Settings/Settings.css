@@ -1,0 +1,49 @@
+.settingsItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    background-color: white;
+    height: 50px;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px;
+    border: 1px solid rgb(234, 234, 234);
+    font-weight: bold;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.5s;
+}
+
+.settingsParent {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.closeBtn {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+}
+
+.settingsItem:hover {
+    box-shadow: 1px 1px 2px rgb(218, 218, 218);
+}
+
+.settingsParent .disabled {
+    background-color: rgb(210, 210, 210);
+    cursor: not-allowed;
+}
+.premiumPlanContainer {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+}
+.premiumPlanContainer p span {
+    font-weight: bold;
+}
