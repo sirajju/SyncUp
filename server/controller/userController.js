@@ -397,12 +397,14 @@ const checkUsername = async (req, res) => {
     try {
         const username = req.query.username.toLowerCase()
         const userData = await User.findOne({ username })
+        console.log('CHecking');
         if (!userData) {
             res.json({ success: true })
         } else {
             res.json({ success: false, message: "Username is already taken" })
         }
     } catch (error) {
+        console.log(error);
         res.staus(203).json({ success: false, message: "Something went wrong" })
     }
 }
