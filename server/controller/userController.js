@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
             } else {
                 res.status(203).json({ message: "Oops!,Something went wrong", success: false })
             }
-        }else{
+        } else {
             res.status(203).json({ message: "Account already exists", success: false })
 
         }
@@ -108,30 +108,34 @@ const compareHash = async (pass, hashedPass) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body
+        console.log("loggin in user");
         const userData = await User.findOne({ $or: [{ email: email }, { username: email }] })
         if (userData) {
             if (await compareHash(password, userData.password)) {
                 if (userData.isBlocked) {
                     res.status(203).json({ message: "User suspended", success: false })
                 } else {
+                    let token;
                     jwt.sign({ username: userData.username, email: userData.email }, process.env.JWT_SECRET, async (err, data) => {
                         if (err) {
                             throw new Error('Oops!,Something went wrong').stack(err)
                         }
-                        else if (!userData.isEmailVerified) {
-                            res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token: data, success: false })
-                        }
-                        else {
-                            const connData = await Connection.findOne({ userId: userData._id })
-                            if (connData) {
-                                if (userData.logged_devices == 1 && connData) {
-                                    req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
-                                }
-                            }
-                            await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
-                            res.json({ message: "Login success", success: true, token: data })
-                        }
+                        token = data
                     })
+                    if (!userData.isEmailVerified) {
+                        res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token, success: false })
+                    }
+                    else {
+                        const connData = await Connection.findOne({ userId: userData._id })
+                        if (connData) {
+                            if (userData.logged_devices == 1 && connData) {
+                                req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
+                            }
+                        }
+                        console.log("logged in");
+                        await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
+                        res.json({ message: "Login success", success: true, token })
+                    }
                 }
             } else {
                 res.json({ message: "Incorrect password", success: false })
@@ -425,6 +429,7 @@ const checkUser = async (req, res) => {
             const userData = await User.aggregate([
                 { $match: { $or: [{ username: regex }, { email: regex }], isEmailVerified: true, email: { $ne: req.userEmail } } },
                 { $addFields: { isContact: { $in: [me._id, { $map: { input: "$contacts", as: "contact", in: "$$contact.id" } }] } } },
+                { $project: { isContact: 1, username: 1, isPremium: 1, avatar_url: 1, settingsConfig: 1, email: 1 } },
                 { $sort: { isContact: -1 } }
             ]);
 
@@ -442,7 +447,8 @@ const checkUser = async (req, res) => {
                         _id: ind,
                         avatar_url: el.googleContacts.photos.url,
                         username: el.googleContacts.names.displayName,
-                        isPremium: false
+                        isPremium: false,
+                        isGoogle: true
                     }
                     userData.push(obj)
                 })
@@ -554,8 +560,9 @@ const getNoti = async (req, res) => {
             { $match: { email: req.userEmail } },
             { $unwind: "$notifications" },
             { $lookup: { from: 'users', localField: 'notifications.userId', foreignField: '_id', as: 'notiData' } },
-            { $project: { 'notifications': 1, 'notiData': 1, '_id': 1 } }
+            { $project: { 'notifications': 1, 'notiData': 1, '_id': 1 } },
         ])
+        console.log(notifications);
         const requests = notifications.filter(el => el.notifications.type == 'request')
         const normal = notifications.filter(el => el.notifications.type != 'request')
         let notiToSend = [...normal]
@@ -641,15 +648,20 @@ const convertPointsToPremium = async (req, res) => {
         const userData = await User.findOne({ email: req.userEmail, isPremium: false })
         if (userData) {
             if (userData.chatpoints >= 499) {
+                const today = new Date();
+                const futureDate = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
                 const updateData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { isPremium: true }, $inc: { chatpoints: -499 } }, { new: true })
                 await new Premium({
                     userId: userData._id,
-                    type: 'chatpoints',
+                    type: 'monthly',
                     price: 499,
-                    expiresAt: new Date().getMonth() + 1,
+                    expiresAt: futureDate.getTime(),
+                    expiresAtString: futureDate.toLocaleDateString('en-GB', { day: "2-digit", month: "short", year: "numeric" }),
                     paymentType: 'chatpoints',
                     paymentStatus: 'success',
-                    paymentSessionId: `cp_${userData._id}`
+                    paymentSessionId: `cp_${userData._id}`,
+                    createdAt: Date.now()
+
                 }).save()
                 if (updateData) {
                     res.json({ success: true, message: "Welcome to premium membership" })
@@ -889,8 +901,7 @@ const checkContactByUsername = async (req, res) => {
         const { username } = req.query
         const me = await User.findOne({ email: req.userEmail })
         if (username) {
-            const userData = await User.findOne({ username, 'blockedContacts.userId': me._id })
-            console.log(userData);
+            const userData = await User.findOne({ username })
             if (userData) {
                 const contactData = await User.find({ email: req.userEmail, contacts: { $elemMatch: { id: userData._id } } })
                 if (contactData.length) {
@@ -915,6 +926,112 @@ const logoutAccount = async (req, res) => {
         console.log(error);
         res.json({ success: false, message: error.message })
 
+    }
+}
+
+const saveConfig = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        console.log(req.body);
+        if (userData) {
+            const updateData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { settingsConfig: { ...userData.settingsConfig, ...req.body } } }, { new: true })
+            console.log(updateData.settingsConfig);
+            if (updateData) {
+                return res.json({ success: true })
+            }
+        }
+        return res.json({ success: false, message: "Something went wrong" })
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Internal server err" })
+    }
+}
+
+const getBlockedUsers = async (req, res) => {
+    try {
+        const blockedData = await User.aggregate([
+            { $match: { email: req.userEmail } },
+            { $unwind: "$blockedContacts" },
+            { $lookup: { from: "users", localField: "blockedContacts.userId", foreignField: "_id", as: "blockedUser" } },
+            { $project: { 'blockedUser.email': 1, 'blockedUser.username': 1, 'blockedUser.avatar_url': 1, blockedAt: '$blockedContacts.blockedAt' } },
+            { $unwind: "$blockedUser" },
+            { $sort: { 'blockedAt': -1 } }
+        ])
+        console.log(blockedData);
+        if (blockedData.length) {
+            const encData = encryptData(blockedData)
+            if (encData) {
+                return res.json({ success: true, body: encData })
+            }
+        }
+        return res.json({ success: false, message: "Err while geting data" })
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Internal server err" })
+    }
+}
+
+const getPremiumDetails = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            const premiumData = await Premium.findOne({ userId: userData._id.toString() })
+            if (premiumData) {
+                const encData = encryptData(premiumData)
+                return res.json({ success: true, body: encData })
+            }
+        }
+        return res.json({ success: false, message: "Something went wrong" })
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Internal server err" })
+    }
+}
+
+const isAlive = async (req, res) => {
+    try {
+        const userData = await User.findOne({ email: req.userEmail })
+        if (userData) {
+            if(userData.isPremium){
+                const premiumData = await Premium.findOne({$or:[{userId:userData._id},{emailIfExpired:userData.email}]})
+                const expiration = new Date(premiumData.expiresAt)
+                const currentData = new Date()
+                const timeDifference = expiration.getTime() - currentData.getTime()
+                const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24))
+                console.log(timeDifference,dayDifference);
+                if(timeDifference <= 0){
+                    const update = await Premium.findOneAndUpdate({userId:userData._id},{$set:{isExpired:true,userId:"expired",emailIfExpired:userData.email}})
+                    if(update){
+                        const exprdNoti = {type:"premium",message:"Your premium has been expired",time:Date.now(),isReaded:false}
+                        await User.findOneAndUpdate({email:userData.email},{$push:{notifications:exprdNoti}})
+                        userData.isPremium = false
+                        userData.notifications = [...userData.notifications,exprdNoti]
+                        await userData.save()
+                    }
+                }else if (dayDifference <= 3){
+                    if(!premiumData.isExpNotified){
+                        const exprdNoti = {type:"premium",message:"Your premium will expire soon",time:Date.now(),isReaded:false}
+                        premiumData.isExpNotified = true
+                        await premiumData.save()
+                        userData.notifications = [...userData.notifications,exprdNoti]
+                        await userData.save()
+                    }
+                }
+            }
+            if (!userData.isEmailVerified) {
+                res.status(200).json({ success: false, err: "EMAILNOTVERERR", message: "Email is not verified yet!!" })
+            }
+            else if (req.query.getData) {
+                const encData = crypto.AES.encrypt(JSON.stringify(userData), process.env.CRYPTO_SECRET)
+                res.status(200).json({ body: encData.toString(), success: true })
+            }else{
+                res.json({success:true})
+            }
+            
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Internal server error" })
     }
 }
 
@@ -954,5 +1071,9 @@ module.exports = {
     toggleAfk,
     changeAfkMessage,
     checkContactByUsername,
-    logoutAccount
+    logoutAccount,
+    saveConfig,
+    getBlockedUsers,
+    getPremiumDetails,
+    isAlive
 }
