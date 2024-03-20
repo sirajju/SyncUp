@@ -4,12 +4,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+
 }
 
 .userProfileChild {
     background: rgba(255, 255, 255, 0.438);
-    width: 40%;
-    height: 85%;
+    width: 50vh;
+    height: 90%;
     border-radius: 10px;
     display: flex;
     justify-content: flex-start;
@@ -78,7 +80,7 @@
     flex-direction: column;
 }
 .blkReport {
-    height: 100%;
+    height: 80%;
     display: flex;
     justify-content: flex-end;
     align-items: center;

@@ -16,6 +16,7 @@ function UserDetails({ chat, reciever ,setChat}) {
     const [blockConfirm, openBlockConfirm] = useState(false)
     const [isBlocked, setBlocked] = useState(false)
     const [conversation, setConversation] = useState(null)
+    const [isMobile,setMobile]=useState(false)
     const dispatch = useDispatch()
     const [reason, setReason] = useState('')
     const getUser = function(){
@@ -38,6 +39,11 @@ function UserDetails({ chat, reciever ,setChat}) {
                 setBlocked(res)
 
             }
+        }
+        if (window.outerWidth <= 800 && chat.type) {
+            setMobile(true)
+        } else {
+            setMobile(false)
         }
         const data = allConversation.value.filter(el => el.opponent[0]._id == chat.data)
         setConversation(data || false)
@@ -66,11 +72,9 @@ function UserDetails({ chat, reciever ,setChat}) {
             method: "POST",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` }
         }
+        dispatch(setUserData({...me.value,blockedContacts:[...me.value.blockedContacts,{userId:userData._id,blockedAt:Date.now()}]}))
         Axios(options).then(res => {
-            if (res.data.success) {
-                dispatch(setUserData({...me.value,blockedContacts:[...me.value.blockedContacts,{userId:userData._id,blockedAt:Date.now()}]}))
-                toast.success(res.data.message)
-            } else {
+            if (!res.data.success) {
                 toast.error(res.data.message)
             }
         })
@@ -83,11 +87,9 @@ function UserDetails({ chat, reciever ,setChat}) {
             method: "POST",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` }
         }
+        dispatch(setUserData({...me.value,blockedContacts:me.value.blockedContacts.filter(el=>el.userId!=userData._id)}))
         Axios(options).then(res => {
-            if (res.data.success) {
-                dispatch(setUserData({...me.value,blockedContacts:me.value.blockedContacts.filter(el=>el.userId!=userData._id)}))
-                toast.success(res.data.message)
-            } else {
+            if (!res.data.success) {
                 toast.error(res.data.message)
             }
         })
@@ -124,10 +126,18 @@ function UserDetails({ chat, reciever ,setChat}) {
                         <span>{userData.chatpoints}</span>
                     </div>
                 </div>
-                <button className="profileBtn viewNotes">View notes</button>
+                {/* <button className="profileBtn viewNotes">View notes</button> */}
                 <button className="profileBtn chatLock">Chatlock</button>
+                {isMobile&&<div className="blkReport">
+                        <button className="profileBtn viewNotes" onClick={() => openConfirmBox(true)} >Report</button>
+                        {!isBlocked ?
+                            <button className="profileBtn chatLock btnBlk" onClick={() => openBlockConfirm(true)} >Block</button> :
+                            <button className="profileBtn chatLock btnBlk" onClick={unBlockContact} >Unblock</button>
+                        }
+                        <button className="profileBtn chatLock btnBlk">Remove friend</button>
+                    </div>}
             </div>
-            {conversation&& conversation[0] && <div className="userProfileChild">
+            {Boolean(conversation&& conversation[0]&&!isMobile) && <div className="userProfileChild">
                 <div className="stausContainer">
                     <h1>Status</h1>
                     <div className="statusText text-start">
