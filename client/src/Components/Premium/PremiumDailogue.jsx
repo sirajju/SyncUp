@@ -9,7 +9,7 @@ const App = ({ isModalOpen, setIsModalOpen }) => {
     return (
         <>
             <Modal
-                title="Premium required 🗿"
+                title="Premium required !!"
                 visible={isModalOpen} 
                 centered={true}
                 width={'60vh'}
