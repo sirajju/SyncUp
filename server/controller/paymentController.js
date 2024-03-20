@@ -13,7 +13,7 @@ const createPaymentSession = async (req, res) => {
 
             await stripe.customers.create({
                 name: 'Hello world',
-                description:"Premium payment",
+                description: "Premium payment",
                 address: {
                     line1: 'Kozhikode',
                     postal_code: '673580',
@@ -39,16 +39,20 @@ const createPaymentSession = async (req, res) => {
             })
             if (session) {
                 const userData = await User.findOne({ email: req.userEmail })
-                const existsData = await Premium.findOneAndDelete({userId:userData._id})
+                const existsData = await Premium.findOneAndDelete({ userId: userData._id })
+                const today = new Date();
+                const futureDate = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
                 const premiumData = await new Premium({
                     userId: userData._id,
                     type: plan,
                     price: (session.amount_total) / 100,
                     authToken: token,
-                    expiresAt: plan == 'Monthly' ? (new Date().getMonth() + 1) : "never",
+                    expiresAt: plan == 'Monthly' ? futureDate.getTime() : 0,
+                    expiresAtString:plan == 'Monthly' ? futureDate.toLocaleDateString('en-GB',{day:"2-digit",month:"short",year:"numeric"}) : "never",
                     paymentType: 'card',
                     paymentStatus: 'pending',
-                    paymentSessionId: session.id
+                    paymentSessionId: session.id,
+                    createdAt:Date.now()
 
                 }).save()
                 if (premiumData) {
