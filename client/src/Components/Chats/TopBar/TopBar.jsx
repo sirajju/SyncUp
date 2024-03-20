@@ -10,6 +10,7 @@ import premiumIcon from '../../../assets/Images/premium_icon.png';
 import shareIcon from '../../../assets/Images/share.png';
 import deleteIcon from '../../../assets/Images/delete.png';
 import scheduleIcon from '../../../assets/Images/schedule.png';
+import searchIcon from '../../../assets/Images/search.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
@@ -30,6 +31,7 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [notiNum, setNotiNum] = useState(0);
   const [afkSwitchState, setAfkSwitchState] = useState(userData.value.afk.isOn)
+  const [searchingElement, setSearching] = useState(false)
   const myNotes = useSelector(state => state.myNotes)
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => saveContact(codeResponse),
@@ -199,17 +201,31 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
     'Chats': chatsItems,
     'My Notes': myNotesItems,
   }
+
+  const setSearch = (e) => {
+    setSearching(e.target.value)
+    if (!e.target.value) {
+      handleSearch('')
+    }
+  }
+
   return (
     <div className="topBarContainer">
-      <input type="text" onChange={handleSearch} maxLength={20} placeholder='Enter username or email' className="searchBar" />
+      <input type="text" onKeyUp={(e)=>e.key=='Enter'&& handleSearch(searchingElement)} onChange={setSearch} maxLength={20} placeholder='Enter username or email' className="searchBar" />
       <div className="chatOptions">
-        <div>
-          {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}
-          <img src={notification} onClick={() => { setGo('Notifications'); dispatch(setUserData({ ...userData.value, notifications: userData.value.notifications.map(el => el = { ...el, isReaded: true }) })) }} className='icon notificationsIcon' alt='Notification' />
-        </div>
+        {!searchingElement.length ?
+          <div>
+            {notiNum > 0 && <p className='notiNum'>{notiNum}</p>}
+            <img src={notification} onClick={() => { setGo('Notifications'); dispatch(setUserData({ ...userData.value, notifications: userData.value.notifications.map(el => el = { ...el, isReaded: true }) })) }} className='icon notificationsIcon' alt='Notification' />
+          </div> :
+          <div style={{width:'100%',padding:"5px"}}>
+            <img onClick={() => handleSearch(searchingElement)} src={searchIcon} className='searchIcon icon' alt='Menu Icon' />
+          </div>
+        }
         <CreateNote isOpen={isOpen} setOpen={setOpen} />
         <PremiumDailogue isModalOpen={isPremiumModalOpen} setIsModalOpen={setPremiumModalOpen} />
-        {!userData.value.googleSynced && <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Google Sync' />}
+        {(!userData.value.googleSynced && !userData.value.settingsConfig.hide_sync_icon )&& <img src={syncIcon} onClick={() => login()} className='icon googleSync' alt='Google Sync' />}
+        <img src={settingIcon} className='icon settingsIcon' onClick={() => setGo('Settings')} alt='Profile' />
         <Dropdown
           arrow
           menu={{
@@ -220,7 +236,6 @@ function TopBar({ handleSearch, setGo, activeTab, setActiveTab }) {
         >
           <img src={menuIcon} className='icon menuIcon' alt='Menu Icon' />
         </Dropdown>
-        {/* <img src={settingIcon} className='icon settingsIcon' alt='Profile' /> */}
         <img src={userData.value.avatar_url} onClick={() => setGo('Profile')} style={{ borderRadius: '50px' }} className='icon profileIcon' alt='Profile' />
       </div>
     </div>

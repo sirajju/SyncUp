@@ -81,6 +81,10 @@
 .menuIcon {
     width: 10px;
 }
+.searchIcon {
+    width: 30px !important;
+    height: 30px !important;
+}
 @keyframes rotate {
     0% {
         transform: rotate(180deg);
