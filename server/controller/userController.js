@@ -992,29 +992,31 @@ const isAlive = async (req, res) => {
     try {
         const userData = await User.findOne({ email: req.userEmail })
         if (userData) {
-            if(userData.isPremium){
-                const premiumData = await Premium.findOne({$or:[{userId:userData._id},{emailIfExpired:userData.email}]})
-                const expiration = new Date(premiumData.expiresAt)
-                const currentData = new Date()
-                const timeDifference = expiration.getTime() - currentData.getTime()
-                const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24))
-                console.log(timeDifference,dayDifference);
-                if(timeDifference <= 0){
-                    const update = await Premium.findOneAndUpdate({userId:userData._id},{$set:{isExpired:true,userId:"expired",emailIfExpired:userData.email}})
-                    if(update){
-                        const exprdNoti = {type:"premium",message:"Your premium has been expired",time:Date.now(),isReaded:false}
-                        await User.findOneAndUpdate({email:userData.email},{$push:{notifications:exprdNoti}})
-                        userData.isPremium = false
-                        userData.notifications = [...userData.notifications,exprdNoti]
-                        await userData.save()
-                    }
-                }else if (dayDifference <= 3){
-                    if(!premiumData.isExpNotified){
-                        const exprdNoti = {type:"premium",message:"Your premium will expire soon",time:Date.now(),isReaded:false}
-                        premiumData.isExpNotified = true
-                        await premiumData.save()
-                        userData.notifications = [...userData.notifications,exprdNoti]
-                        await userData.save()
+            if (userData.isPremium) {
+                const premiumData = await Premium.findOne({ $or: [{ userId: userData._id }, { emailIfExpired: userData.email }] })
+                if (premiumData) {
+                    const expiration = new Date(premiumData.expiresAt)
+                    const currentData = new Date()
+                    const timeDifference = expiration.getTime() - currentData.getTime()
+                    const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24))
+                    console.log(timeDifference, dayDifference);
+                    if (timeDifference <= 0) {
+                        const update = await Premium.findOneAndUpdate({ userId: userData._id }, { $set: { isExpired: true, userId: "expired", emailIfExpired: userData.email } })
+                        if (update) {
+                            const exprdNoti = { type: "premium", message: "Your premium has been expired", time: Date.now(), isReaded: false }
+                            await User.findOneAndUpdate({ email: userData.email }, { $push: { notifications: exprdNoti } })
+                            userData.isPremium = false
+                            userData.notifications = [...userData.notifications, exprdNoti]
+                            await userData.save()
+                        }
+                    } else if (dayDifference <= 3) {
+                        if (!premiumData.isExpNotified) {
+                            const exprdNoti = { type: "premium", message: "Your premium will expire soon", time: Date.now(), isReaded: false }
+                            premiumData.isExpNotified = true
+                            await premiumData.save()
+                            userData.notifications = [...userData.notifications, exprdNoti]
+                            await userData.save()
+                        }
                     }
                 }
             }
@@ -1024,10 +1026,10 @@ const isAlive = async (req, res) => {
             else if (req.query.getData) {
                 const encData = crypto.AES.encrypt(JSON.stringify(userData), process.env.CRYPTO_SECRET)
                 res.status(200).json({ body: encData.toString(), success: true })
-            }else{
-                res.json({success:true})
+            } else {
+                res.json({ success: true })
             }
-            
+
         }
     } catch (error) {
         console.log(error);
