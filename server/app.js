@@ -43,8 +43,8 @@ app.use(cors())
     req.io = io
     next()
   })
-  app.use('/', userRouter);
-  app.use('/admin', adminRouter);
+  app.use('/api/', userRouter);
+  app.use('/api/admin', adminRouter);
   // app.use('/peerjs',peerServer)
 
   app.get('*', (req, res) => {
