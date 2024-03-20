@@ -5,6 +5,9 @@ const premium = new mongoose.Schema({
         type: String,
         required: true
     },
+    emailIfExpired :{
+        type:String,
+    },
     customization: {
         type: Object,
         default: {
@@ -20,8 +23,11 @@ const premium = new mongoose.Schema({
         type:String
     },
     expiresAt: {
-        type: String,
+        type: Number,
         required: true
+    },
+    expiresAtString: {
+        type: String,
     },
     price: {
         type: Number,
@@ -31,6 +37,10 @@ const premium = new mongoose.Schema({
         type: String,
         required: true
     },
+    isExpNotified:{
+        type:Boolean,
+        default:false
+    },
     paymentStatus: {
         type: String,
         required: true
@@ -38,6 +48,14 @@ const premium = new mongoose.Schema({
     paymentSessionId: {
         type: String,
         required: true
+    },
+    createdAt:{
+        type:Number,
+        default:Date.now()
+    },
+    isExpired:{
+        type:Boolean,
+        default:false
     }
 },{collection:'premium'})
 
