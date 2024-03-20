@@ -13,12 +13,14 @@ import missedIcon from '../../assets/Images/incoming_red.png'
 import outgoingIcon from '../../assets/Images/outgoing.png'
 import outgoingAccepted from '../../assets/Images/outgoing_accepted.png'
 import acceptedIcon from '../../assets/Images/call_accepted.png'
+import Confirmation from '../Confirmation/Dailogue'
 
 export default function ({ setGo, setChat }) {
     const localLogs = useSelector(state => state.callLogs)
     const [logs, setLogs] = useState(localLogs.value)
     const dispatch = useDispatch()
     const userData = useSelector(state => state.user)
+    const [isOpened,setOpened]=useState(!userData.value.settingsConfig.save_call_logs)
     useEffect(() => {
         const options = {
             route: "getCallLogs",
@@ -73,6 +75,7 @@ export default function ({ setGo, setChat }) {
     return (
         <>
             <div className="callLogOptions">
+                <Confirmation value={isOpened} func={setOpened} title='Warning!!' content='You have disabled saving call logs..' posFunc={()=>setGo("Settings")} okBtnText="Change" noBtnText="cancell" />
                 <button onClick={() => setGo('')} >
                     <MDBIcon fas icon="angle-left" />
                 </button>
@@ -101,7 +104,7 @@ export default function ({ setGo, setChat }) {
                             {el.data.isAccepted && <span className="callDuration" > Duration : {el.data.duration} </span>}
                         </div>
                         <div className="followRqstDiv" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 10px 10px 0 ', whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{new Date(el.data.createdAt).toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+                            <span style={{ fontSize: '10px', fontWeight: 400, margin: '60px 10px 10px 0 ', whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{new Date(parseInt(el.data.createdAt)).getDate() == new Date().getDate() ? (new Date(parseInt(el.data.createdAt)).toLocaleTimeString('en-US', { hour: '2-digit', minute: "2-digit", hour12: true })) : new Date(parseInt(el.data.createdAt)).getDate() == new Date().getDate() - 1 ? "Yesterday" : (new Date(parseInt(el.data.createdAt)).toLocaleDateString())}</span>
                         </div>
                         <img className="logVidCallIcon" onClick={() => setChat({ type: "videoCall", data: { from: userData.value._id, to: el.opponentData._id, conversationName: `CONVERSATION_${v4()}` } })} src={videoCallIcon} alt="" />
                     </div>
