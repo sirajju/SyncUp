@@ -3,7 +3,6 @@ import './Chatlist.css'
 import dp from '../../../assets/Images/man.png'
 import { useDispatch, useSelector } from 'react-redux'
 import Ads from '../AdsInterface/Ads'
-
 import toast from 'react-hot-toast'
 import Axios from '../../../interceptors/axios'
 import CurrentList from './currentList'
@@ -49,10 +48,10 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, se
         })
 
     }
-    const checkCondact = (id) => {
+    const checkCondact = (id,isPublic) => {
         const contact = userData.value.contacts.find(el => el.id === id);
-        if (contact) {
-            if (contact.isAccepted) {
+        if (contact || isPublic) {
+            if (isPublic || contact.isAccepted) {
                 return "Accepted";
             } else {
                 return 'Pending';
@@ -120,13 +119,14 @@ const Chatlist = React.memo(function Chatlist({ searchResult, setChat, setGo, se
                         </div>
                     )
                 })}
-            {!userData.value.isPremium && <div className="chatlistItem smallAds" style={{ 'height': '200px' }}>
-                <Ads />
-            </div>}
             {Boolean(conversation.value.length) && <CurrentList setGo={setGo} setChat={setChat} />}
             {(!conversation.value.length && !searchResult.length && !searchResult.notfound) &&
                 <EmptyChat openContactsModal={openContactsModal} />
             }
+            <div className="chatListAdItem smallAds" style={{ 'height': '200px' }}>
+               {!userData.value.isPremium && <Ads isMobile={true} />}
+                <div className='mobilePremiumText' ><h1>{userData.value.settingsConfig.replace_premium_text ? userData.value.username.toUpperCase() : 'Premium user'}</h1></div>
+            </div>
         </div>
     )
 })

@@ -65,6 +65,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             setLoading(false)
 
         })
+        
         socket.on('typing', () => {
             console.log('typing');
             setTyping(true)
@@ -101,7 +102,7 @@ const ConversationTopBar = ({ reciever, setChat, setGo, chat, isBlocked }) => {
             <div className="conversationMenu">
                 {isLoading && <LinearProgress variant='soft' color='danger' style={{ color: "#ED80FD" }} />}
                 {!isBlocked && <img src={vidCall} onClick={() => setChat({ type: 'videoCall', data: { to: reciever._id, from: userData.value._id, conversationName: `CONVERSATION_${v4().split('-').join('')}` } })} alt="" />}
-                <img src={menu} alt="" />
+                {/* <img src={menu} alt="" /> */}
             </div>
         </div>
     )
@@ -125,6 +126,8 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
         const data = conversation.value?.filter(el => el.opponent[0]._id == chat.data)
         if (data[0]?.messages?.length) {
             setMessages(data[0].messages)
+        } else if (currentChat.value.length) {
+            setMessages(currentChat.value)
         } else {
             setMessages([])
             GetMessages(chat.data).then(msgList => {
@@ -134,7 +137,6 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                     setMessages([])
                 }
             })
-
         }
     }, [chat])
 
@@ -148,9 +150,6 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
         if (doodleRef.current) {
             doodleRef.current.scrollTop = doodleRef.current.scrollHeight * 2000
         }
-        GetChatList().then(res=>{
-            dispatch(setConversations(res))
-        })
     }, [messages])
 
     function displayMenu(e, msg) {
@@ -223,16 +222,16 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                             return (
                                 <>
                                     {el.senderId === userData.value._id ? (
-                                        <div key={ind} className={`message rightMessage ${currentMessage?._id == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el)}>
+                                        <div key={ind} title={new Date(el.sentTime).toLocaleString()} className={`message rightMessage ${currentMessage?._id == el._id ? 'bg-danger text-light' : ''} text-center `} onContextMenu={el.isDeleted ? (e) => e.preventDefault() : (e) => displayMenu(e, el)}>
                                             <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                                 <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} className="mediaMessage" />
                                                 <p className='p-1 text-start' >{el.content}</p>
                                             </>)}</div>
                                             {/* {el.isConfettiEnabled && <img className='popperImg' src={flower} />} */}
-                                            <span className={`messageStatusIndicator`}>{new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
+                                            <span className={`messageStatusIndicator`}>{new Date(parseInt(el.sentTime)).getDate() == new Date().getDate() ? (new Date(parseInt(el.sentTime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: "2-digit", hour12: true })) : new Date(parseInt(el.sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" : (new Date(parseInt(el.sentTime)).toLocaleDateString())} <img src={el.isReaded ? msgSeen : (el.isDelivered ? msgDelivered : msgSent)} alt="" /> {(el.isEdited && !el.isDeleted) ? "Edited" : ""} </span>
                                         </div>
                                     ) : (
-                                        <div key={ind} className={`message leftMessage text-center`}>
+                                        <div key={ind} title={new Date(el.sentTime).toLocaleString()} className={`message leftMessage text-center`}>
                                             <div className='p-1' >{el?.isDeleted ? <i>This message has been vanished </i> : (!el.isMedia ? <span className={`messageText`}>{el.content}</span> : <>
                                                 <img src={el.mediaConfig.url} alt="d" onClick={() => downloadImage(el)} loading='lazy' className="mediaMessage" />
                                                 <p className='p-1' >{el.content}
@@ -240,7 +239,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                                                 </p>
                                             </>)}</div>
 
-                                            <span className={`messageStatusIndicator`}> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(el.sentTime).getHours().toString().padStart(2, '0')}:{new Date(el.sentTime).getMinutes().toString().padStart(2, '0')}  </span>
+                                            <span className={`messageStatusIndicator`}> {(el.isEdited && !el.isDeleted) && "Edited"}  {new Date(parseInt(el.sentTime)).getDate() == new Date().getDate() ? (new Date(parseInt(el.sentTime)).toLocaleTimeString('en-US', { hour: '2-digit', minute: "2-digit", hour12: true })) : new Date(parseInt(el.sentTime)).getDate() == new Date().getDate() - 1 ? "Yesterday" : (new Date(parseInt(el.sentTime)).toLocaleDateString())}  </span>
                                         </div>
                                     )}
                                 </>
@@ -282,7 +281,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 setReciever({ ...reciever, blockedContacts: [...reciever.blockedContacts, { userId: userData.value._id, blockedAt: Date.now() }] })
                 setBlocked(true)
             } else {
-                const res = await GetChatList()
+                const res = await GetChatList('From block state')
                 dispatch(setConversations(res))
             }
         })
@@ -291,7 +290,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts?.filter(el => el.userId != data.userId) }))
                 setBlocked(false)
             } else {
-                const res = await GetChatList()
+                const res = await GetChatList('From block state')
                 dispatch(setConversations(res))
             }
         })
@@ -348,7 +347,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         else if (chat.type == 'videoCall') {
             if (chat.data.from == userData.value._id) {
-                socket.emit('onCall', { ...chat.data, createLog: true })
+                socket.emit('onCall', { ...chat.data, createLog: true, clearLogFromMe: !userData.value.settingsConfig.save_call_logs })
             } else {
                 socket.emit('onCall', chat.data)
             }
@@ -412,7 +411,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         }
         else {
             if (e.target.value.trim()) {
-                socket.emit('typingStarted',chat)
+                socket.emit('typingStarted', chat)
                 setMessage(e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1));
             }
         }
@@ -504,7 +503,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 toast.error(res.data.message)
             }
             const ms = await GetMessages(chat.data)
-            const cv = await GetChatList()
+            const cv = await GetChatList('from confetti')
             dispatch(setConversations(cv))
             dispatch(setCurrentChat(ms))
         })
@@ -539,7 +538,7 @@ function ChatingInterface({ setGo, setChat, chat }) {
         <>
             {(!chat.type && userData.value.isPremium) && (
                 <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
-                    <h1>Premium user</h1>
+                   <h1>{userData.value.settingsConfig.replace_premium_text ? userData.value.username.toUpperCase() : 'Premium user'}</h1>
                 </div>
             )}
             {(!userData.value.isPremium && !chat.type) && <Ads chat={chat} />}
@@ -567,7 +566,8 @@ const ConversationBottom = function ({ isBlocked, message, removeLastEmoji, send
                 <input onKeyDown={(e) => (e.key == 'Backspace' && message?.length < 3) && removeLastEmoji(e)} onInput={handleInputChange} onKeyUp={(e) => e.key == 'Enter' ? sendMessage() : false} value={message} type="text" ref={inputRef} placeholder='Type a message...' className="msgInput text-capitalize" />
                 <img src={add} id='imageAdd' onClick={() => fileInputRef.current.click()} alt="" />
                 <input type="file" onInput={handleFileInput} ref={fileInputRef} accept={"image/*, video/*"} hidden id="" />
-                <img src={!message ? (!isSending ? mic : timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" /></>}
+                {Boolean(message.length) && <img src={!message ? (isSending && timer) : (!isSending ? send : timer)} onClick={!message ? () => alert('mic') : sendMessage} alt="" />}
+                </>}
         </div>
     )
 }

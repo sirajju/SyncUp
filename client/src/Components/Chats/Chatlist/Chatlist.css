@@ -1,4 +1,4 @@
-.chatlistContainer{
+.chatlistContainer {
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
@@ -8,7 +8,8 @@
     height: 80%;
 
 }
-.chatlistItem{
+
+.chatlistItem {
     width: 100%;
     height: 110px;
     background: #F8F8F8;
@@ -17,32 +18,38 @@
     display: flex;
     cursor: pointer;
     margin-top: 10px;
-    position: relative ;
+    position: relative;
 
 }
+
 .chatIcon {
     width: 80px;
     border-radius: 100%;
 }
+
 .chatDetails {
     margin-left: 20px;
     width: 100%;
     display: flex;
     justify-content: space-between;
 }
+
 .chatDetails .userName {
     color: black;
     font-size: 28px;
 }
+
 .chatDetails p {
     font-size: 15px;
 }
+
 .lastMsgTime {
     color: #010851;
     font-size: 14px;
 }
+
 .unreadMsgCount {
-    background:#ED80FD ;
+    background: #ED80FD;
     border-radius: 20px;
     width: 22px;
     height: 22px;
@@ -52,11 +59,13 @@
     color: white;
     margin: 10px;
 }
+
 .userName span {
     position: absolute;
     font-size: 10px;
     margin: 7px;
 }
+
 .premiumBadge {
     background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
     color: white;
@@ -65,22 +74,22 @@
     height: 12px;
     position: absolute !important;
 }
-.smallAds{
-    display: none;
-}
-.sendFrndRqst{
+
+.sendFrndRqst {
     height: 40px;
     border: none;
     border-radius: 10px;
     font-size: 10px;
-    background:#ED80FD ;
+    background: #ED80FD;
 }
-.followRqstDiv{
+
+.followRqstDiv {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
 }
+
 .welcomeContainer {
     width: 100%;
     height: 90%;
@@ -90,9 +99,11 @@
     flex-direction: column;
     padding: 20px;
 }
-.welcomeContainer h2{
+
+.welcomeContainer h2 {
     font-size: 20px;
 }
+
 .welcomeContainer button {
     height: 40px;
     width: 100px;
@@ -103,10 +114,15 @@
     color: white;
 }
 
+.lstMsgD {
+    width: 100%;
+}
+
 .lastMessage {
     overflow: hidden;
     white-space: nowrap;
     max-width: 35vh;
+    position: absolute;
 }
 
 .chatlistContainer .ant-float-btn-body {
@@ -116,16 +132,48 @@
 .floatBtnIcon {
     color: white;
 }
+
 .ant-float-btn-body:hover .floatBtnIcon {
     color: #ED80FD;
 }
+
 .contactsListParent {
     width: 100%;
     height: 70vh;
     overflow: auto;
 }
-@media (max-width:700px){
-    .smallAds{
+
+.chatListAdItem {
+    width: 100%;
+    height: 200px;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    cursor: pointer;
+    margin-top: 10px;
+    position: relative;
+}
+
+.smallAds {
+    display: none;
+}
+
+.mobilePremiumText {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobilePremiumText h1 {
+    background: linear-gradient(160deg, #ee9ae5ff 0%, #5961f9ff 100%);
+    background-clip: text;
+    color: transparent;
+    -webkit-background-clip: text;
+}
+
+@media (max-width:700px) {
+    .smallAds {
         display: block;
     }
 }

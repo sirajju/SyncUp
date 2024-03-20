@@ -89,11 +89,27 @@ export default function App({ contactsModal, openContactsModal, setChat, subTitl
                          {`Liked at ${new Date(el.likedUserData.likedAt).toLocaleTimeString('en-US',{hour:"2-digit",'minute':"2-digit",hour12:true})}`}
                         </p>
                       </div>
-                      {/* <div className="followRqstDiv">
-                        <button className="sendFrndRqst" onClick={() => { openContactsModal(false); (onClick ? onClick(el.contactData._id) : setChat({ type: "chat", data: el.contactData._id })) }}  >
-                          <img style={{ 'width': '20px' }} src={icon || message} alt="" />
+   
+                    </div>
+                  </div>
+                ))}
+                {Boolean(data.length && !isLoading && route == 'getBlockedUsers') && data.map(el => (
+                  <div className="chatlistItem contactItem">
+                    <img src={el.blockedUser.avatar_url} className='chatIcon' alt="sd" />
+                    <div className="chatDetails">
+                      <div className="userContent">
+                        <h5 className='userName text-start' style={{ textTransform: 'capitalize' }}>
+                          {(el.blockedUser.username.length > 10 ? el.blockedUser.username.slice(0, 10) + '...' : el.blockedUser.username)}
+                        </h5>
+                        <p className="lastMessage">
+                         {`Blocked at ${new Date(el.blockedAt).toLocaleDateString('en-US',{hour:"2-digit",'minute':"2-digit",hour12:true})}`}
+                        </p>
+                      </div>
+                      {icon && <div className="followRqstDiv">
+                        <button onClick={onClick} className="sendFrndRqst">
+                          <img style={{ 'width': '20px' }} src={icon} alt="" />
                         </button>
-                      </div> */}
+                      </div>}
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setCurrentChat, setConversations as setGlobalConversation, setUserData } from '../../../Context/userContext'
+import { setConversations, setCurrentChat, setConversations as setGlobalConversation, setUserData } from '../../../Context/userContext'
 import { useSocket } from '../../../Context/socketContext'
 import imageIcon from '../../../assets/Images/image.png'
 import businessBadge from '../../../assets/Images/verified.png'
@@ -35,18 +35,18 @@ function CurrentList({ setChat, setGo }) {
     const gettUnread = function (msgs) {
         return msgs?.filter(el => (el?.isReaded == false && el.senderId != userData.value._id && !el.isDeleted))?.length
     }
-    const clearMessage = function (el) {
+    const clearMessage = async function (el) {
+        dispatch(setCurrentChat([]))
+        dispatch(setGlobalConversation(await GetChatlist()))
         setConfirmed(false)
         const options = {
             route: "clearConversationMessages",
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
             params: { chatId: el._id }
         }
-        Axios(options).then(async res => {
+        Axios(options).then(res => {
             if (res.data.success) {
                 setChat({})
-                dispatch(setCurrentChat([]))
-                dispatch(setGlobalConversation(await GetChatlist()))
                 toast.success(res.data.message)
             }
         })
@@ -67,21 +67,21 @@ function CurrentList({ setChat, setGo }) {
 
     }
     const blockUser = function (el) {
-        setConfirmed(false)
         const options = {
             route: isBlocked(el) ? 'unBlockContact' : 'blockContact',
             headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
             payload: { userId: el.opponent[0]._id },
             method: "POST"
         }
+        if (options['route'] == 'unBlockContact') {
+            dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(u => u.userId != el.opponent[0]._id) }))
+        } else {
+            dispatch(setUserData({ ...userData.value, blockedContacts: [...userData.value.blockedContacts, { userId: el.opponent[0]._id, blockedAt: Date.now() }] }))
+        }
+        setConfirmed(false)
         Axios(options).then(async res => {
-            if (res.data.success) {
-                if (options['route'] == 'unBlockContact') {
-                    dispatch(setUserData({ ...userData.value, blockedContacts: userData.value.blockedContacts.filter(u => u.userId != el.opponent[0]._id) }))
-                } else {
-                    dispatch(setUserData({ ...userData.value, blockedContacts: [...userData.value.blockedContacts, { userId: el.opponent[0]._id, blockedAt: Date.now() }] }))
-                }
-                toast.success(res.data.message)
+            if (!res.data.success) {
+                toast.error(res.data.message)
             }
         })
     }
@@ -90,9 +90,7 @@ function CurrentList({ setChat, setGo }) {
         clearMessage: (el) => { setDailogueData({ content: "Do you want to clear messages of the current Conversation.?", params: el, posFunc: clearMessage, children: "Note : All media and messages will be cleared" }); setConfirmed(true); },
         deleteConversation: (el) => { setDailogueData({ content: "Do you want to delete this current Conversation.?", params: el, posFunc: deleteConversation, children: "Note : All media and messages will be cleared" }); setConfirmed(true); },
         blockUser: (el) => { setDailogueData({ content: `Do you want to block ${el.opponent[0].username}..?`, params: el, posFunc: blockUser, children: "Note : You will not able send or recieve messages " }); setConfirmed(true); },
-        // clearMessage,
         // deleteConversation,
-        // blockUser
     }
     const myNotesItems = [
         // {
@@ -109,7 +107,7 @@ function CurrentList({ setChat, setGo }) {
             label: 'Delete conversation',
             key: 'deleteConversation',
             icon: <MDBIcon far icon="trash-alt" />,
-            disabled:true,
+            disabled: true,
             danger: true
         },
         {
@@ -156,7 +154,7 @@ function CurrentList({ setChat, setGo }) {
                         <div key={key} className="chatlistItem cursor-pointer p-3" onClick={() => { setConversation(el.opponent[0]._id) }} >
                             <img src={el.opponent[0].avatar_url} className='chatIcon' alt="" />
                             <div className="chatDetails">
-                                <div>
+                                <div className='lstMsgD'>
                                     <h5 className='userName'>{el.opponent[0].username} {el.opponent[0].isPremium && <span className="badge badge-success rounded-pill d-inline premiumBadge">Premium</span>}  {el.opponent[0].isBusiness && <img src={businessBadge} className='businessBadge' alt="" />} </h5>
                                     {el?.messages.length ? <p className="lastMessage"> {el.last_message?.isDeleted ? "This messsage has been vanished" : !el.last_message?.isMedia ? el.last_message?.content : <img style={{ width: "20px" }} src={imageIcon} />}</p> : ""}
                                 </div>

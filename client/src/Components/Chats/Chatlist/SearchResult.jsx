@@ -20,14 +20,14 @@ function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,cop
                             </h5>
                             <p className="lastMessage">
                                 {(() => {
-                                    const rs = checkCondact(el._id);
+                                    const rs = checkCondact(el._id,el?.settingsConfig?.allow_msg_from_everyone);
                                     if (rs == 'Pending') {
                                         return "Request is not accepted yet"
                                     } else if (rs == 'Accepted') {
                                         if (el._id == userData.value._id) {
                                             return "Message yourself"
                                         }
-                                        return "Message to your contacts"
+                                        return "Message to users"
                                     } else if (rs == 404) {
                                         return "Not found , Invite to get chat points"
                                     }
@@ -39,7 +39,7 @@ function SearchResult({searchResult,addToContact,checkCondact,cancellRequest,cop
                         </div>
                         <div className="followRqstDiv">
                             {(() => {
-                                const rs = checkCondact(el._id);
+                                const rs = checkCondact(el._id,el?.settingsConfig?.allow_msg_from_everyone);
                                 if (rs == 'Pending') {
                                     return (
                                         <button onClick={() => cancellRequest(el._id)} className="sendFrndRqst">
