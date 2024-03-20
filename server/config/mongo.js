@@ -6,7 +6,7 @@ module.exports = async function () {
             console.log('Mongodb local connected');
         })
     }catch(err){
-        mongoose.connect(process.env.MONGODB_URI).then(con => {
+        mongoose.connect('mongodb://localhost:27017/SyncUp').then(con => {
             console.log('Mongodb server connected');
         })
     }

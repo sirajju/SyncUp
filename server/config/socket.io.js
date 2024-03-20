@@ -43,13 +43,21 @@ function intializeSocket(server) {
                 }
             })
             socket.on('onCall', async (data) => {
-                const roomData = await Room.findOneAndUpdate({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } },{$set:{conversationName:data.conversationName}},{new:true})
+                const roomData = await Room.findOneAndUpdate({ senderId: { $in: [data.to, data.from] }, recieverId: { $in: [data.from, data.to] } }, { $set: { conversationName: data.conversationName } }, { new: true })
+                const fromData = await User.find({_id:{$in:[data.from,data.to]}})
+                console.log(fromData.length);
+                let clearedParticipants = []
+                fromData.forEach((el)=>{
+                    if(!el.settingsConfig.save_call_logs){
+                        clearedParticipants.push(el._id)
+                    }
+                })
                 const to = await Connection.findOne({ userId: data.to })
                 let logData;
                 if (data.createLog) {
                     logData = await call_log.find({ conversationName: data.conversationName })
                     if (!logData.length) {
-                        logData = await createLog({ ...data })
+                        logData = await createLog({ ...data,clearedParticipants })
                     }
                 }
                 if (roomData) {
@@ -57,12 +65,12 @@ function intializeSocket(server) {
                 }
                 else {
                     console.log("creating a room for calling");
-                    const newRoom = await createRoom({ senderId: data.to, recieverId: data.from,...data })
+                    const newRoom = await createRoom({ senderId: data.to, recieverId: data.from, ...data })
                     if (newRoom) {
                         socket.join(newRoom.roomId)
                     }
                 }
-                const participantsData = await User.find({ _id: { $in: [data.from,data.to] } }, { username: 1, avatar_url: 1 })
+                const participantsData = await User.find({ _id: { $in: [data.from, data.to] } }, { username: 1, avatar_url: 1 })
                 if (participantsData) {
                     socket.to(to.socketId).emit('callRecieved', { ...data, participantsData })
                 }
@@ -78,15 +86,12 @@ function intializeSocket(server) {
             })
 
             socket.on("requestJoin", async (data) => {
+                console.log(data);
                 const requestedUser = await User.findById({ _id: data.request })
                 if (requestedUser) {
-                    const callLog = await call_log.findOneAndUpdate({ conversationName: data.conversationName }, { $push: { participants: data.request } }, { new: true })
-                    const participentsData = await User.find({ _id: { $all: callLog.participants } }, { username: 1, avatar_url: 1 })
-                    if (participentsData) {
-                        const userConnection = await Connection.findOne({ userId: data.request })
-                        if (userConnection) {
-                            socket.to(userConnection.socketId).emit('requestJoin', { ...data, participantsData: participentsData })
-                        }
+                    const userConnection = await Connection.findOne({ userId: data.request })
+                    if (userConnection) {
+                        socket.to(userConnection.socketId).emit('requestJoin', { ...data })
                     }
 
                 }
@@ -196,7 +201,7 @@ function intializeSocket(server) {
                 }
             })
             const createRoom = async function (data) {
-                console.log(`creating a room `,data);
+                console.log(`creating a room `, data);
                 if (data.senderId && data.recieverId) {
                     const newRoom = await new Room({
                         roomId: `${data.senderId}_${data.recieverId}`,
@@ -233,12 +238,12 @@ function intializeSocket(server) {
 
             // Creating call logs
 
-            const createLog = async function ({ from, to, conversationName, duration, isAccepted, endTime }) {
-                console.log('Creating call log')
+            const createLog = async function ({ from, to, conversationName, duration, isAccepted, endTime,clearedParticipants }) {
                 if (from, to, conversationName) {
                     return await new call_log({
                         conversationName: conversationName || delete this.conversationName,
                         participants: [from, to],
+                        clearedParticipants,
                         from,
                         to,
                         isAccepted,
