@@ -23,92 +23,96 @@ import Joyride from '../../Components/Joyride/Joyride'
 import Notes from '../Notes/Notes'
 import CallLog from '../../Components/CallLogs/CallLog'
 import ScheduleMessages from '../../Components/ScheduleMessages/ScheduleMessages'
+import Settings from '../../Components/Settings/Settings'
 
 const Chatlist = React.memo(Chatslst)
 const ChatingInterface = React.memo(chatingUi)
 
 function Chats() {
     const [searchResult, setSearchData] = useState([])
-    const ads = useSelector(state => state.ads)
-    const notes = useSelector(state => state.notes)
     const socket = useSocket()
-    const [chat, setChat] = useState({ type: null })
+    const [chat, changeChat] = useState({ type: null })
     const [isLoading, setLoading] = useState(true)
     const dispatch = useDispatch()
     const [go, setGo] = useState()
     const userData = useSelector(state => state.user)
     const [isSubLoading, setSubLoading] = useState(false)
     const history = useNavigate()
-    const conversation = useSelector(state => state.conversations)
     const [activeTab, setActiveTab] = useState('Chats')
-    const currentChat = useSelector(state => state.currentChat)
+    const setChat = function (cht) {
+        if (chat.isRestricted && cht.type && !cht.isRestricted) {
+            toast.error("Activity restricted")
+            return false
+        }
+        if (cht.type == 'videoCall') {
+            return changeChat({ ...cht, isRestricted: true })
+        }
+        return changeChat(cht)
+    }
     useEffect(() => {
-        function getAxiosOptions(route) {
-            return {
-                route: route,
-                headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
-                crypto: true
-            };
-        }
+        if (isLoading) {
+            function getAxiosOptions(route) {
+                return {
+                    route: route,
+                    headers: { Authorization: `Bearer ${localStorage.getItem('SyncUp_Auth_Token')}` },
+                    crypto: true
+                };
+            }
 
-        function fetchData(route) {
-            const options = getAxiosOptions(route);
-            return Axios(options)
-                .then(res => {
-                    if (res.data.success) {
-                        return res.data.body;
-                    } else {
-                        throw new Error(res.data.message);
-                    }
-                });
-        }
-
-
-        async function getAds() {
-            const token = localStorage.getItem('SyncUp_Auth_Token');
-            if (token && !userData.value.isPremium) {
-                return fetchData('getAds')
-                    .then(data => {
-                        return dispatch(setAds(data));
+            function fetchData(route) {
+                const options = getAxiosOptions(route);
+                return Axios(options)
+                    .then(res => {
+                        if (res.data.success) {
+                            return res.data.body;
+                        } else {
+                            throw new Error(res.data.message);
+                        }
                     });
             }
-            return Promise.resolve();
 
-        }
 
-        function fetchDataMain() {
-            if (userData.value._id) {
-                socket.emit('set-socketId', { userId: userData.value._id });
+            async function getAds() {
+                const token = localStorage.getItem('SyncUp_Auth_Token');
+                if (token && !userData.value.isPremium) {
+                    return fetchData('getAds')
+                        .then(data => {
+                            return dispatch(setAds(data));
+                        });
+                }
+                return Promise.resolve();
+
             }
-            return GetChatList('chat use effect')
-                .then(res => {
-                    return dispatch(setConversations(res));
-                })
-                .then(getAds)
-                .then(() => fetchData('getNotes').then(res => dispatch(setNotes(res))))
-                .then(() => fetchData('getMyNotes').then(res => dispatch(setMyNotes(res))))
-                .then(() => fetchData('getCallLogs').then(res => dispatch(setLogs(res))))
-                .then(() => fetchData('getScheduledMessages').then(res => dispatch(setScheduledMsgs(res))))
-                .then(() => {
-                    return new Promise(resolve => {
-                        resolve();
+
+            function fetchDataMain() {
+                if (userData.value._id) {
+                    socket.emit('set-socketId', { userId: userData.value._id });
+                }
+                return GetChatList('chat use effect')
+                    .then(res => {
+                        return dispatch(setConversations(res));
+                    })
+                    .then(getAds)
+                    .then(() => fetchData('getNotes').then(res => dispatch(setNotes(res))))
+                    .then(() => fetchData('getMyNotes').then(res => dispatch(setMyNotes(res))))
+                    .then(() => fetchData('getCallLogs').then(res => dispatch(setLogs(res))))
+                    .then(() => fetchData('getScheduledMessages').then(res => dispatch(setScheduledMsgs(res))))
+                    .then(() => {
+                        return new Promise(resolve => {
+                            setLoading(false)
+                            resolve();
+                        });
+                    })
+                    .catch(error => {
+                        throw error;
                     });
-                })
-                .catch(error => {
-                    throw error;
-                });
+            }
+            fetchDataMain()
+                .then(() => setLoading(false))
+                .catch(error => toast.error(error.message));
         }
-        fetchDataMain()
-            .then(() => setLoading(false))
-            .catch(error => toast.error(error.message));
-        // Making responsive on mobile screen
-        // window.addEventListener('resize', () => {
-        //     if (window.outerWidth <= 800 && chat.type) {
-        //         setGo('MobileChat')
-        //     } else {
-        //         setGo('')
-        //     }
-        // })
+
+
     }, [])
     useEffect(() => {
         // Setting socket id on connected
@@ -190,20 +194,20 @@ function Chats() {
     }, [socket])
 
     const reConfgiConversation = async () => {
-        setSubLoading(true)
+        setSubLoading({ text: "Refreshing.." })
         setSearchData([])
         dispatch(setConversations(await GetChatList('searchFunction')))
         setSubLoading(false)
     }
 
-    const handleSearch = useCallback(async (e) => {
+    const handleSearch = useCallback(async (value) => {
         if (activeTab !== 'Chats') setActiveTab('Chats')
-        if (e.target.value.trim()) {
-            setSubLoading(true)
+        if (value.trim()) {
+            setSubLoading({ text: "Searching.." })
             setChat({ type: null })
             const token = localStorage.getItem('SyncUp_Auth_Token')
             const options = {
-                params: { user: e.target.value },
+                params: { user: value },
                 route: "checkUser",
                 headers: { Authorization: `Bearer ${token}` },
                 crypto: true
@@ -215,12 +219,12 @@ function Chats() {
                 dispatch(resetConversation())
             } else {
                 dispatch(resetConversation())
-                setSearchData({ notfound: true, data: [...res.data.body, { username: e.target.value }] })
+                setSearchData({ notfound: true, data: [...res.data.body, { username: value }] })
             }
             setSubLoading(false)
         } else {
             setSearchData([])
-            setSubLoading(true)
+            setSubLoading({ text: "Refreshing.." })
             GetChatList('searchFunction').then(res => {
                 dispatch(setConversations(res))
                 setSubLoading(false)
@@ -228,6 +232,14 @@ function Chats() {
 
         }
     }, [])
+
+    useEffect(() => {
+        if (window.outerWidth <= 800 && chat.type) {
+            setGo('MobileChat')
+        } else {
+            setGo('')
+        }
+    }, [chat])
 
 
     const props = {
@@ -245,6 +257,7 @@ function Chats() {
                 {go == 'MobileChat' && chat.type && <ChatingInterface {...props} />}
                 {go == 'CallLogs' && <CallLog setChat={setChat} setGo={setGo} />}
                 {go == 'ScheduleMessages' && <ScheduleMessages isSubLoading={isSubLoading} setSubLoading={setSubLoading} setChat={setChat} setGo={setGo} />}
+                {go == 'Settings' && <Settings isSubLoading={isSubLoading} setSubLoading={setSubLoading} setChat={setChat} setGo={setGo} />}
                 {!go &&
                     <>
 
@@ -253,7 +266,7 @@ function Chats() {
                         {
                             ['Notes', 'My Notes'].includes(activeTab) ?
                                 <Notes activeTab={activeTab} /> :
-                                isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" ></span> </div> :
+                                isSubLoading ? <div className='subLoader'> <span className="subLoaderSpinner" > </span>  <p>{isSubLoading.text}</p> </div> :
                                     <Chatlist setChat={setChat} setSearchData={setSearchData} setGo={setGo} searchResult={searchResult} />
                         }
                         <Joyride />
