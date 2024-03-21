@@ -51,6 +51,7 @@ function Chats() {
             }
             return changeChat({ ...cht, isRestricted: true })
         }
+        window.onbeforeunload = (e) => {}
         return changeChat(cht)
     }
     useEffect(() => {
