@@ -152,6 +152,23 @@ const user = mongoose.Schema({
             isReaded: {
                 type:Boolean,
                 default:false
+            },
+            userId: {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:'Users'
+            },
+            username:{
+                type:String
+            },
+            avatar_url:{
+                type:String
+            },
+            email:{
+                type:String
+            },
+            noteId:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:'Notes'
             }
         }],
         default: [{

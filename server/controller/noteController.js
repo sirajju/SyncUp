@@ -153,7 +153,10 @@ const likeNote = async (req, res) => {
                 const ldata = await new Like({
                     userId: userData._id,
                     userEmail: userData.email,
-                    noteId: notesData._id
+                    noteId: notesData._id,
+                    likedAt:Date.now(),
+                    likedAtString:new Date().toLocaleString('en-GB',{date:'2-digit',month:'2-digit',year:'numeric'})
+
                 }).save()
                 const noteData = await Note.findByIdAndUpdate({ _id: notesData._id }, { $push: { likes: userData._id.toString() } })
                 if (noteData) {

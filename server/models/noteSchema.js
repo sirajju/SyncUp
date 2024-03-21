@@ -18,7 +18,7 @@ const note = new mongoose.Schema({
         required: true
     },
     likes: {
-        type: [],
+        type: Array,
         default: []
     },
     replys:{
