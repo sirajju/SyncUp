@@ -19,6 +19,7 @@ function Settings({ setGo }) {
     const dispatch = useDispatch()
     const [isListOpen, setListOpen] = useState(false)
     const toggleData = (data) => {
+        setConfirm(false)
         dispatch(setUserData({ ...userData.value, settingsConfig: { ...userData.value.settingsConfig, ...data } }))
         const options = {
             route: "saveConfig",
@@ -31,9 +32,6 @@ function Settings({ setGo }) {
                 toast.error(res.data.message)
             }
         })
-        if (confirm) {
-            setConfirm(false)
-        }
     }
 
     const unBlockUser = function () {
@@ -57,20 +55,22 @@ function Settings({ setGo }) {
         }
     }, [])
 
+    const handlePrvtMsg = () => {
+        if (userData.value.settingsConfig.allow_msg_from_everyone) {
+            toggleData({ allow_msg_from_everyone: !userData.value.settingsConfig.allow_msg_from_everyone })
+        } else {
+            setModalDetails({ title: "Are you sure ?", posFunc: () => toggleData({ allow_msg_from_everyone: !userData.value.settingsConfig.allow_msg_from_everyone }), content: "This action will allow unknown users to call or text you... " });
+            setConfirm(true)
+        }
+    }
+
     return (
         <div className='settingsParent'>
             {isListOpen && <List contactsModal={isListOpen} icon={modalDetails.icon} onClick={modalDetails.onClick} openContactsModal={setListOpen} modalTitle={modalDetails.title} route={modalDetails.route} />}
             <PremiumDailogue isModalOpen={isPremiumOpen} setIsModalOpen={setPremiumOpen} />
             <Confirmation value={confirm} title={modalDetails.title} content={modalDetails.content} posFunc={modalDetails.posFunc} func={setConfirm} />
             <button className="closeBtn" onClick={() => { setGo(false) }}> <span>&times;</span> </button>
-            <div className='settingsItem mt-5' onClick={
-                () => {
-                    userData.value.settingsConfig.allow_msg_from_everyone
-                    ? toggleData({ allow_msg_from_everyone: !userData.value.settingsConfig.allow_msg_from_everyone })
-                    :
-                    setModalDetails({ title: "Are you sure ?", posFunc: () => toggleData({ allow_msg_from_everyone: !userData.value.settingsConfig.allow_msg_from_everyone }), content: "This action will allow unknown users to call or text you... " });
-                    setConfirm(true)
-                }} >
+            <div className='settingsItem mt-5' onClick={handlePrvtMsg} >
                 <span>Allow messages from unknown users : </span>
                 <Switch
                     checkedChildren={'YES'}
@@ -104,8 +104,8 @@ function Settings({ setGo }) {
                 // onClick={toggleAfk}
                 />
             </div>
-            <Divider plain={true} style={{ width: "300px" }} orientation='left'>Appearence</Divider>
-            {!userData.value.googleSynced  && <div  className={`settingsItem`} onClick={() => toggleData({ hide_sync_icon: !userData.value.settingsConfig.hide_sync_icon })} >
+            {Boolean(userData.value.isPremium || !userData.value.googleSynced) && <Divider plain={true} style={{ width: "300px" }} orientation='left'>Appearence</Divider>}
+            {!userData.value.googleSynced && <div className={`settingsItem`} onClick={() => toggleData({ hide_sync_icon: !userData.value.settingsConfig.hide_sync_icon })} >
                 <span>Hide google contact sync icon : </span>
                 <Switch
                     checkedChildren={'YES'}
@@ -113,7 +113,7 @@ function Settings({ setGo }) {
                     value={userData.value.settingsConfig.hide_sync_icon}
                 />
             </div>}
-            {userData.value.isPremium&&<div className='settingsItem profilePremiumBadge' onClick={() => toggleData({ replace_premium_text: !userData.value.settingsConfig.replace_premium_text })}>
+            {userData.value.isPremium && <div className='settingsItem profilePremiumBadge' onClick={() => toggleData({ replace_premium_text: !userData.value.settingsConfig.replace_premium_text })}>
                 <span>Replace premium text with name : </span>
                 <Switch
                     checkedChildren={'YES'}
@@ -123,7 +123,7 @@ function Settings({ setGo }) {
                 />
             </div>}
             {userData.value.isPremium && <> <Divider plain={true} style={{ width: "300px" }} orientation='left'>Payment</Divider>
-                <div className='settingsItem' onClick={premiumData?.type ? ()=>{setModalDetails({title:"Your premium plan",content:<PremiumPlan premiumData={premiumData} />,posFunc:toggleData});setConfirm(true)} : ()=>toast('Loading..')} >
+                <div className='settingsItem' onClick={premiumData?.type ? () => { setModalDetails({ title: "Your premium plan", content: <PremiumPlan premiumData={premiumData} />, posFunc: toggleData }); setConfirm(true) } : () => toast('Loading..')} >
                     <span>Premium plan</span>
                     {
                         !premiumData && <span className='text-success small'>Active</span>
@@ -139,10 +139,10 @@ function Settings({ setGo }) {
     )
 }
 
-const PremiumPlan = ({premiumData})=>{
+const PremiumPlan = ({ premiumData }) => {
 
-    const copyToClipboard = (text)=>{
-        navigator.clipboard.writeText(premiumData.paymentSessionId).then(()=>{
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(premiumData.paymentSessionId).then(() => {
             toast.success('Copied to clipboard')
         })
     }
@@ -150,11 +150,11 @@ const PremiumPlan = ({premiumData})=>{
     return (
         <div className="premiumPlanContainer">
             <p><span>Type :</span> {premiumData.type.toUpperCase()}</p>
-            <p><span>Price :</span> {premiumData.paymentType=='chatpoints' ? premiumData.price+'pts' : "₹"+premiumData.price}</p>
+            <p><span>Price :</span> {premiumData.paymentType == 'chatpoints' ? premiumData.price + 'pts' : "₹" + premiumData.price}</p>
             <p><span>Purchased at :</span> {new Date(premiumData.createdAt).toLocaleDateString('en-GB', { day: "2-digit", month: "short", year: "numeric" })}</p>
             <p><span>Expires at :</span> {premiumData.expiresAtString ? premiumData.expiresAtString : new Date(premiumData.expiresAt).toLocaleDateString('en-GB', { day: "2-digit", month: "short", year: "numeric" })}</p>
             <p><span>Payment type :</span> {premiumData.paymentType}</p>
-            <p><span>Payment id :</span> <code onClick={copyToClipboard} style={{cursor:"pointer"}} >Copy</code></p>
+            <p><span>Payment id :</span> <code onClick={copyToClipboard} style={{ cursor: "pointer" }} >Copy</code></p>
         </div>
     )
 }
