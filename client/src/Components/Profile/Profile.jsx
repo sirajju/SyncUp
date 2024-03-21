@@ -184,7 +184,7 @@ function Profile({ setGo, chat }) {
                     <span>Select your premium badge : </span>
                     <span class="badge badge-success rounded-pill d-inline premiumBadge" style={{ cursor: 'pointer', right: "10px" }} >Premium</span>
                 </div>
-                <div className='afkDiv' onClick={() => !userData.value.isPremium && openPremiumModal(true)} >
+                <div className='afkDiv' onClick={() => !userData.value.isPremium ? openPremiumModal(true) : toggleAfk()} >
                     <span>Turn on or off away from keyboard : </span>
                     <Switch
                         checkedChildren={'ON'}
@@ -192,7 +192,6 @@ function Profile({ setGo, chat }) {
                         value={userData.value.afk.isOn}
                         className='premiumToggle'
                     />
-
                 </div>
                 {userData.value.afk.isOn && <p style={{ fontSize: "10px", color: "red" }} >Note : Afk will automatically turn off if an activity detects</p>}
                 <div class="input-group mb-3" hidden={!userData.value.afk.isOn} >
