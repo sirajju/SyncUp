@@ -45,7 +45,7 @@ function App() {
       </div>}
       <Router>
         <Routes>
-          <Route path='/' element={<Home />} />
+          <Route path='/home' index={true}  element={<Home />} />
           <Route path='/login' element={<GuestRoute><Login /></GuestRoute>} />
           <Route path='/register' element={<GuestRoute><Register /></GuestRoute>} />
           <Route path='/chats' element={<UserRoute><Chats /></UserRoute>} />
