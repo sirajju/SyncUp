@@ -30,9 +30,7 @@ const message = new mongoose.Schema({
         }
     },
     clearedParticipants:{
-        type: [{
-            type: String
-        }],
+        type: Array,
         default: []
     },
     isConfettiEnabled:{
