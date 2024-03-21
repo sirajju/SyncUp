@@ -278,7 +278,7 @@ const verifyOtp = async (req, res) => {
             let expire = userData.auth.otp.expireAt
             if ((expire - Date.now()) >= 0) {
                 if (userData.invitedBy) {
-                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
+                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { reffered:{email:userData.email},notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
                     await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
                     connData = await Connection.findOne({ userId: invData._id })
                     if (connData) {

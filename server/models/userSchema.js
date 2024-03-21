@@ -64,17 +64,14 @@ const user = mongoose.Schema({
     },
     isPremium: {
         type: Boolean,
-        require: true,
         default: false
     },
     isEmailVerified: {
         type: Boolean,
-        require: true,
         default: false
     },
     isBusiness: {
         type: Boolean,
-        require: true,
         default: false
     },
     isBlocked: {
@@ -86,15 +83,43 @@ const user = mongoose.Schema({
         default: false
     },
     contacts: {
-        type: Array,
+        type: [{
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Users'
+            },
+            email: {
+                type: String
+            },
+            isAccepted: {
+                type: Boolean,
+                default: false
+            }
+        }],
         default: []
     },
     reffered: {
-        type: Array,
+        type: [{
+            email: {
+                type: String,
+            }
+        }],
         default: []
     },
     requests: {
-        type: Array,
+        type: [{
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Users'
+            },
+            email: {
+                type: String
+            },
+            isAccepted: {
+                type: Boolean,
+                default: false
+            }
+        }],
         default: []
     },
     afk: {
@@ -113,16 +138,28 @@ const user = mongoose.Schema({
         default: null
     },
     notifications: {
-        type: Array,
+        type: [{
+            type: {
+                type:String
+            },
+            message: {
+                type:String
+            },
+            time: {
+                type:Number,
+                default:Date.now()
+            },
+            isReaded: {
+                type:Boolean,
+                default:false
+            }
+        }],
         default: [{
             type: "premium",
             message: "You have earned 100 chat points by registering",
             time: Date.now(),
             isReaded: false
         }]
-    },
-    contacts: {
-        type: Array,
     },
     avatar_url: {
         type: String,

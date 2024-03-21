@@ -18,12 +18,18 @@ const note = new mongoose.Schema({
         required: true
     },
     likes: {
-        type: Array,
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Likes'
+        }],
         default: []
     },
     replys:{
-        type:Array,
-        default:[]
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Replys'
+        }],
+        default: []
     },
     expiresAt: {
         type: Number,
@@ -34,7 +40,16 @@ const note = new mongoose.Schema({
         default:new Date(Date.now() + 86400000).toLocaleDateString('en-GB',{day:'2-digit',month:"2-digit",year:"2-digit"})
     },
     blockedUsers: {
-        type: Array,
+        type: [{
+            userId:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"Users"
+            },
+            blockedAt:{
+                type:Number,
+                dafault:Date.now()
+            }
+        }],
         default: []
     },
     isCleared: {

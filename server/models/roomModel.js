@@ -20,9 +20,12 @@ const room = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    participants:{
-        type:Array,
-        default:[]
+    participants: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Users'
+        }],
+        default: []
     }
 })
 const Room = mongoose.model('Room', room)
