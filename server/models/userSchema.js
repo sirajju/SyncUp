@@ -64,14 +64,17 @@ const user = mongoose.Schema({
     },
     isPremium: {
         type: Boolean,
+        require: true,
         default: false
     },
     isEmailVerified: {
         type: Boolean,
+        require: true,
         default: false
     },
     isBusiness: {
         type: Boolean,
+        require: true,
         default: false
     },
     isBlocked: {
@@ -83,43 +86,15 @@ const user = mongoose.Schema({
         default: false
     },
     contacts: {
-        type: [{
-            id: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Users'
-            },
-            email: {
-                type: String
-            },
-            isAccepted: {
-                type: Boolean,
-                default: false
-            }
-        }],
+        type: Array,
         default: []
     },
     reffered: {
-        type: [{
-            email: {
-                type: String,
-            }
-        }],
+        type: Array,
         default: []
     },
     requests: {
-        type: [{
-            id: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Users'
-            },
-            email: {
-                type: String
-            },
-            isAccepted: {
-                type: Boolean,
-                default: false
-            }
-        }],
+        type: Array,
         default: []
     },
     afk: {
@@ -138,45 +113,16 @@ const user = mongoose.Schema({
         default: null
     },
     notifications: {
-        type: [{
-            type: {
-                type:String
-            },
-            message: {
-                type:String
-            },
-            time: {
-                type:Number,
-                default:Date.now()
-            },
-            isReaded: {
-                type:Boolean,
-                default:false
-            },
-            userId: {
-                type:mongoose.Schema.Types.ObjectId,
-                ref:'Users'
-            },
-            username:{
-                type:String
-            },
-            avatar_url:{
-                type:String
-            },
-            email:{
-                type:String
-            },
-            noteId:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:'Notes'
-            }
-        }],
+        type: Array,
         default: [{
             type: "premium",
             message: "You have earned 100 chat points by registering",
             time: Date.now(),
             isReaded: false
         }]
+    },
+    contacts: {
+        type: Array,
     },
     avatar_url: {
         type: String,

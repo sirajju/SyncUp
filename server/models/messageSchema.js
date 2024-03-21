@@ -30,8 +30,8 @@ const message = new mongoose.Schema({
         }
     },
     clearedParticipants:{
-        type: Array,
-        default: []
+        type:Array,
+        default:[]
     },
     isConfettiEnabled:{
         type:Boolean,
@@ -67,14 +67,7 @@ const message = new mongoose.Schema({
         default:false
     },
     mediaConfig:{
-        type:{
-            type:{
-                type:String,
-            },
-            url:{
-                type:String
-            }
-        },
+        type:Object,
         default:{}
     }
 })
