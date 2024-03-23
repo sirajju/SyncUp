@@ -21,6 +21,18 @@ const progressContext = createSlice({
     },
   },
 });
+const subLoaderContext = createSlice({
+  name: "subLoaderContext",
+  initialState: { value: false },
+  reducers: {
+    showSubLoading: (state,action) => {
+      state.value = action.payload || true;
+    },
+    hideSubLoading: (state,action) => {
+      state.value = action.payload || false;
+    },
+  },
+});
 const adminContext = createSlice({
   name: "adminContext",
   initialState: {},
@@ -221,6 +233,7 @@ const scheduledMessages = createSlice({
 export const { setConversations, resetConversation } = totalConversations.actions;
 export const { setCurrentChat, markDelivered, addNewMessage, deleteMessage, markSeen, markEdited } = currentchat.actions;
 export const { showLoading, hideLoading } = progressContext.actions;
+export const { showSubLoading, hideSubLoading } = subLoaderContext.actions;
 export const { setAds } = adsData.actions
 export const { setNotes, addNote, setExpired } = notesData.actions
 export const { setMyNotes, addMyNote, setArchived, clearNotes } = myNotes.actions
@@ -233,6 +246,7 @@ export const { setScheduledMsgs, markScheduledSent, removeScheduledMsg, resetSch
 
 const rootReducer = combineReducers({
   progress: progressContext.reducer,
+  subloader: subLoaderContext.reducer,
   user: userSlice.reducer,
   admin: adminContext.reducer,
   currentChat: currentchat.reducer,

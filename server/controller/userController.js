@@ -57,7 +57,7 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error.message, success: false })
+        res.json({ message: error.message, success: false })
     }
 }
 const OauthRegister = async (req, res) => {
@@ -89,7 +89,7 @@ const OauthRegister = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error.message, success: false })
+        res.json({ message: error.message, success: false })
     }
 }
 const makeHashed = async function (pass) {
@@ -115,27 +115,26 @@ const loginUser = async (req, res) => {
                 if (userData.isBlocked) {
                     res.status(203).json({ message: "User suspended", success: false })
                 } else {
-                    let token;
-                    jwt.sign({ username: userData.username, email: userData.email }, process.env.JWT_SECRET, async (err, data) => {
+                    jwt.sign({ username: userData.username, email: userData.email }, process.env.JWT_SECRET, async (err, token) => {
+                        console.log(token);
                         if (err) {
                             throw new Error('Oops!,Something went wrong').stack(err)
                         }
-                        token = data
-                    })
-                    if (!userData.isEmailVerified) {
-                        res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token, success: false })
-                    }
-                    else {
-                        const connData = await Connection.findOne({ userId: userData._id })
-                        if (connData) {
-                            if (userData.logged_devices == 1 && connData) {
-                                req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
-                            }
+                        if (!userData.isEmailVerified) {
+                            res.status(203).json({ message: "Please verify your email", err: 'EMAILNOTVERERR', token, success: false })
                         }
-                        console.log("logged in");
-                        await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
-                        res.json({ message: "Login success", success: true, token })
-                    }
+                        else {
+                            const connData = await Connection.findOne({ userId: userData._id })
+                            if (connData) {
+                                if (userData.logged_devices == 1 && connData) {
+                                    req.io.to(connData.socketId).emit('logoutUser', { message: "User logged in another device" })
+                                }
+                            }
+                            console.log("logged in");
+                            await User.findOneAndUpdate({ _id: userData._id }, { $set: { logged_devices: 1 } })
+                            res.json({ message: "Login success", success: true, token })
+                        }
+                    })
                 }
             } else {
                 res.json({ message: "Incorrect password", success: false })
@@ -144,8 +143,8 @@ const loginUser = async (req, res) => {
             res.status(203).json({ message: "User not exists", success: false })
         }
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: error.message, success: false })
+        console.log(error.message);
+        res.json({ message: error.message, success: false })
     }
 }
 const oAuthLoginUser = async (req, res) => {
@@ -192,7 +191,7 @@ const oAuthLoginUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error.message, success: false })
+        res.json({ message: error.message, success: false })
     }
 }
 const generateRandom = (length, numOnly) => {
@@ -278,7 +277,7 @@ const verifyOtp = async (req, res) => {
             let expire = userData.auth.otp.expireAt
             if ((expire - Date.now()) >= 0) {
                 if (userData.invitedBy) {
-                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { reffered:{email:userData.email},notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
+                    const invData = await User.findOneAndUpdate({ email: userData.invitedBy }, { $push: { reffered: { email: userData.email }, notifications: { type: "premium", message: "You got 150 chatpoints by refferal", time: Date.now(), isReaded: false } } })
                     await User.findOneAndUpdate({ email: userData.invitedBy }, { $inc: { chatpoints: 150 } })
                     connData = await Connection.findOne({ userId: invData._id })
                     if (connData) {
@@ -340,7 +339,7 @@ const sendReset = async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong", success: false })
+        res.json({ message: "Something went wrong", success: false })
         console.log(error);
 
     }
@@ -390,7 +389,7 @@ const changePasword = async (req, res) => {
             res.json({ message: "Signature verification failed!!" })
         }
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong", success: false })
+        res.json({ message: "Something went wrong", success: false })
     }
 }
 const checkUsername = async (req, res) => {
@@ -419,7 +418,7 @@ const getAds = async (req, res) => {
         }
         res.json({ success: true, body: encrypted })
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const checkUser = async (req, res) => {
@@ -479,7 +478,7 @@ const checkUser = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ err: error.message })
+        res.json({ err: error.message })
     }
 }
 const encryptData = (data) => {
@@ -553,7 +552,7 @@ const cancellRequest = async (req, res) => {
             res.json({ success: false, message: `Something went wrong` })
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const getNoti = async (req, res) => {
@@ -583,7 +582,7 @@ const getNoti = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error.message, success: false })
+        res.json({ message: error.message, success: false })
     }
 }
 const acceptReq = async (req, res) => {
@@ -607,7 +606,7 @@ const acceptReq = async (req, res) => {
 
         }
     } catch (error) {
-        res.status(500).json({ message: error.message, success: false })
+        res.json({ message: error.message, success: false })
     }
 }
 const removeContact = async (req, res) => {
@@ -627,7 +626,7 @@ const removeContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const changeUsername = async (req, res) => {
@@ -642,7 +641,7 @@ const changeUsername = async (req, res) => {
         return res.json({ message: "User is not authenticated" })
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Somthing went wrong" })
+        res.json({ message: "Somthing went wrong" })
     }
 }
 const convertPointsToPremium = async (req, res) => {
@@ -678,7 +677,7 @@ const convertPointsToPremium = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: error.message })
+        res.json({ message: error.message })
     }
 }
 const saveContacts = async (req, res) => {
@@ -730,7 +729,7 @@ const getContacts = async (req, res) => {
         }
         return res.json({ success: false, message: "No contacts found!!" })
     } catch (error) {
-        res.status(500).json({ success: false, message: "Err while getting contacts" })
+        res.json({ success: false, message: "Err while getting contacts" })
         console.log(error);
     }
 }
@@ -738,7 +737,7 @@ const makeFinishedRide = async (req, res) => {
     try {
         const userData = await User.findOneAndUpdate({ email: req.userEmail }, { $set: { joyRideFinished: true } })
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const reportContact = async (req, res) => {
@@ -765,7 +764,7 @@ const reportContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const blockContact = async (req, res) => {
@@ -793,7 +792,7 @@ const blockContact = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 const unBlockContact = async (req, res) => {
@@ -818,7 +817,7 @@ const unBlockContact = async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.json({ success: false, message: error.message })
     }
 }
 
@@ -851,7 +850,7 @@ const getCallLogs = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: 'Err while getting logs' })
+        res.json({ success: false, message: 'Err while getting logs' })
     }
 }
 
@@ -863,7 +862,7 @@ const resetCalllogs = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: "Err while resetting logs" })
+        res.json({ success: false, message: "Err while resetting logs" })
     }
 }
 
@@ -879,7 +878,7 @@ const toggleAfk = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(500).json({ success: false, message: "Error while toggling afk" });
+        res.json({ success: false, message: "Error while toggling afk" });
     }
 }
 

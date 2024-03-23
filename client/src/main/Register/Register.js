@@ -14,6 +14,7 @@ function Register() {
     const [err, setErr] = useState()
     const [params, setParams] = useSearchParams()
     const [showPass, setShow] = useState(false)
+    const [isInvalidUsername,setInvalidUsername]=useState(false)
     const [isLoading, setLoading] = useState(false)
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -57,7 +58,7 @@ function Register() {
 
         if (e.target.value !== '') {
             if (e.target.id == 'username') {
-                setUserData({ ...userData, username: e.target.value.toLowerCase().slice(0,10) })
+                setUserData({ ...userData, username: e.target.value.toLowerCase().slice(0, 10) })
                 const options = {
                     route: "checkUsername",
                     params: { username: e.target.value }
@@ -65,10 +66,10 @@ function Register() {
                 Axios(options).then(res => {
                     if (!res.data.success) {
                         setErr(res.data.message)
-                        e.target.classList.add('invalid')
+                        setInvalidUsername(true)
                     } else {
                         setErr(null)
-                        e.target.classList.remove('invalid')
+                        setInvalidUsername(false)
                     }
                 })
             }
@@ -99,7 +100,7 @@ function Register() {
                 setUserData({ ...userData, refferal });;
             }
             if (userData['password'] == userData['confirm password']) {
-                const pattern =  /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,26}$/;
+                const pattern = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,26}$/;
                 if (pattern.test(userData.password)) {
                     setLoading(true)
                     const options = {
@@ -118,7 +119,7 @@ function Register() {
                         }
                         setLoading(false)
                     })
-                }else{
+                } else {
                     toast.error('Please make a strong password')
                 }
             } else {
@@ -133,7 +134,7 @@ function Register() {
         <LoginPage {...props}>
             <div className='formContainer'>
                 <div data-mdb-input-init className="form-outline">
-                    <input onChange={handleChange} type="text" id="username" value={userData.username} placeholder='Enter username' className='loginInput' />
+                    <input onChange={handleChange} type="text" id="username" value={userData.username} placeholder='Enter username' className={`loginInput ${isInvalidUsername && 'invalid'}`} />
                 </div>
                 <div data-mdb-input-init className="form-outline">
                     <input onChange={handleChange} type="email" id="email" placeholder='Enter email' className='loginInput' />
@@ -152,7 +153,7 @@ function Register() {
                     <label htmlFor='showPass' className='showPassLabel'>Show password</label>
                 </div>
             </div>
-            <button className="btnLogin mt-1" style={{ height: '35px' }} onClick={(e) => isLoading ? toast('Verifying') : handleSubmit(e)}>{isLoading ? <div className='loginBtnSpinnerParent' > <span className="spinner"></span> </div> : "Register"}</button>
+            <button className="btnLogin mt-1" disabled={Boolean(isInvalidUsername)} style={{ height: '35px' }} onClick={(e) => isLoading ? toast('Verifying') : handleSubmit(e)}>{isLoading ? <div className='loginBtnSpinnerParent' > <span className="spinner"></span> </div> : "Register"}</button>
             <button className="button resendOtp m-1 mt-2" style={{ height: '30px', width: '130px', padding: 0 }} onClick={login}>Google</button>
             <p className='createHere'>Alreay have an account ? <Link to={'/login'}>Login here</Link></p>
         </LoginPage>

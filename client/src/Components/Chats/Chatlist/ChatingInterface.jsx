@@ -128,6 +128,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
     useEffect(() => {
         const data = conversation.value?.filter(el => el.opponent[0]._id == chat.data)
         if (data[0]?.messages?.length) {
+            dispatch(setCurrentChat(data[0].messages))
             setMessages(data[0].messages)
         } else if (currentChat.value.length) {
             setMessages(currentChat.value)
@@ -137,6 +138,7 @@ const MessageRenderer = ({ isBlocked, reciever, openGreeting, isChatLoading, set
                 dispatch(setConversations(res))
                 GetMessages(chat.data).then(msgList => {
                     if (msgList?.length) {
+                        dispatch(setCurrentChat(msgList))
                         setMessages(msgList)
                     } else {
                         setMessages([])
@@ -374,7 +376,6 @@ function ChatingInterface({ setGo, setChat, chat }) {
                 inputRef?.current?.focus()
             }
         })
-
     }, [chat, userData]);
     useEffect(() => {
         if (userData.value.afk.isOn && chat.type) {

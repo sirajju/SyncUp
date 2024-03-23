@@ -22,8 +22,8 @@ const note = new mongoose.Schema({
         default: []
     },
     replys:{
-        type:Array,
-        default:[]
+        type: Array,
+        default: []
     },
     expiresAt: {
         type: Number,
@@ -34,7 +34,7 @@ const note = new mongoose.Schema({
         default:new Date(Date.now() + 86400000).toLocaleDateString('en-GB',{day:'2-digit',month:"2-digit",year:"2-digit"})
     },
     blockedUsers: {
-        type: Array,
+        type:Array,
         default: []
     },
     isCleared: {

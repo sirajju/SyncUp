@@ -51,7 +51,7 @@ function Chats() {
             }
             return changeChat({ ...cht, isRestricted: true })
         }
-        window.onbeforeunload = (e) => {}
+        window.onbeforeunload = (e) => { }
         return changeChat(cht)
     }
     useEffect(() => {
@@ -95,6 +95,9 @@ function Chats() {
                 }
                 return GetChatList('chat use effect')
                     .then(res => {
+                        // createTable('conversations', Object.keys(res[0])).then(() => {
+                        //     insertToTable('conversations', res)
+                        // })
                         return dispatch(setConversations(res));
                     })
                     .then(getAds)

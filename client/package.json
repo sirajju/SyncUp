@@ -2,7 +2,7 @@
   "name": "syncup",
   "version": "0.1.0",
   "private": true,
-  "homepage":"https://syncuppp.netlify.app/",
+  "homepage": "https://syncuppp.netlify.app/",
   "dependencies": {
     "@apirtc/apirtc": "^5.0.19",
     "@emoji-mart/data": "^1.1.2",
@@ -32,6 +32,8 @@
     "cloudinary-react": "^1.8.1",
     "crypto": "^1.0.1",
     "crypto-js": "^4.2.0",
+    "dexie": "^3.2.7",
+    "dexie-react-hooks": "^1.1.7",
     "dotenv": "^16.3.1",
     "emoji-mart": "^5.5.2",
     "emoji-picker-react": "^4.6.13",
