@@ -8,7 +8,7 @@ const createPaymentSession = async (req, res) => {
         const { plan } = req.body
         if (plan) {
             const token = generateRandom(50, false)
-            const em = `${req.headers['referer']}/plans?token=${token}&&u=${btoa(req.userEmail)}`
+            const em = `${req.headers['origin']}/plans?token=${token}&&u=${btoa(req.userEmail)}`
             console.log(em);
 
             await stripe.customers.create({
@@ -32,7 +32,7 @@ const createPaymentSession = async (req, res) => {
                 ],
                 mode: plan == 'Monthly' ? "subscription" : "payment",
                 success_url: em,
-                cancel_url: `${req.headers['referer']}/plans?isCancelled=true`,
+                cancel_url: `${req.headers['origin']}/plans?isCancelled=true`,
                 customer_email: req.userEmail,
                 currency: "inr",
 
