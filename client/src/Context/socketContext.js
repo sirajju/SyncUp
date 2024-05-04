@@ -5,9 +5,9 @@ import { io } from 'socket.io-client'
 const socketContext = createContext(null)
 
 export const SocketProvider = (props) => {
-    // const socket = io(`http://${window.location.hostname}:5000`)
+    const socket = io(`http://${window.location.hostname}:5000`)
 
-    const socket = io(`https://syncup-5jun.onrender.com`)
+    // const socket = io(`https://syncup-5jun.onrender.com`)
     socket.on("connect_error", (err) => {
         console.log(`connect_error due to ${err.message}`);
       });
