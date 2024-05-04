@@ -327,7 +327,7 @@ const sendReset = async (req, res) => {
                 }
                 await User.findOneAndUpdate({ email }, { $set: { 'auth.token.value': token, 'auth.token.expireAt': Date.now() + 300000, 'auth.token.tryCount': totalTry } })
                 email = btoa(email)
-                const message = `Link to reset your password : ${req.headers['origin']}/resetPassword?token=${token}&&user=${email}`
+                const message = `Link to reset your password : https://${req.headers['host']}/resetPassword?token=${token}&&user=${email}`
                 const mailData = await sendMail(message, atob(email), 'From SyncUp : Link to reset your password')
                 if (mailData) {
                     res.json({ message: "Reset will be recieved (if user exists)", success: true })
