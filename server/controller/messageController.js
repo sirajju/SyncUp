@@ -56,8 +56,9 @@ const getConversation = async (req, res) => {
                 const userData = await User.findOne({ email: req.userEmail });
                 const recieverData = await User.findOne({ _id: recieverId });
                 const unReadMsgsLength = await Message.find({ senderId: recieverData._id, recieverId: userData._id })?.length
-                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true } })
-                await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: '' } })
+               let time = Date.now()
+                await Message.updateMany({ senderId: recieverData._id, recieverId: userData._id }, { $set: { isReaded: true, recieverLastSync: time } }, { new: true })
+                await Message.updateMany({ senderId: userData._id, recieverId: recieverData._id }, { $set: { tempId: '', senderLastSync: time } })
                 const conversationData = await Conversation.findOne({
                     $or: [
                         { participents: [userData._id, recieverData._id] },
@@ -197,7 +198,9 @@ const getCurrentConversations = async (req, res) => {
         // });
 
         if (conversationData && conversationData.length > 0) {
-            await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true } });
+            let time = Date.now()
+                await Message.updateMany({ recieverId: userData._id }, { $set: { isDelivered: true, recieverLastSync: time } });
+                await Message.updateMany({ senderId: userData._id }, { $set: { senderLastSync: time } });
             const updatePromises = conversationData.map(async (el) => {
                 return Conversation.aggregate([
                     { $match: { participents: { $in: [userData._id] } } },
