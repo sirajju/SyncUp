@@ -51,6 +51,14 @@ const message = new mongoose.Schema({
         type:Number,
         default:Date.now()
     },
+    senderLastSync:{
+        type:Number,
+        default:Date.now()
+    },
+    recieverLastSync:{
+        type:Number,
+        default:Date.now()
+    },
     sentTimeString:{
         type:String,
         default:new Date().toLocaleDateString('en-GB',{hour:"2-digit",minute:"2-digit",hour12:true})
